@@ -9,6 +9,10 @@
     <packaging>pom</packaging>
     <version>${revision}</version>
 
+    <modules>
+        <module>dominion-ecs-api</module>
+    </modules>
+
     <properties>
         <revision>0.1.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
