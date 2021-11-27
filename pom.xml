@@ -11,6 +11,7 @@
 
     <modules>
         <module>dominion-ecs-api</module>
+        <module>dominion-ecs-engine</module>
     </modules>
 
     <properties>
