@@ -10,6 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>dominion-ecs-engine</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>dev.dominion.ecs</groupId>
+            <artifactId>dominion-ecs-api</artifactId>
+            <version>${revision}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
