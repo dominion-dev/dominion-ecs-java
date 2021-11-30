@@ -6,14 +6,14 @@ import java.util.ServiceLoader;
 public interface Dominion extends AutoCloseable {
 
     static Dominion init() {
-        return init("dev.dominion.ecs.engine.EntityRepository");
+        return init("dev.dominion.ecs.engine");
     }
 
     static Dominion init(String implementation) {
         return ServiceLoader
                 .load(Dominion.class)
                 .stream()
-                .filter(p -> p.get().getClass().getName().equals(implementation))
+                .filter(p -> p.get().getClass().getName().contains(implementation))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Unable to load " + implementation))
                 .get();
