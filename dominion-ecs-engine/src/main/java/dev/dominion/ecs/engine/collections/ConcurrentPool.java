@@ -11,12 +11,12 @@ import java.util.concurrent.locks.StampedLock;
  */
 public final class ConcurrentPool<T> {
 
-    private static final int NUM_OF_PAGES_BIT_SIZE = 14;
-    private static final int PAGE_CAPACITY_BIT_SIZE = 16;
-    private static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
-    private static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
-    private static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
-    private static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
+    public static final int NUM_OF_PAGES_BIT_SIZE = 14;
+    public static final int PAGE_CAPACITY_BIT_SIZE = 16;
+    public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
+    public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
+    public static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
+    public static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
 
     @SuppressWarnings("unchecked")
     private final Page<T>[] pages = new Page[NUM_OF_PAGES];
