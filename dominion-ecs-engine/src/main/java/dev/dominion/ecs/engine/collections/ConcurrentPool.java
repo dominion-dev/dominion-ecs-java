@@ -41,23 +41,31 @@ public final class ConcurrentPool<T> {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
         private Page<T> currentPage;
+        private long nextId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
             currentPage = pool.newPage(this);
+            nextId = allocateNextId();
         }
 
         public long nextId() {
             long stamp = lock.writeLock();
             try {
-                int pageSize = currentPage.hasCapacity() ?
-                        currentPage.getAndIncrementSize() :
-                        (currentPage = pool.newPage(this)).getAndIncrementSize();
-                return (pageSize & OBJECT_INDEX_BIT_MASK) |
-                        (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
+                long returnValue = nextId;
+                nextId = allocateNextId();
+                return returnValue;
             } finally {
                 lock.unlockWrite(stamp);
             }
+        }
+
+        private long allocateNextId() {
+            int pageSize = currentPage.hasCapacity() ?
+                    currentPage.getAndIncrementSize() :
+                    (currentPage = pool.newPage(this)).getAndIncrementSize();
+            return (pageSize & OBJECT_INDEX_BIT_MASK) |
+                    (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
         }
     }
 
