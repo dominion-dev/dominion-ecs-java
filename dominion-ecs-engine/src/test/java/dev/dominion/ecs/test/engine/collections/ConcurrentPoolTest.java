@@ -1,8 +1,6 @@
 package dev.dominion.ecs.test.engine.collections;
 
-import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
-import dev.dominion.ecs.engine.collections.SparseIntMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +39,7 @@ class ConcurrentPoolTest {
         public void concurrentNextId() throws InterruptedException {
             final int capacity = 1 << 22;
             ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant();
-            final ExecutorService pool = Executors.newFixedThreadPool(8);
+            final ExecutorService pool = Executors.newFixedThreadPool(4);
             for (int i = 0; i < capacity; i++) {
                 pool.execute(tenant::nextId);
             }

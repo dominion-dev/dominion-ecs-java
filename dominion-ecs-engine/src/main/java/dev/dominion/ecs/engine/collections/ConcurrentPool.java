@@ -60,12 +60,15 @@ public final class ConcurrentPool<T> {
                     int pageSize;
                     if (currentPage.hasCapacity()) {
                         pageSize = currentPage.getAndIncrementSize();
-                        if (!lock.validate(stamp))
+                        if (!lock.validate(stamp)) {
+                            currentPage.decrementSize();
                             continue;
+                        }
                     } else {
                         stamp = lock.tryConvertToWriteLock(stamp);
-                        if (stamp == 0L)
+                        if (stamp == 0L) {
                             continue;
+                        }
                         // exclusive access
                         pageSize = (currentPage = pool.newPage(this)).getAndIncrementSize();
                     }
@@ -84,7 +87,7 @@ public final class ConcurrentPool<T> {
         private final Object[] data = new Object[PAGE_CAPACITY];
         private final Page<T> previous;
         private final int id;
-        private AtomicInteger size = new AtomicInteger(0);
+        private final AtomicInteger size = new AtomicInteger(0);
 
         public Page(int id, Page<T> previous) {
             this.previous = previous;
@@ -93,6 +96,10 @@ public final class ConcurrentPool<T> {
 
         public int getAndIncrementSize() {
             return size.getAndIncrement();
+        }
+
+        public void decrementSize() {
+            size.decrementAndGet();
         }
 
         @SuppressWarnings("unchecked")
