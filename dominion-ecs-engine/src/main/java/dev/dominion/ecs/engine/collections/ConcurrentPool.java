@@ -11,12 +11,12 @@ import java.util.concurrent.locks.StampedLock;
  */
 public final class ConcurrentPool<T> {
 
-    private static final int NUM_OF_PAGES_BIT_SIZE = 14;
-    private static final int PAGE_CAPACITY_BIT_SIZE = 16;
-    private static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
-    private static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
-    private static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
-    private static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
+    public static final int NUM_OF_PAGES_BIT_SIZE = 14;
+    public static final int PAGE_CAPACITY_BIT_SIZE = 16;
+    public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
+    public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
+    public static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
+    public static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
 
     @SuppressWarnings("unchecked")
     private final Page<T>[] pages = new Page[NUM_OF_PAGES];
@@ -41,22 +41,44 @@ public final class ConcurrentPool<T> {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
         private Page<T> currentPage;
+        private long nextId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
             currentPage = pool.newPage(this);
+            nextId();
         }
 
         public long nextId() {
-            long stamp = lock.writeLock();
+            long stamp = lock.tryOptimisticRead();
             try {
-                int pageSize = currentPage.hasCapacity() ?
-                        currentPage.getAndIncrementSize() :
-                        (currentPage = pool.newPage(this)).getAndIncrementSize();
-                return (pageSize & OBJECT_INDEX_BIT_MASK) |
-                        (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
+                for (; ; stamp = lock.writeLock()) {
+                    if (stamp == 0L)
+                        continue;
+                    // possibly racy reads
+                    long returnValue = nextId;
+                    int pageSize;
+                    if (currentPage.hasCapacity()) {
+                        pageSize = currentPage.getAndIncrementSize();
+                        if (!lock.validate(stamp)) {
+                            currentPage.decrementSize();
+                            continue;
+                        }
+                    } else {
+                        stamp = lock.tryConvertToWriteLock(stamp);
+                        if (stamp == 0L) {
+                            continue;
+                        }
+                        // exclusive access
+                        pageSize = (currentPage = pool.newPage(this)).getAndIncrementSize();
+                    }
+                    nextId = (pageSize & OBJECT_INDEX_BIT_MASK) |
+                            (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
+                    return returnValue;
+                }
             } finally {
-                lock.unlockWrite(stamp);
+                if (StampedLock.isWriteLockStamp(stamp))
+                    lock.unlockWrite(stamp);
             }
         }
     }
@@ -65,7 +87,7 @@ public final class ConcurrentPool<T> {
         private final Object[] data = new Object[PAGE_CAPACITY];
         private final Page<T> previous;
         private final int id;
-        private int size = 0;
+        private final AtomicInteger size = new AtomicInteger(0);
 
         public Page(int id, Page<T> previous) {
             this.previous = previous;
@@ -73,7 +95,11 @@ public final class ConcurrentPool<T> {
         }
 
         public int getAndIncrementSize() {
-            return size++;
+            return size.getAndIncrement();
+        }
+
+        public void decrementSize() {
+            size.decrementAndGet();
         }
 
         @SuppressWarnings("unchecked")
@@ -86,7 +112,7 @@ public final class ConcurrentPool<T> {
         }
 
         public boolean hasCapacity() {
-            return size < data.length;
+            return size.get() < data.length;
         }
 
         public Page<T> getPrevious() {
