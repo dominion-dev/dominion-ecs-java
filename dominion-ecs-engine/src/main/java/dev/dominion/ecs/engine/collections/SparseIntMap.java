@@ -5,7 +5,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface SparseIntMap<V> extends Cloneable {
-    void put(int key, V value);
+
+    V put(int key, V value);
 
     V get(int key);
 
@@ -39,7 +40,7 @@ public interface SparseIntMap<V> extends Cloneable {
         }
 
         @Override
-        public void put(int key, V value) {
+        public V put(int key, V value) {
             throw new UnsupportedOperationException();
         }
 

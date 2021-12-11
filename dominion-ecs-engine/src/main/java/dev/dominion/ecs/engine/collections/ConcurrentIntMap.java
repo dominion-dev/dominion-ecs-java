@@ -3,6 +3,7 @@ package dev.dominion.ecs.engine.collections;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -15,7 +16,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     private final Object[] values;
     private final StampedLock lock = new StampedLock();
     private final int capacity;
-    private int size = 0;
+    private AtomicInteger size = new AtomicInteger(0);
 
     private ConcurrentIntMap(int[] dense, int[] sparse, Object[] values) {
         this.dense = dense;
@@ -37,34 +38,26 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     }
 
     @Override
-    public void put(int key, V value) {
-        long stamp = lock.writeLock();
-        try {
-            putValue(key, value);
-        } finally {
-            lock.unlockWrite(stamp);
-        }
-    }
-
-    private void putValue(int key, V value) {
-        Object current = get(key);
-        int i = current == null ? size++ : sparse[key];
+    public V put(int key, V value) {
+        V current = get(key);
+        int i = current == null ? size.getAndIncrement() : sparse[key];
         dense[i] = key;
         sparse[key] = i;
         values[i] = value;
+        return current;
     }
 
     @Override
     public V get(int key) {
         int i = sparse[key];
-        if (i > size || dense[i] != key) return null;
+        if (i > size.get() || dense[i] != key) return null;
         return valueAt(i);
     }
 
     @Override
     public Boolean contains(int key) {
         int i = sparse[key];
-        return i <= size && dense[i] == key;
+        return i <= size.get() && dense[i] == key;
     }
 
     @Override
@@ -76,7 +69,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
                 long ws = lock.tryConvertToWriteLock(stamp);
                 if (ws != 0L) {
                     stamp = ws;
-                    putValue(key, value = mappingFunction.apply(key));
+                    put(key, value = mappingFunction.apply(key));
                     break;
                 } else {
                     lock.unlockRead(stamp);
@@ -91,12 +84,12 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
 
     @Override
     public int size() {
-        return size;
+        return size.get();
     }
 
     @Override
     public boolean isEmpty() {
-        return size == 0;
+        return size.get() == 0;
     }
 
     @SuppressWarnings("unchecked")
@@ -107,7 +100,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     @Override
     @SuppressWarnings("unchecked")
     public Iterator<V> iterator() {
-        return new ObjectIterator<>((V[]) values, size);
+        return new ObjectIterator<>((V[]) values, size.get());
     }
 
     @Override
