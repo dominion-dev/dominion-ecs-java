@@ -15,11 +15,11 @@ class ConcurrentIntMapTest {
     public void put() {
         SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
         Assertions.assertTrue(concurrentIntMap.isEmpty());
-        concurrentIntMap.put(0, 0);
+        Assertions.assertNull(concurrentIntMap.put(0, 0));
         Assertions.assertEquals(1, concurrentIntMap.size());
-        concurrentIntMap.put(1, 1);
+        Assertions.assertNull(concurrentIntMap.put(1, 1));
         Assertions.assertEquals(2, concurrentIntMap.size());
-        concurrentIntMap.put(1, 2);
+        Assertions.assertEquals(1, concurrentIntMap.put(1, 2));
         Assertions.assertEquals(2, concurrentIntMap.size());
     }
 
