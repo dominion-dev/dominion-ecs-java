@@ -34,20 +34,39 @@ class ConcurrentPoolTest {
             Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
         }
 
+        @Test
+        public void freeId() {
+            ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant();
+            Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            tenant.freeId(1);
+            Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            tenant.freeId(0);
+            Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            tenant.freeId(1);
+            tenant.freeId(2);
+            Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+            Assertions.assertEquals(3, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+        }
 
         @Test
-        public void concurrentNextId() throws InterruptedException {
+        public void concurrentIds() throws InterruptedException {
             final int capacity = 1 << 22;
             ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant();
-            final ExecutorService pool = Executors.newFixedThreadPool(4);
+            final ExecutorService pool = Executors.newFixedThreadPool(2);
             for (int i = 0; i < capacity; i++) {
+                if (i % 10 == 0) {
+                    final int idx = i - 1;
+                    pool.execute(() -> tenant.freeId(idx));
+                }
                 pool.execute(tenant::nextId);
             }
             pool.shutdown();
             Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
             long finalId = tenant.nextId();
-            Assertions.assertEquals(capacity, finalId);
+            Assertions.assertEquals((int) (capacity * .9), finalId);
         }
-
     }
 }

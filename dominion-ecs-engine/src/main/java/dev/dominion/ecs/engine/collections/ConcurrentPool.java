@@ -40,8 +40,9 @@ public final class ConcurrentPool<T> {
     public static final class Tenant<T> {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
+        private final long[] nextIds = new long[1 << 10];
+        private final AtomicInteger nextIdIndex = new AtomicInteger(0);
         private Page<T> currentPage;
-        private long nextId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
@@ -52,27 +53,40 @@ public final class ConcurrentPool<T> {
         public long nextId() {
             long stamp = lock.tryOptimisticRead();
             try {
-                for (; ; stamp = lock.writeLock()) {
-                    if (stamp == 0L)
+                for (; ; ) {
+                    if (stamp == 0L) {
+                        stamp = lock.writeLock();
                         continue;
+                    }
                     // possibly racy reads
-                    long returnValue = nextId;
+                    int i = nextIdIndex.get();
+                    long returnValue;
+                    if (i > 0) {
+                        returnValue = nextIds[i];
+                        if (nextIdIndex.compareAndSet(i, i - 1)) {
+                            return returnValue;
+                        }
+                        continue;
+                    }
+                    returnValue = nextIds[i];
                     int pageSize;
                     if (currentPage.hasCapacity()) {
                         pageSize = currentPage.getAndIncrementSize();
                         if (!lock.validate(stamp)) {
                             currentPage.decrementSize();
+                            stamp = lock.writeLock();
                             continue;
                         }
                     } else {
                         stamp = lock.tryConvertToWriteLock(stamp);
                         if (stamp == 0L) {
+                            stamp = lock.writeLock();
                             continue;
                         }
                         // exclusive access
                         pageSize = (currentPage = pool.newPage(this)).getAndIncrementSize();
                     }
-                    nextId = (pageSize & OBJECT_INDEX_BIT_MASK) |
+                    nextIds[i] = (pageSize & OBJECT_INDEX_BIT_MASK) |
                             (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
                     return returnValue;
                 }
@@ -80,6 +94,10 @@ public final class ConcurrentPool<T> {
                 if (StampedLock.isWriteLockStamp(stamp))
                     lock.unlockWrite(stamp);
             }
+        }
+
+        public void freeId(long id) {
+            nextIds[nextIdIndex.incrementAndGet()] = id;
         }
     }
 
