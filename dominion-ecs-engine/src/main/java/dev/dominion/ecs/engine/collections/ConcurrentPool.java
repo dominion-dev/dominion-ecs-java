@@ -1,8 +1,5 @@
 package dev.dominion.ecs.engine.collections;
 
-import dev.dominion.ecs.engine.system.UnsafeFactory;
-import sun.misc.Unsafe;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
@@ -41,23 +38,24 @@ public final class ConcurrentPool<T> {
     }
 
     public static final class Tenant<T> implements AutoCloseable {
-        private final static int LONG_BYTES = 8;
-        private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
-        private final AtomicInteger nextIdIndex = new AtomicInteger(0);
-        private final long address;
-        private int capacity;
+        private final ConcurrentLongStack stack;
         private Page<T> currentPage;
+        private long newId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
             currentPage = pool.newPage(this);
-            address = allocateMemory(1 << 16);
+            stack = new ConcurrentLongStack(1 << 16);
             nextId();
         }
 
         public long nextId() {
+            long returnValue = stack.pop();
+            if (returnValue != Long.MIN_VALUE) {
+                return returnValue;
+            }
             long stamp = lock.tryOptimisticRead();
             try {
                 for (; ; ) {
@@ -66,16 +64,7 @@ public final class ConcurrentPool<T> {
                         continue;
                     }
                     // possibly racy reads
-                    int i = nextIdIndex.get();
-                    long returnValue;
-                    if (i > 0) {
-                        returnValue = unsafe.getLong(address + (long) i);
-                        if (nextIdIndex.compareAndSet(i, i - LONG_BYTES)) {
-                            return returnValue;
-                        }
-                        continue;
-                    }
-                    returnValue = unsafe.getLong(address);
+                    returnValue = newId;
                     int pageSize;
                     if (currentPage.hasCapacity()) {
                         pageSize = currentPage.getAndIncrementSize();
@@ -93,35 +82,24 @@ public final class ConcurrentPool<T> {
                         // exclusive access
                         pageSize = (currentPage = pool.newPage(this)).getAndIncrementSize();
                     }
-                    unsafe.putLong(address,
-                            (pageSize & OBJECT_INDEX_BIT_MASK) |
-                                    (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE);
-
+                    newId = (pageSize & OBJECT_INDEX_BIT_MASK) |
+                            (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
                     return returnValue;
                 }
             } finally {
-                if (StampedLock.isWriteLockStamp(stamp))
+                if (StampedLock.isWriteLockStamp(stamp)) {
                     lock.unlockWrite(stamp);
+                }
             }
         }
 
         public void freeId(long id) {
-            long offset = nextIdIndex.addAndGet(LONG_BYTES);
-            if (offset < capacity) {
-                unsafe.putLong(address + offset, id);
-            } else {
-                nextIdIndex.addAndGet(-LONG_BYTES);
-            }
-        }
-
-        private long allocateMemory(int capacity) {
-            this.capacity = capacity;
-            return unsafe.allocateMemory(capacity);
+            stack.push(id);
         }
 
         @Override
         public void close() {
-            unsafe.freeMemory(address);
+            stack.close();
         }
     }
 

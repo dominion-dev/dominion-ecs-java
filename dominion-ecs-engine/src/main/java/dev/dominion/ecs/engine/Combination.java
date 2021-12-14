@@ -4,7 +4,6 @@ import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 
-
 public final class Combination {
     private final Class<? extends Component>[] componentTypes;
     private final int entryLength;
