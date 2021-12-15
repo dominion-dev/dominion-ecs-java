@@ -12,8 +12,20 @@ import java.util.concurrent.TimeUnit;
 class ConcurrentPoolTest {
 
     @Test
-    void newTenant() {
-        Assertions.assertNotNull(new ConcurrentPool<Object[]>().newTenant());
+    public void newTenant() {
+        try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+            Assertions.assertNotNull(tenant);
+        }
+    }
+
+    @Test
+    public void register() {
+        ConcurrentPool<Object[]> concurrentPool = new ConcurrentPool<>();
+        try (ConcurrentPool.Tenant<Object[]> tenant = concurrentPool.newTenant()) {
+            Object[] entry = new Object[0];
+            Assertions.assertEquals(entry, tenant.register(1, entry));
+            Assertions.assertEquals(entry, concurrentPool.getEntry(1));
+        }
     }
 
     @Nested
