@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ConcurrentLongStack implements AutoCloseable {
     private static final int LONG_BYTES = 8;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    public final AtomicInteger index = new AtomicInteger(-LONG_BYTES);
+    private final AtomicInteger index = new AtomicInteger(-LONG_BYTES);
     private final long address;
     private final int capacity;
 
@@ -34,6 +34,10 @@ public final class ConcurrentLongStack implements AutoCloseable {
         }
         index.addAndGet(-LONG_BYTES);
         return false;
+    }
+
+    public int size() {
+        return (index.get() >> 3) + 1;
     }
 
     @Override
