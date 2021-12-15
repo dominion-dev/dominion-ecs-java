@@ -72,4 +72,40 @@ class ConcurrentPoolTest {
             }
         }
     }
+
+    @Nested
+    public class PageTest {
+
+        @Test
+        public void size() {
+            ConcurrentPool.Page<Object> page = new ConcurrentPool.Page<>(0, null);
+            Assertions.assertEquals(0, page.getAndIncrementSize());
+            Assertions.assertEquals(1, page.getAndIncrementSize());
+            Assertions.assertEquals(1, page.decrementSize());
+        }
+
+        @Test
+        public void capacity() {
+            ConcurrentPool.Page<Object> page = new ConcurrentPool.Page<>(0, null);
+            Assertions.assertTrue(page.hasCapacity());
+            for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY - 1; i++) {
+                page.getAndIncrementSize();
+            }
+            Assertions.assertTrue(page.hasCapacity());
+            page.getAndIncrementSize();
+            Assertions.assertFalse(page.hasCapacity());
+            page.decrementSize();
+            Assertions.assertTrue(page.hasCapacity());
+        }
+
+        @Test
+        public void data() {
+            ConcurrentPool.Page<Integer> previous = new ConcurrentPool.Page<>(0, null);
+            ConcurrentPool.Page<Integer> page = new ConcurrentPool.Page<>(0, previous);
+            Integer value = 1;
+            page.set(10, value);
+            Assertions.assertEquals(value, page.get(10));
+            Assertions.assertEquals(previous, page.getPrevious());
+        }
+    }
 }

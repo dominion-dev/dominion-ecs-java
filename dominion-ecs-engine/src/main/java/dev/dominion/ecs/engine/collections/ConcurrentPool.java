@@ -10,7 +10,6 @@ import java.util.concurrent.locks.StampedLock;
  * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
  */
 public final class ConcurrentPool<T> {
-
     public static final int NUM_OF_PAGES_BIT_SIZE = 14;
     public static final int PAGE_CAPACITY_BIT_SIZE = 16;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
@@ -31,6 +30,10 @@ public final class ConcurrentPool<T> {
     private Page<T> getPage(long id) {
         int pageId = (int) ((id >> PAGE_CAPACITY_BIT_SIZE) & PAGE_INDEX_BIT_MASK);
         return pages[pageId];
+    }
+
+    public T getEntry(long id) {
+        return getPage(id).get(id);
     }
 
     public Tenant<T> newTenant() {
@@ -97,13 +100,17 @@ public final class ConcurrentPool<T> {
             stack.push(id);
         }
 
+        public T register(long id, T entry) {
+            return pool.getPage(id).set(id, entry);
+        }
+
         @Override
         public void close() {
             stack.close();
         }
     }
 
-    private static final class Page<T> {
+    public static final class Page<T> {
         private final Object[] data = new Object[PAGE_CAPACITY];
         private final Page<T> previous;
         private final int id;
@@ -118,17 +125,18 @@ public final class ConcurrentPool<T> {
             return size.getAndIncrement();
         }
 
-        public void decrementSize() {
-            size.decrementAndGet();
+        public int decrementSize() {
+            return size.decrementAndGet();
         }
 
         @SuppressWarnings("unchecked")
-        public T get(int key) {
-            return (T) data[key];
+        public T get(long id) {
+            return (T) data[(int) (id & OBJECT_INDEX_BIT_MASK)];
         }
 
-        public void set(int key, T value) {
-            data[key] = value;
+        @SuppressWarnings("unchecked")
+        public T set(long id, T value) {
+            return (T) (data[(int) (id & OBJECT_INDEX_BIT_MASK)] = value);
         }
 
         public boolean hasCapacity() {
