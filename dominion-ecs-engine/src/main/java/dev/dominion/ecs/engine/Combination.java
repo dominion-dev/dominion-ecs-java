@@ -17,6 +17,13 @@ public final class Combination {
     }
 
     public Entity createEntity(Component... components) {
-        return null;
+        long id = tenant.nextId();
+        Object[] entry = new Object[entryLength];
+        Entity entity = (Entity) (tenant.register(id, entry)[0] = new LongEntity(id));
+        //noinspection StatementWithEmptyBody
+        if(entryLength > 1) {
+            //todo: store components
+        }
+        return entity;
     }
 }
