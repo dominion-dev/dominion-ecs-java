@@ -16,12 +16,12 @@ public final class Combination {
         entryLength = componentTypes.length + 1;
     }
 
-    public Entity createEntity(Component... components) {
+    public LongEntity createEntity(Component... components) {
         long id = tenant.nextId();
         Object[] entry = new Object[entryLength];
-        Entity entity = (Entity) (tenant.register(id, entry)[0] = new LongEntity(id));
+        LongEntity entity = (LongEntity) (tenant.register(id, entry)[0] = new LongEntity(id, tenant));
         //noinspection StatementWithEmptyBody
-        if(entryLength > 1) {
+        if (entryLength > 1) {
             //todo: store components
         }
         return entity;
