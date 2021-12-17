@@ -10,15 +10,15 @@ class CombinationTest {
 
     @Test
     void createEntity() {
-        ConcurrentPool<Object[]> concurrentPool = new ConcurrentPool<>();
-        try (ConcurrentPool.Tenant<Object[]> tenant = concurrentPool.newTenant()) {
+        ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
+        try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
             Combination combination = new Combination(tenant);
             LongEntity entity = combination.createEntity();
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(tenant, entity.getTenant());
-            Object[] entry = concurrentPool.getEntry(entity.getId());
+            LongEntity entry = concurrentPool.getEntry(entity.getId());
             Assertions.assertNotNull(entry);
-            Assertions.assertEquals(entity, entry[0]);
+            Assertions.assertEquals(entity, entry);
         }
     }
 }

@@ -7,9 +7,9 @@ import dev.dominion.ecs.engine.collections.ConcurrentPool;
 public final class LongEntity implements Entity {
 
     private long id;
-    private ConcurrentPool.Tenant<Object[]> tenant;
+    private ConcurrentPool.Tenant<LongEntity> tenant;
 
-    public LongEntity(long id, ConcurrentPool.Tenant<Object[]> tenant) {
+    public LongEntity(long id, ConcurrentPool.Tenant<LongEntity> tenant) {
         this.id = id;
         this.tenant = tenant;
     }
@@ -22,31 +22,27 @@ public final class LongEntity implements Entity {
         this.id = id;
     }
 
-    public ConcurrentPool.Tenant<Object[]> getTenant() {
+    public ConcurrentPool.Tenant<LongEntity> getTenant() {
         return tenant;
     }
 
-    void setTenant(ConcurrentPool.Tenant<Object[]> tenant) {
+    void setTenant(ConcurrentPool.Tenant<LongEntity> tenant) {
         this.tenant = tenant;
     }
 
     @Override
     public void addComponents(Component... components) {
-
     }
 
     @Override
     public void removeComponents(Component... components) {
-
     }
 
     @Override
     public <S extends Enum<S>> void setState(S state) {
-
     }
 
     @Override
     public void setEnabled(boolean enabled) {
-
     }
 }
