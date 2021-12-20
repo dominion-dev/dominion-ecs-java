@@ -50,70 +50,82 @@ class ConcurrentPoolTest {
         @Test
         public void freeId() {
             try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+                Assertions.assertEquals(1, tenant.currentPageSize());
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(2, tenant.currentPageSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                tenant.freeId(1);
+                Assertions.assertEquals(3, tenant.currentPageSize()); // ready nextId == 2
+                tenant.freeId(0); // 1 -> 0 : ready nextId == 1
+                Assertions.assertEquals(2, tenant.currentPageSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(3, tenant.currentPageSize());
                 Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                tenant.freeId(0);
-                Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                tenant.freeId(1);
-                tenant.freeId(2);
-                Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                // move to the next page
+                for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY; i++) {
+                    tenant.nextId();
+                }
+                Assertions.assertEquals(4, tenant.currentPageSize());
                 Assertions.assertEquals(3, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                tenant.freeId(1);
+                Assertions.assertEquals(5, tenant.currentPageSize());
+                Assertions.assertEquals(65535, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(6, tenant.currentPageSize());
             }
         }
 
         @Test
         public void concurrentIds() throws InterruptedException {
-            try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+            ConcurrentPool<Object[]> concurrentPool = new ConcurrentPool<>();
+            try (ConcurrentPool.Tenant<Object[]> tenant = concurrentPool.newTenant()) {
                 final int capacity = 1 << 22;
                 final ExecutorService pool = Executors.newFixedThreadPool(4);
+                int removed = 0;
                 for (int i = 0; i < capacity; i++) {
                     if (i % 10 == 0) {
-                        final int idx = i - 1;
+                        final int idx = (int) (i * 0.7);
                         pool.execute(() -> tenant.freeId(idx));
+                        removed++;
                     }
                     pool.execute(tenant::nextId);
                 }
                 pool.shutdown();
-                Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
-                long finalId = tenant.nextId();
-                Assertions.assertEquals((int) (capacity * .9), finalId);
+                Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
+                Assertions.assertEquals(capacity + 1 - removed, concurrentPool.size());
+                Assertions.assertEquals((int) (capacity * .9), tenant.nextId());
             }
         }
     }
 
     @Nested
-    public class PageTest {
+    public class LinkedPageTest {
 
         @Test
         public void size() {
-            ConcurrentPool.Page<Object> page = new ConcurrentPool.Page<>(0, null);
-            Assertions.assertEquals(0, page.getAndIncrementSize());
-            Assertions.assertEquals(1, page.getAndIncrementSize());
-            Assertions.assertEquals(1, page.decrementSize());
+            ConcurrentPool.LinkedPage<Object> page = new ConcurrentPool.LinkedPage<>(0, null);
+            Assertions.assertEquals(0, page.incrementIndex());
+            Assertions.assertEquals(1, page.incrementIndex());
+            Assertions.assertEquals(0, page.decrementIndex());
         }
 
         @Test
         public void capacity() {
-            ConcurrentPool.Page<Object> page = new ConcurrentPool.Page<>(0, null);
+            ConcurrentPool.LinkedPage<Object> page = new ConcurrentPool.LinkedPage<>(0, null);
             Assertions.assertTrue(page.hasCapacity());
             for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY - 1; i++) {
-                page.getAndIncrementSize();
+                page.incrementIndex();
             }
             Assertions.assertTrue(page.hasCapacity());
-            page.getAndIncrementSize();
+            page.incrementIndex();
             Assertions.assertFalse(page.hasCapacity());
-            page.decrementSize();
+            page.decrementIndex();
             Assertions.assertTrue(page.hasCapacity());
         }
 
         @Test
         public void data() {
-            ConcurrentPool.Page<Integer> previous = new ConcurrentPool.Page<>(0, null);
-            ConcurrentPool.Page<Integer> page = new ConcurrentPool.Page<>(0, previous);
+            ConcurrentPool.LinkedPage<Integer> previous = new ConcurrentPool.LinkedPage<>(0, null);
+            ConcurrentPool.LinkedPage<Integer> page = new ConcurrentPool.LinkedPage<>(0, previous);
             Integer value = 1;
             page.set(10, value);
             Assertions.assertEquals(value, page.get(10));
