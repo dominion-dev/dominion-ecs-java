@@ -107,11 +107,11 @@ public final class ConcurrentPool<T> {
             }
         }
 
-        public void freeId(long id) {
+        public long freeId(long id) {
             LinkedPage<T> page = pool.getPage(id);
             if (page.isEmpty()) {
                 stack.push(id);
-                return;
+                return id;
             }
             boolean notCurrentPage = page != currentPage;
             int reusableId = page.remove(id, notCurrentPage);
@@ -120,6 +120,7 @@ public final class ConcurrentPool<T> {
             } else {
                 newId = reusableId;
             }
+            return reusableId;
         }
 
         public T register(long id, T entry) {
