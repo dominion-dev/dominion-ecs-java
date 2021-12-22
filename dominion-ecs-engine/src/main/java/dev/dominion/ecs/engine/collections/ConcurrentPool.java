@@ -1,6 +1,8 @@
 package dev.dominion.ecs.engine.collections;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
@@ -11,7 +13,7 @@ import java.util.concurrent.locks.StampedLock;
  * <------------- 32 -------------><------------- 32 ------------->
  * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
  */
-public final class ConcurrentPool<T> {
+public final class ConcurrentPool<T> implements AutoCloseable {
     public static final int NUM_OF_PAGES_BIT_SIZE = 14;
     public static final int PAGE_CAPACITY_BIT_SIZE = 16;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
@@ -23,6 +25,7 @@ public final class ConcurrentPool<T> {
     @SuppressWarnings("unchecked")
     private final LinkedPage<T>[] pages = new LinkedPage[NUM_OF_PAGES];
     private final AtomicInteger pageIndex = new AtomicInteger(-1);
+    private final List<Tenant<T>> tenants = new ArrayList<>();
 
     private LinkedPage<T> newPage(Tenant<T> owner) {
         int id = pageIndex.incrementAndGet();
@@ -40,7 +43,9 @@ public final class ConcurrentPool<T> {
     }
 
     public Tenant<T> newTenant() {
-        return new Tenant<>(this);
+        Tenant<T> newTenant = new Tenant<>(this);
+        tenants.add(newTenant);
+        return newTenant;
     }
 
     public int size() {
@@ -49,6 +54,11 @@ public final class ConcurrentPool<T> {
                 .mapToInt(LinkedPage::size)
 //                .peek(System.out::println)
                 .sum();
+    }
+
+    @Override
+    public void close() {
+        tenants.forEach(Tenant::close);
     }
 
     public static final class Tenant<T> implements AutoCloseable {
