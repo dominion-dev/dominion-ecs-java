@@ -1,5 +1,6 @@
 package dev.dominion.ecs.test.engine.collections;
 
+import dev.dominion.ecs.engine.LongEntity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -13,16 +14,16 @@ class ConcurrentPoolTest {
 
     @Test
     public void newTenant() {
-        try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+        try (ConcurrentPool.Tenant<LongEntity> tenant = new ConcurrentPool<LongEntity>().newTenant()) {
             Assertions.assertNotNull(tenant);
         }
     }
 
     @Test
     public void register() {
-        ConcurrentPool<Object[]> concurrentPool = new ConcurrentPool<>();
-        try (ConcurrentPool.Tenant<Object[]> tenant = concurrentPool.newTenant()) {
-            Object[] entry = new Object[0];
+        ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
+        try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
+            LongEntity entry = new LongEntity(1, tenant);
             Assertions.assertEquals(entry, tenant.register(1, entry));
             Assertions.assertEquals(entry, concurrentPool.getEntry(1));
         }
@@ -33,7 +34,7 @@ class ConcurrentPoolTest {
 
         @Test
         public void nextId() {
-            try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+            try (ConcurrentPool.Tenant<LongEntity> tenant = new ConcurrentPool<LongEntity>().newTenant()) {
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(0, (tenant.nextId() >> ConcurrentPool.PAGE_CAPACITY_BIT_SIZE)
@@ -49,7 +50,7 @@ class ConcurrentPoolTest {
 
         @Test
         public void freeId() {
-            try (ConcurrentPool.Tenant<Object[]> tenant = new ConcurrentPool<Object[]>().newTenant()) {
+            try (ConcurrentPool.Tenant<LongEntity> tenant = new ConcurrentPool<LongEntity>().newTenant()) {
                 Assertions.assertEquals(1, tenant.currentPageSize());
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(2, tenant.currentPageSize());
@@ -76,8 +77,8 @@ class ConcurrentPoolTest {
 
         @Test
         public void concurrentIds() throws InterruptedException {
-            ConcurrentPool<Object[]> concurrentPool = new ConcurrentPool<>();
-            try (ConcurrentPool.Tenant<Object[]> tenant = concurrentPool.newTenant()) {
+            ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
+            try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
                 final int capacity = 1 << 22;
                 final ExecutorService pool = Executors.newFixedThreadPool(4);
                 int removed = 0;
@@ -102,7 +103,7 @@ class ConcurrentPoolTest {
 
         @Test
         public void size() {
-            ConcurrentPool.LinkedPage<Object> page = new ConcurrentPool.LinkedPage<>(0, null);
+            ConcurrentPool.LinkedPage<LongEntity> page = new ConcurrentPool.LinkedPage<>(0, null);
             Assertions.assertEquals(0, page.incrementIndex());
             Assertions.assertEquals(1, page.incrementIndex());
             Assertions.assertEquals(0, page.decrementIndex());
@@ -110,7 +111,7 @@ class ConcurrentPoolTest {
 
         @Test
         public void capacity() {
-            ConcurrentPool.LinkedPage<Object> page = new ConcurrentPool.LinkedPage<>(0, null);
+            ConcurrentPool.LinkedPage<LongEntity> page = new ConcurrentPool.LinkedPage<>(0, null);
             Assertions.assertTrue(page.hasCapacity());
             for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY - 1; i++) {
                 page.incrementIndex();
@@ -124,11 +125,11 @@ class ConcurrentPoolTest {
 
         @Test
         public void data() {
-            ConcurrentPool.LinkedPage<Integer> previous = new ConcurrentPool.LinkedPage<>(0, null);
-            ConcurrentPool.LinkedPage<Integer> page = new ConcurrentPool.LinkedPage<>(0, previous);
-            Integer value = 1;
-            page.set(10, value);
-            Assertions.assertEquals(value, page.get(10));
+            ConcurrentPool.LinkedPage<LongEntity> previous = new ConcurrentPool.LinkedPage<>(0, null);
+            ConcurrentPool.LinkedPage<LongEntity> page = new ConcurrentPool.LinkedPage<>(0, previous);
+            LongEntity entity = new LongEntity(1, null);
+            page.set(10, entity);
+            Assertions.assertEquals(entity, page.get(10));
             Assertions.assertEquals(previous, page.getPrevious());
         }
     }

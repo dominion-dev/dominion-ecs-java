@@ -4,7 +4,7 @@ import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 
-public final class LongEntity implements Entity {
+public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     private long id;
     private ConcurrentPool.Tenant<LongEntity> tenant;
@@ -18,7 +18,7 @@ public final class LongEntity implements Entity {
         return id;
     }
 
-    void setId(long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

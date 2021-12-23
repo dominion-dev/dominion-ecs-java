@@ -13,10 +13,18 @@ public final class LinkedCombinations implements AutoCloseable {
 
     private final ClassIndex classIndex = new ClassIndex();
     private final ConcurrentPool<LongEntity> pool = new ConcurrentPool<>();
-    private final Node root = new Node(null);
+    private final Node root;
+
+    public LinkedCombinations() {
+        root = new Node(null);
+        root.combination = new Combination(pool.newTenant());
+    }
 
     @SafeVarargs
     public final Combination createOrGet(Class<? extends Component>... componentTypes) {
+        if (componentTypes.length == 0) {
+            return root.combination;
+        }
         traverseNode(root, componentTypes);
         return new Combination(pool.newTenant(), componentTypes);
     }
@@ -78,14 +86,6 @@ public final class LinkedCombinations implements AutoCloseable {
 
         public SparseIntMap<Node> getLinks() {
             return SparseIntMap.UnmodifiableView.wrap(links);
-        }
-
-        public Combination getCombination() {
-            return combination;
-        }
-
-        public void setCombination(Combination combination) {
-            this.combination = combination;
         }
 
         @Override

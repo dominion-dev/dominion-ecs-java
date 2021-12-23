@@ -13,7 +13,7 @@ import java.util.concurrent.locks.StampedLock;
  * <------------- 32 -------------><------------- 32 ------------->
  * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
  */
-public final class ConcurrentPool<T> implements AutoCloseable {
+public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
     public static final int NUM_OF_PAGES_BIT_SIZE = 14;
     public static final int PAGE_CAPACITY_BIT_SIZE = 16;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
@@ -61,7 +61,13 @@ public final class ConcurrentPool<T> implements AutoCloseable {
         tenants.forEach(Tenant::close);
     }
 
-    public static final class Tenant<T> implements AutoCloseable {
+    public interface Identifiable {
+        long getId();
+
+        void setId(long id);
+    }
+
+    public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
         private final ConcurrentLongStack stack;
@@ -141,14 +147,18 @@ public final class ConcurrentPool<T> implements AutoCloseable {
             return currentPage.size();
         }
 
+        public ConcurrentPool<T> getPool() {
+            return pool;
+        }
+
         @Override
         public void close() {
             stack.close();
         }
     }
 
-    public static final class LinkedPage<T> {
-        private final Object[] data = new Object[PAGE_CAPACITY];
+    public static final class LinkedPage<T extends Identifiable> {
+        private final Identifiable[] data = new Identifiable[PAGE_CAPACITY];
         private final LinkedPage<T> previous;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
@@ -178,6 +188,10 @@ public final class ConcurrentPool<T> implements AutoCloseable {
                     return 0;
                 }
                 data[indexToBeReused] = data[lastIndex];
+                data[lastIndex] = null;
+                if (data[indexToBeReused] != null) {
+                    data[indexToBeReused].setId(indexToBeReused);
+                }
                 return lastIndex;
             }
         }

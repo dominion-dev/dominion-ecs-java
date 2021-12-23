@@ -57,18 +57,18 @@ class LinkedCombinationTest {
 
         @Test
         void createOrGetLink() {
-            try (LinkedCombinations linkedArchetypes = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedArchetypes.new Node(null);
+            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
+                LinkedCombinations.Node node = linkedCombinations.new Node(null);
                 node.createOrGetLink(C1.class);
-                Assertions.assertTrue(linkedArchetypes.getClassIndex().getIndex(C1.class) > 0);
+                Assertions.assertTrue(linkedCombinations.getClassIndex().getIndex(C1.class) > 0);
                 Assertions.assertFalse(node.getLinks().isEmpty());
             }
         }
 
         @Test
         void getLink() {
-            try (LinkedCombinations linkedArchetypes = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedArchetypes.new Node(null);
+            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
+                LinkedCombinations.Node node = linkedCombinations.new Node(null);
                 Assertions.assertNull(node.getLink(C1.class));
                 node.createOrGetLink(C1.class);
                 Assertions.assertNotNull(node.getLink(C1.class));
@@ -77,13 +77,13 @@ class LinkedCombinationTest {
 
         @Test
         void hasComponentType() {
-            try (LinkedCombinations linkedArchetypes = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedArchetypes.new Node(null);
+            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
+                LinkedCombinations.Node node = linkedCombinations.new Node(null);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
 
                 SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-                cTypes.put(linkedArchetypes.getClassIndex().addClass(C2.class), C2.class);
-                node = linkedArchetypes.new Node(cTypes);
+                cTypes.put(linkedCombinations.getClassIndex().addClass(C2.class), C2.class);
+                node = linkedCombinations.new Node(cTypes);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
                 Assertions.assertTrue(node.hasComponentType(C2.class));
             }
@@ -91,11 +91,11 @@ class LinkedCombinationTest {
 
         @Test
         void toStringTest() {
-            try (LinkedCombinations linkedArchetypes = new LinkedCombinations()) {
+            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
                 SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-                cTypes.put(linkedArchetypes.getClassIndex().addClass(C1.class), C1.class);
-                cTypes.put(linkedArchetypes.getClassIndex().addClass(C2.class), C2.class);
-                LinkedCombinations.Node node = linkedArchetypes.new Node(cTypes);
+                cTypes.put(linkedCombinations.getClassIndex().addClass(C1.class), C1.class);
+                cTypes.put(linkedCombinations.getClassIndex().addClass(C2.class), C2.class);
+                LinkedCombinations.Node node = linkedCombinations.new Node(cTypes);
                 Assertions.assertEquals("C1,C2", node.toString());
             }
         }
