@@ -8,7 +8,7 @@ import java.util.concurrent.locks.StampedLock;
 
 public final class ClassIndex implements AutoCloseable {
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final static int INT_BYTES = 4;
+    private final static int INT_BYTES_SHIFT = 2;
     private static final int DEFAULT_HASH_BITS = 14;
     private static final int MAX_HASH_BITS = 24;
     private final StampedLock lock = new StampedLock();
@@ -32,9 +32,9 @@ public final class ClassIndex implements AutoCloseable {
     private long ensureCapacity(long address, int newCapacity) {
         long newAddress = address;
         if (newCapacity != capacity) {
-            newAddress = unsafe.reallocateMemory(address, (long) newCapacity * INT_BYTES);
+            newAddress = unsafe.reallocateMemory(address, (long) newCapacity << INT_BYTES_SHIFT);
         }
-        unsafe.setMemory(newAddress, (long) newCapacity * INT_BYTES, (byte) 0);
+        unsafe.setMemory(newAddress, (long) newCapacity << INT_BYTES_SHIFT, (byte) 0);
         capacity = newCapacity;
         return newAddress;
     }
@@ -94,7 +94,7 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     private long getIdentityAddress(long identityHashCode) {
-        return address + identityHashCode * INT_BYTES;
+        return address + (identityHashCode << INT_BYTES_SHIFT);
     }
 
     public int getHashBits() {

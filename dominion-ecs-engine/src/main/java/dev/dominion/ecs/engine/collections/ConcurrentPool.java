@@ -1,5 +1,9 @@
 package dev.dominion.ecs.engine.collections;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
@@ -9,48 +13,79 @@ import java.util.concurrent.locks.StampedLock;
  * <------------- 32 -------------><------------- 32 ------------->
  * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
  */
-public final class ConcurrentPool<T> {
-
+public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
     public static final int NUM_OF_PAGES_BIT_SIZE = 14;
     public static final int PAGE_CAPACITY_BIT_SIZE = 16;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
     public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
+    public static final long PAGE_INDEX_BIT_MASK_SHIFTED = (long) PAGE_INDEX_BIT_MASK << PAGE_CAPACITY_BIT_SIZE;
     public static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
     public static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
 
     @SuppressWarnings("unchecked")
-    private final Page<T>[] pages = new Page[NUM_OF_PAGES];
-    private final AtomicInteger pageIndex = new AtomicInteger(0);
+    private final LinkedPage<T>[] pages = new LinkedPage[NUM_OF_PAGES];
+    private final AtomicInteger pageIndex = new AtomicInteger(-1);
+    private final List<Tenant<T>> tenants = new ArrayList<>();
 
-    private Page<T> newPage(Tenant<T> owner) {
-        int id = pageIndex.getAndIncrement();
-        Page<T> newPage = new Page<>(id, owner.currentPage);
+    private LinkedPage<T> newPage(Tenant<T> owner) {
+        int id = pageIndex.incrementAndGet();
+        LinkedPage<T> newPage = new LinkedPage<>(id, owner.currentPage);
         return pages[id] = newPage;
     }
 
-    private Page<T> getPage(long id) {
+    private LinkedPage<T> getPage(long id) {
         int pageId = (int) ((id >> PAGE_CAPACITY_BIT_SIZE) & PAGE_INDEX_BIT_MASK);
         return pages[pageId];
     }
 
-    public Tenant<T> newTenant() {
-        return new Tenant<>(this);
+    public T getEntry(long id) {
+        return getPage(id).get(id);
     }
 
-    public static final class Tenant<T> {
+    public Tenant<T> newTenant() {
+        Tenant<T> newTenant = new Tenant<>(this);
+        tenants.add(newTenant);
+        return newTenant;
+    }
+
+    public int size() {
+        return Arrays.stream(pages)
+                .filter(Objects::nonNull)
+                .mapToInt(LinkedPage::size)
+//                .peek(System.out::println)
+                .sum();
+    }
+
+    @Override
+    public void close() {
+        tenants.forEach(Tenant::close);
+    }
+
+    public interface Identifiable {
+        long getId();
+
+        void setId(long id);
+    }
+
+    public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
-        private final long[] nextIds = new long[1 << 10];
-        private final AtomicInteger nextIdIndex = new AtomicInteger(0);
-        private Page<T> currentPage;
+        private final ConcurrentLongStack stack;
+        private LinkedPage<T> currentPage;
+        private long newId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
             currentPage = pool.newPage(this);
+            stack = new ConcurrentLongStack(1 << 16);
             nextId();
         }
 
         public long nextId() {
+            long returnValue = stack.pop();
+            if (returnValue != Long.MIN_VALUE) {
+                return returnValue;
+            }
             long stamp = lock.tryOptimisticRead();
             try {
                 for (; ; ) {
@@ -59,21 +94,12 @@ public final class ConcurrentPool<T> {
                         continue;
                     }
                     // possibly racy reads
-                    int i = nextIdIndex.get();
-                    long returnValue;
-                    if (i > 0) {
-                        returnValue = nextIds[i];
-                        if (nextIdIndex.compareAndSet(i, i - 1)) {
-                            return returnValue;
-                        }
-                        continue;
-                    }
-                    returnValue = nextIds[i];
-                    int pageSize;
+                    returnValue = newId;
+                    int pageIndex;
                     if (currentPage.hasCapacity()) {
-                        pageSize = currentPage.getAndIncrementSize();
+                        pageIndex = currentPage.incrementIndex();
                         if (!lock.validate(stamp)) {
-                            currentPage.decrementSize();
+                            currentPage.decrementIndex();
                             stamp = lock.writeLock();
                             continue;
                         }
@@ -84,57 +110,116 @@ public final class ConcurrentPool<T> {
                             continue;
                         }
                         // exclusive access
-                        pageSize = (currentPage = pool.newPage(this)).getAndIncrementSize();
+                        pageIndex = (currentPage = pool.newPage(this)).incrementIndex();
                     }
-                    nextIds[i] = (pageSize & OBJECT_INDEX_BIT_MASK) |
+                    newId = (pageIndex & OBJECT_INDEX_BIT_MASK) |
                             (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
                     return returnValue;
                 }
             } finally {
-                if (StampedLock.isWriteLockStamp(stamp))
+                if (StampedLock.isWriteLockStamp(stamp)) {
                     lock.unlockWrite(stamp);
+                }
             }
         }
 
-        public void freeId(long id) {
-            nextIds[nextIdIndex.incrementAndGet()] = id;
+        public long freeId(long id) {
+            LinkedPage<T> page = pool.getPage(id);
+            if (page.isEmpty()) {
+                stack.push(id);
+                return id;
+            }
+            boolean notCurrentPage = page != currentPage;
+            int reusableId = page.remove(id, notCurrentPage);
+            if (notCurrentPage) {
+                stack.push((id & PAGE_INDEX_BIT_MASK_SHIFTED) | reusableId);
+            } else {
+                newId = reusableId;
+            }
+            return reusableId;
+        }
+
+        public T register(long id, T entry) {
+            return pool.getPage(id).set(id, entry);
+        }
+
+        public int currentPageSize() {
+            return currentPage.size();
+        }
+
+        public ConcurrentPool<T> getPool() {
+            return pool;
+        }
+
+        @Override
+        public void close() {
+            stack.close();
         }
     }
 
-    private static final class Page<T> {
-        private final Object[] data = new Object[PAGE_CAPACITY];
-        private final Page<T> previous;
+    public static final class LinkedPage<T extends Identifiable> {
+        private final Identifiable[] data = new Identifiable[PAGE_CAPACITY];
+        private final LinkedPage<T> previous;
         private final int id;
-        private final AtomicInteger size = new AtomicInteger(0);
+        private final AtomicInteger index = new AtomicInteger(-1);
 
-        public Page(int id, Page<T> previous) {
+        public LinkedPage(int id, LinkedPage<T> previous) {
             this.previous = previous;
             this.id = id;
         }
 
-        public int getAndIncrementSize() {
-            return size.getAndIncrement();
+        public int incrementIndex() {
+            return index.incrementAndGet();
         }
 
-        public void decrementSize() {
-            size.decrementAndGet();
+        public int decrementIndex() {
+            return index.decrementAndGet();
+        }
+
+        public int remove(long id, boolean doNotUpdateIndex) {
+            int indexToBeReused = (int) id & OBJECT_INDEX_BIT_MASK;
+            for (; ; ) {
+                int lastIndex = doNotUpdateIndex ? index.get() : index.decrementAndGet();
+                if (lastIndex >= PAGE_CAPACITY) {
+                    index.compareAndSet(PAGE_CAPACITY, PAGE_CAPACITY - 1);
+                    continue;
+                }
+                if (lastIndex < 0) {
+                    return 0;
+                }
+                data[indexToBeReused] = data[lastIndex];
+                data[lastIndex] = null;
+                if (data[indexToBeReused] != null) {
+                    data[indexToBeReused].setId(indexToBeReused);
+                }
+                return lastIndex;
+            }
         }
 
         @SuppressWarnings("unchecked")
-        public T get(int key) {
-            return (T) data[key];
+        public T get(long id) {
+            return (T) data[(int) id & OBJECT_INDEX_BIT_MASK];
         }
 
-        public void set(int key, T value) {
-            data[key] = value;
+        @SuppressWarnings("unchecked")
+        public T set(long id, T value) {
+            return (T) (data[(int) id & OBJECT_INDEX_BIT_MASK] = value);
         }
 
         public boolean hasCapacity() {
-            return size.get() < data.length;
+            return index.get() < PAGE_CAPACITY - 1;
         }
 
-        public Page<T> getPrevious() {
+        public LinkedPage<T> getPrevious() {
             return previous;
+        }
+
+        public int size() {
+            return index.get() + 1;
+        }
+
+        public boolean isEmpty() {
+            return size() == 0;
         }
     }
 }

@@ -47,7 +47,6 @@ public class DominionTest {
 
         @Override
         public void close() {
-
         }
     }
 }
