@@ -79,7 +79,7 @@ class ConcurrentPoolTest {
         public void concurrentIds() throws InterruptedException {
             ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
             try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-                final int capacity = 1 << 22;
+                final int capacity = 1 << 20;
                 final ExecutorService pool = Executors.newFixedThreadPool(4);
                 int removed = 0;
                 for (int i = 0; i < capacity; i++) {

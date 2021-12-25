@@ -9,24 +9,24 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class LinkedCombinations implements AutoCloseable {
+public final class LinkedCompositions implements AutoCloseable {
 
     private final ClassIndex classIndex = new ClassIndex();
     private final ConcurrentPool<LongEntity> pool = new ConcurrentPool<>();
     private final Node root;
 
-    public LinkedCombinations() {
+    public LinkedCompositions() {
         root = new Node(null);
-        root.combination = new Combination(pool.newTenant());
+        root.composition = new Composition(pool.newTenant());
     }
 
     @SafeVarargs
-    public final Combination createOrGet(Class<? extends Component>... componentTypes) {
+    public final Composition createOrGet(Class<? extends Component>... componentTypes) {
         if (componentTypes.length == 0) {
-            return root.combination;
+            return root.composition;
         }
         traverseNode(root, componentTypes);
-        return new Combination(pool.newTenant(), componentTypes);
+        return new Composition(pool.newTenant(), componentTypes);
     }
 
     private void traverseNode(Node currentNode, Class<? extends Component>[] componentTypes) {
@@ -38,7 +38,7 @@ public final class LinkedCombinations implements AutoCloseable {
     }
 
     @SafeVarargs
-    public final Set<Combination> query(Class<? extends Component>... componentTypes) {
+    public final Set<Composition> query(Class<? extends Component>... componentTypes) {
         return null;
     }
 
@@ -60,7 +60,7 @@ public final class LinkedCombinations implements AutoCloseable {
     public final class Node {
         private final SparseIntMap<Class<? extends Component>> componentTypes;
         private final SparseIntMap<Node> links = new ConcurrentIntMap<>();
-        private Combination combination;
+        private Composition composition;
 
         public Node(SparseIntMap<Class<? extends Component>> componentTypes) {
             this.componentTypes = componentTypes;

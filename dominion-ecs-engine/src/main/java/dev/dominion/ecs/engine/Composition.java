@@ -4,12 +4,12 @@ import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 
 @SuppressWarnings("ClassCanBeRecord")
-public final class Combination {
+public final class Composition {
     private final Class<? extends Component>[] componentTypes;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
 
     @SafeVarargs
-    public Combination(ConcurrentPool.Tenant<LongEntity> tenant, Class<? extends Component>... componentTypes) {
+    public Composition(ConcurrentPool.Tenant<LongEntity> tenant, Class<? extends Component>... componentTypes) {
         this.tenant = tenant;
         this.componentTypes = componentTypes;
     }

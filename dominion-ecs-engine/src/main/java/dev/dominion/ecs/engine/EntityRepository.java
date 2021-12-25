@@ -6,12 +6,12 @@ import dev.dominion.ecs.api.Entity;
 
 public class EntityRepository implements Dominion {
 
-    private final LinkedCombinations combinations = new LinkedCombinations();
+    private final LinkedCompositions compositions = new LinkedCompositions();
 
     @Override
     public Entity createEntity(Component... components) {
         if (components.length == 0) {
-            return combinations.createOrGet().createEntity();
+            return compositions.createOrGet().createEntity();
         }
         return null;
     }

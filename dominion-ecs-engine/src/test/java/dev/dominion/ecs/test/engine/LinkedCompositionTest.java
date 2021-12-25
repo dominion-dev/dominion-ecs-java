@@ -1,7 +1,7 @@
 package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Component;
-import dev.dominion.ecs.engine.LinkedCombinations;
+import dev.dominion.ecs.engine.LinkedCompositions;
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 import org.junit.jupiter.api.Assertions;
@@ -9,14 +9,14 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 
-class LinkedCombinationTest {
+class LinkedCompositionTest {
 
     @Test
     void createOrGetWith1Component() {
-        try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
-            linkedCombinations.createOrGet(C1.class);
-            LinkedCombinations.Node root = linkedCombinations.getRoot();
-            LinkedCombinations.Node link = root.getLink(C1.class);
+        try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
+            linkedCompositions.createOrGet(C1.class);
+            LinkedCompositions.Node root = linkedCompositions.getRoot();
+            LinkedCompositions.Node link = root.getLink(C1.class);
             Assertions.assertNotNull(link);
             Assertions.assertTrue(link.hasComponentType(C1.class));
             Assertions.assertFalse(link.hasComponentType(C2.class));
@@ -25,16 +25,16 @@ class LinkedCombinationTest {
 
     @Test
     void createOrGetWith2Component() {
-        try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
-            linkedCombinations.createOrGet(C1.class, C2.class);
-            LinkedCombinations.Node root = linkedCombinations.getRoot();
+        try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
+            linkedCompositions.createOrGet(C1.class, C2.class);
+            LinkedCompositions.Node root = linkedCompositions.getRoot();
 
-            LinkedCombinations.Node c1Link = root.getLink(C1.class);
+            LinkedCompositions.Node c1Link = root.getLink(C1.class);
             Assertions.assertNotNull(c1Link);
             Assertions.assertTrue(c1Link.hasComponentType(C1.class));
             Assertions.assertFalse(c1Link.hasComponentType(C2.class));
 
-            LinkedCombinations.Node c2Link = root.getLink(C2.class);
+            LinkedCompositions.Node c2Link = root.getLink(C2.class);
             Assertions.assertNotNull(c2Link);
             Assertions.assertTrue(c2Link.hasComponentType(C2.class));
             Assertions.assertFalse(c2Link.hasComponentType(C1.class));
@@ -57,18 +57,18 @@ class LinkedCombinationTest {
 
         @Test
         void createOrGetLink() {
-            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedCombinations.new Node(null);
+            try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
+                LinkedCompositions.Node node = linkedCompositions.new Node(null);
                 node.createOrGetLink(C1.class);
-                Assertions.assertTrue(linkedCombinations.getClassIndex().getIndex(C1.class) > 0);
+                Assertions.assertTrue(linkedCompositions.getClassIndex().getIndex(C1.class) > 0);
                 Assertions.assertFalse(node.getLinks().isEmpty());
             }
         }
 
         @Test
         void getLink() {
-            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedCombinations.new Node(null);
+            try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
+                LinkedCompositions.Node node = linkedCompositions.new Node(null);
                 Assertions.assertNull(node.getLink(C1.class));
                 node.createOrGetLink(C1.class);
                 Assertions.assertNotNull(node.getLink(C1.class));
@@ -77,13 +77,13 @@ class LinkedCombinationTest {
 
         @Test
         void hasComponentType() {
-            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
-                LinkedCombinations.Node node = linkedCombinations.new Node(null);
+            try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
+                LinkedCompositions.Node node = linkedCompositions.new Node(null);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
 
                 SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-                cTypes.put(linkedCombinations.getClassIndex().addClass(C2.class), C2.class);
-                node = linkedCombinations.new Node(cTypes);
+                cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
+                node = linkedCompositions.new Node(cTypes);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
                 Assertions.assertTrue(node.hasComponentType(C2.class));
             }
@@ -91,11 +91,11 @@ class LinkedCombinationTest {
 
         @Test
         void toStringTest() {
-            try (LinkedCombinations linkedCombinations = new LinkedCombinations()) {
+            try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
                 SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-                cTypes.put(linkedCombinations.getClassIndex().addClass(C1.class), C1.class);
-                cTypes.put(linkedCombinations.getClassIndex().addClass(C2.class), C2.class);
-                LinkedCombinations.Node node = linkedCombinations.new Node(cTypes);
+                cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
+                cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
+                LinkedCompositions.Node node = linkedCompositions.new Node(cTypes);
                 Assertions.assertEquals("C1,C2", node.toString());
             }
         }
