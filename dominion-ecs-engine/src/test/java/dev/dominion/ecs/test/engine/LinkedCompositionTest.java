@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 class LinkedCompositionTest {
 
     @Test
-    void createOrGetWith1Component() {
+    void getOrCreateWith1Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            linkedCompositions.createOrGet(C1.class);
+            linkedCompositions.getOrCreate(C1.class);
             LinkedCompositions.Node root = linkedCompositions.getRoot();
             LinkedCompositions.Node link = root.getLink(C1.class);
             Assertions.assertNotNull(link);
@@ -24,9 +24,9 @@ class LinkedCompositionTest {
     }
 
     @Test
-    void createOrGetWith2Component() {
+    void getOrCreateWith2Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            linkedCompositions.createOrGet(C1.class, C2.class);
+            linkedCompositions.getOrCreate(C1.class, C2.class);
             LinkedCompositions.Node root = linkedCompositions.getRoot();
 
             LinkedCompositions.Node c1Link = root.getLink(C1.class);
@@ -56,10 +56,10 @@ class LinkedCompositionTest {
     public class NodeTest {
 
         @Test
-        void createOrGetLink() {
+        void getOrCreateLink() {
             try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
                 LinkedCompositions.Node node = linkedCompositions.new Node(null);
-                node.createOrGetLink(C1.class);
+                node.getOrCreateLink(C1.class);
                 Assertions.assertTrue(linkedCompositions.getClassIndex().getIndex(C1.class) > 0);
                 Assertions.assertFalse(node.getLinks().isEmpty());
             }
@@ -70,7 +70,7 @@ class LinkedCompositionTest {
             try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
                 LinkedCompositions.Node node = linkedCompositions.new Node(null);
                 Assertions.assertNull(node.getLink(C1.class));
-                node.createOrGetLink(C1.class);
+                node.getOrCreateLink(C1.class);
                 Assertions.assertNotNull(node.getLink(C1.class));
             }
         }

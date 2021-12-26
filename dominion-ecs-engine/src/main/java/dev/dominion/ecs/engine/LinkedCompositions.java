@@ -6,13 +6,16 @@ import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 import dev.dominion.ecs.engine.system.ClassIndex;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public final class LinkedCompositions implements AutoCloseable {
 
     private final ClassIndex classIndex = new ClassIndex();
     private final ConcurrentPool<LongEntity> pool = new ConcurrentPool<>();
+    private final NodeCache nodeCache = new NodeCache();
     private final Node root;
 
     public LinkedCompositions() {
@@ -21,7 +24,7 @@ public final class LinkedCompositions implements AutoCloseable {
     }
 
     @SafeVarargs
-    public final Composition createOrGet(Class<? extends Component>... componentTypes) {
+    public final Composition getOrCreate(Class<? extends Component>... componentTypes) {
         if (componentTypes.length == 0) {
             return root.composition;
         }
@@ -32,7 +35,7 @@ public final class LinkedCompositions implements AutoCloseable {
     private void traverseNode(Node currentNode, Class<? extends Component>[] componentTypes) {
         for (Class<? extends Component> componentType : componentTypes) {
             if (currentNode.hasComponentType(componentType)) continue;
-            Node node = currentNode.createOrGetLink(componentType);
+            Node node = currentNode.getOrCreateLink(componentType);
             traverseNode(node, componentTypes);
         }
     }
@@ -57,6 +60,22 @@ public final class LinkedCompositions implements AutoCloseable {
         pool.close();
     }
 
+    public final class NodeCache {
+        private final Map<Long, Node> data = new ConcurrentHashMap<>();
+
+        public static long componentTypesHashCode(SparseIntMap<Class<? extends Component>> componentTypes) {
+            return componentTypes.keysStream()
+                    .sorted()
+                    .reduce(0, (sum, hashCode) -> 31 * sum + hashCode);
+        }
+
+        public Node getOrCreateNode(SparseIntMap<Class<? extends Component>> componentTypes) {
+            long key = componentTypesHashCode(componentTypes);
+
+            return data.computeIfAbsent(key, k -> new Node(componentTypes));
+        }
+    }
+
     public final class Node {
         private final SparseIntMap<Class<? extends Component>> componentTypes;
         private final SparseIntMap<Node> links = new ConcurrentIntMap<>();
@@ -66,7 +85,7 @@ public final class LinkedCompositions implements AutoCloseable {
             this.componentTypes = componentTypes;
         }
 
-        public Node createOrGetLink(Class<? extends Component> componentType) {
+        public Node getOrCreateLink(Class<? extends Component> componentType) {
             int key = classIndex.addClass(componentType);
             return links.computeIfAbsent(key,
                     k -> {
@@ -74,7 +93,7 @@ public final class LinkedCompositions implements AutoCloseable {
                                 new ConcurrentIntMap<Class<? extends Component>>() :
                                 componentTypes.clone();
                         cTypes.put(k, componentType);
-                        return new Node(cTypes);
+                        return nodeCache.getOrCreateNode(cTypes);
                     });
         }
 
