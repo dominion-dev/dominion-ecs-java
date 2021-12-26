@@ -122,6 +122,12 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
                 .boxed();
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public V[] values() {
+        return (V[]) values;
+    }
+
     @Override
     public int getCapacity() {
         return capacity;
