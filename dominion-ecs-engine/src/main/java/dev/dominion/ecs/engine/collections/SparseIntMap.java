@@ -22,6 +22,8 @@ public interface SparseIntMap<V> extends Cloneable {
 
     Stream<V> stream();
 
+    Stream<Integer> keysStream();
+
     int getCapacity();
 
     SparseIntMap<V> clone();
@@ -77,6 +79,11 @@ public interface SparseIntMap<V> extends Cloneable {
         @Override
         public Stream<V> stream() {
             return subject.stream();
+        }
+
+        @Override
+        public Stream<Integer> keysStream() {
+            return subject.keysStream();
         }
 
         @Override

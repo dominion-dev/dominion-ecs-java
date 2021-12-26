@@ -6,6 +6,7 @@ import java.util.Spliterators;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -106,6 +107,13 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     @Override
     public Stream<V> stream() {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED), false);
+    }
+
+    @Override
+    public Stream<Integer> keysStream() {
+        return IntStream.of(dense)
+                .limit(size.get())
+                .boxed();
     }
 
     @Override
