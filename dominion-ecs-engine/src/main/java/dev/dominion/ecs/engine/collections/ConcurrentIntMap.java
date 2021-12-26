@@ -64,22 +64,28 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     @Override
     public V computeIfAbsent(int key, Function<Integer, ? extends V> mappingFunction) {
         V value;
-        long stamp = lock.readLock();
+        long stamp = lock.tryOptimisticRead();
         try {
-            while ((value = get(key)) == null) {
-                long ws = lock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    put(key, value = mappingFunction.apply(key));
+            for (; ; stamp = lock.writeLock()) {
+                if (stamp == 0L)
+                    continue;
+                // possibly racy reads
+                value = get(key);
+                if (!lock.validate(stamp))
+                    continue;
+                if (value != null)
                     break;
-                } else {
-                    lock.unlockRead(stamp);
-                    stamp = lock.writeLock();
-                }
+                stamp = lock.tryConvertToWriteLock(stamp);
+                if (stamp == 0L)
+                    continue;
+                // exclusive access
+                put(key, value = mappingFunction.apply(key));
+                break;
             }
             return value;
         } finally {
-            lock.unlock(stamp);
+            if (StampedLock.isWriteLockStamp(stamp))
+                lock.unlockWrite(stamp);
         }
     }
 

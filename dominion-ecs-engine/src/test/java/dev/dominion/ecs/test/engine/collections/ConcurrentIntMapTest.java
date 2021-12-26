@@ -60,6 +60,20 @@ class ConcurrentIntMapTest {
     }
 
     @Test
+    public void concurrentComputeIfNull() throws InterruptedException {
+        final int capacity = 1 << 22;
+        SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>(capacity);
+        final ExecutorService pool = Executors.newFixedThreadPool(8);
+        for (int i = 0; i < capacity; i++) {
+            int finalI = i;
+            pool.execute(() -> concurrentIntMap.computeIfAbsent(finalI, k -> finalI));
+        }
+        pool.shutdown();
+        Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
+        Assertions.assertEquals(capacity, concurrentIntMap.size());
+    }
+
+    @Test
     public void cloneTest() {
         SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
         Assertions.assertTrue(concurrentIntMap.isEmpty());
