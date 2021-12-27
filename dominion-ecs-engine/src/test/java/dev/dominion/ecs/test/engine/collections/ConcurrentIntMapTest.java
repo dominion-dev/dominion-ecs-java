@@ -113,6 +113,5 @@ class ConcurrentIntMapTest {
         map2.put(2, 0);
         map2.put(1, 0);
         Assertions.assertEquals(map2.sortedKeysHashCode(), map1.sortedKeysHashCode());
-        System.out.println(map1.sortedKeysHashCode());
     }
 }

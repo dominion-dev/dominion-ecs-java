@@ -1,7 +1,8 @@
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.system.HashCode;
+
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -135,12 +136,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
         int length = size();
         int[] keys = new int[length];
         System.arraycopy(dense, 0, keys, 0, length);
-        Arrays.sort(keys);
-        long hashCode = 0;
-        for (int i = 0; i < length; i++) {
-            hashCode = 31 * hashCode + keys[i];
-        }
-        keysHashCode = hashCode;
+        keysHashCode = HashCode.sortedInputHashCode(keys);
         isKeysHashCodeValid.set(true);
         return keysHashCode;
     }
