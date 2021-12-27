@@ -20,6 +20,11 @@ class LinkedCompositionTest {
             Assertions.assertNotNull(link);
             Assertions.assertTrue(link.hasComponentType(C1.class));
             Assertions.assertFalse(link.hasComponentType(C2.class));
+
+            SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
+            cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
+            Assertions.assertTrue(linkedCompositions.getNodeCache()
+                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
         }
     }
 
@@ -38,6 +43,14 @@ class LinkedCompositionTest {
             Assertions.assertNotNull(c2Link);
             Assertions.assertTrue(c2Link.hasComponentType(C2.class));
             Assertions.assertFalse(c2Link.hasComponentType(C1.class));
+
+            SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
+            cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
+            Assertions.assertTrue(linkedCompositions.getNodeCache()
+                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
+            cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
+            Assertions.assertTrue(linkedCompositions.getNodeCache()
+                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
         }
     }
 

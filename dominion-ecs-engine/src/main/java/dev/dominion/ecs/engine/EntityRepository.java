@@ -31,6 +31,6 @@ public class EntityRepository implements Dominion {
 
     @Override
     public void close() {
-
+        compositions.close();
     }
 }
