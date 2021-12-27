@@ -1,6 +1,5 @@
 package dev.dominion.ecs.engine.collections;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -91,7 +90,7 @@ public interface SparseIntMap<V> extends Cloneable {
 
         @Override
         public V[] values() {
-            return Arrays.copyOf(subject.values(), subject.size());
+            return subject.values();
         }
 
         @Override

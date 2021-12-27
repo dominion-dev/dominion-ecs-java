@@ -1,5 +1,6 @@
 package dev.dominion.ecs.engine.collections;
 
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -122,10 +123,16 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
                 .boxed();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
     @Override
     public V[] values() {
-        return (V[]) values;
+        if (isEmpty()) {
+            return null;
+        }
+        int length = size.get();
+        V[] target = (V[]) Array.newInstance(values[0].getClass(), length);
+        System.arraycopy(values, 0, target, 0, length);
+        return target;
     }
 
     @Override

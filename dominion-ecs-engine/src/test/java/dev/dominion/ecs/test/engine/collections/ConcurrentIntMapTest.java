@@ -85,6 +85,14 @@ class ConcurrentIntMapTest {
         concurrentIntMap.put(1, 1);
         Assertions.assertEquals(1, concurrentIntMap.get(1));
         Assertions.assertNull(cloned.get(1));
+    }
 
+    @Test
+    public void values() {
+        SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
+        concurrentIntMap.put(0, 10);
+        concurrentIntMap.put(1, 11);
+        Integer[] values = concurrentIntMap.values();
+        Assertions.assertArrayEquals(new Integer[]{10, 11}, values);
     }
 }
