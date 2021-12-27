@@ -24,7 +24,7 @@ class LinkedCompositionTest {
             SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
             cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
+                    .contains(cTypes.sortedKeysHashCode()));
         }
     }
 
@@ -47,10 +47,10 @@ class LinkedCompositionTest {
             SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
             cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
+                    .contains(cTypes.sortedKeysHashCode()));
             cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(LinkedCompositions.NodeCache.longHashCode(cTypes.keysStream())));
+                    .contains(cTypes.sortedKeysHashCode()));
         }
     }
 
