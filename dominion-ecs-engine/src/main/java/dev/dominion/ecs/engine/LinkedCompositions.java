@@ -5,14 +5,13 @@ import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.HashCode;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class LinkedCompositions implements AutoCloseable {
 
@@ -38,9 +37,7 @@ public final class LinkedCompositions implements AutoCloseable {
                 }
                 return link.getOrCreateComposition();
             default:
-                long hashCode = NodeCache.longHashCode(
-                        Arrays.stream(componentTypes).map(classIndex::getIndexOrAddClass)
-                );
+                long hashCode = HashCode.sortedInputHashCode(classIndex.getIndexOrAddClassBatch(componentTypes));
                 link = nodeCache.getNode(hashCode);
                 if (link == null) {
                     traverseNode(root, componentTypes);
@@ -84,11 +81,11 @@ public final class LinkedCompositions implements AutoCloseable {
     public final class NodeCache {
         private final Map<Long, Node> data = new ConcurrentHashMap<>();
 
-        public static long longHashCode(Stream<Integer> ints) {
-            return ints
-                    .sorted()
-                    .reduce(0, (sum, hashCode) -> 31 * sum + hashCode);
-        }
+//        public static long longHashCode(Stream<Integer> ints) {
+//            return ints
+//                    .sorted()
+//                    .reduce(0, (sum, hashCode) -> 31 * sum + hashCode);
+//        }
 
         public Node getNode(long key) {
             return data.get(key);
