@@ -18,14 +18,17 @@ public class DominionTest {
 
     @Test
     void createEntity() {
+        Assertions.assertNull(Dominion.init("MockDominion").createEntity());
     }
 
     @Test
     void createEntityAs() {
+        Assertions.assertNull(Dominion.init("MockDominion").createEntityAs(null));
     }
 
     @Test
     void destroyEntity() {
+        Assertions.assertFalse(Dominion.init("MockDominion").destroyEntity(null));
     }
 
     public static class MockDominion implements Dominion {
