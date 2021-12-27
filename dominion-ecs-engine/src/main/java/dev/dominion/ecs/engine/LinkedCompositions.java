@@ -95,7 +95,7 @@ public final class LinkedCompositions implements AutoCloseable {
         }
 
         public Node getOrCreateNode(SparseIntMap<Class<? extends Component>> componentTypes) {
-            long key = longHashCode(componentTypes.keysStream());
+            long key = componentTypes.sortedKeysHashCode();
             return data.computeIfAbsent(key, k -> new Node(componentTypes));
         }
 

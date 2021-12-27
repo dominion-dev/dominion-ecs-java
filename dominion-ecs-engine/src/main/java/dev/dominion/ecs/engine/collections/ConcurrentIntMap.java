@@ -1,9 +1,11 @@
 package dev.dominion.ecs.engine.collections;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
@@ -12,13 +14,14 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
-
     private final int[] dense;
     private final int[] sparse;
     private final Object[] values;
     private final StampedLock lock = new StampedLock();
     private final int capacity;
-    private AtomicInteger size = new AtomicInteger(0);
+    private final AtomicInteger size = new AtomicInteger(0);
+    private final AtomicBoolean isKeysHashCodeValid = new AtomicBoolean(false);
+    private long keysHashCode;
 
     private ConcurrentIntMap(int[] dense, int[] sparse, Object[] values) {
         this.dense = dense;
@@ -46,6 +49,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
         dense[i] = key;
         sparse[key] = i;
         values[i] = value;
+        isKeysHashCodeValid.set(false);
         return current;
     }
 
@@ -124,6 +128,23 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
                 .boxed();
     }
 
+    public long sortedKeysHashCode() {
+        if (isKeysHashCodeValid.get()) {
+            return keysHashCode;
+        }
+        int length = size();
+        int[] keys = new int[length];
+        System.arraycopy(dense, 0, keys, 0, length);
+        Arrays.sort(keys);
+        long hashCode = 0;
+        for (int i = 0; i < length; i++) {
+            hashCode = 31 * hashCode + keys[i];
+        }
+        keysHashCode = hashCode;
+        isKeysHashCodeValid.set(true);
+        return keysHashCode;
+    }
+
     @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
     @Override
     public V[] values() {
@@ -151,7 +172,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
         System.arraycopy(sparse, 0, newSparse, 0, capacity);
         System.arraycopy(values, 0, newValues, 0, capacity);
         ConcurrentIntMap<V> cloned = new ConcurrentIntMap<>(newDense, newSparse, newValues);
-        cloned.size = size;
+        cloned.size.set(size.get());
         return cloned;
     }
 }
