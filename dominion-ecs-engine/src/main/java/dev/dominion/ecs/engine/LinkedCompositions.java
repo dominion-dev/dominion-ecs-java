@@ -32,13 +32,15 @@ public final class LinkedCompositions implements AutoCloseable {
             case 0:
                 return root.composition;
             case 1:
-                Node link = root.getLink(componentTypes[0]);
+                Node link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
                 if (link == null) {
                     link = root.getOrCreateLink(componentTypes[0]);
                 }
                 return link.getOrCreateComposition();
             default:
-                long hashCode = NodeCache.longHashCode(Arrays.stream(componentTypes).map(classIndex::addClass));
+                long hashCode = NodeCache.longHashCode(
+                        Arrays.stream(componentTypes).map(classIndex::getIndexOrAddClass)
+                );
                 link = nodeCache.getNode(hashCode);
                 if (link == null) {
                     traverseNode(root, componentTypes);
@@ -113,7 +115,7 @@ public final class LinkedCompositions implements AutoCloseable {
         }
 
         public Node getOrCreateLink(Class<? extends Component> componentType) {
-            int key = classIndex.addClass(componentType);
+            int key = classIndex.getIndexOrAddClass(componentType);
             return links.computeIfAbsent(key,
                     k -> {
                         var cTypes = componentTypes == null ?
@@ -124,10 +126,13 @@ public final class LinkedCompositions implements AutoCloseable {
                     });
         }
 
-        public Node getLink(Class<? extends Component> componentType) {
-            int key = classIndex.getIndex(componentType);
+        public Node getLink(int key) {
             if (key == 0) return null;
             return links.get(key);
+        }
+
+        public Node getLink(Class<? extends Component> componentType) {
+            return getLink(classIndex.getIndex(componentType));
         }
 
         public SparseIntMap<Node> getLinks() {

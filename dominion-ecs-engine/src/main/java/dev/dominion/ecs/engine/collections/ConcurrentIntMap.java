@@ -85,8 +85,9 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
             }
             return value;
         } finally {
-            if (StampedLock.isWriteLockStamp(stamp))
+            if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
+            }
         }
     }
 
