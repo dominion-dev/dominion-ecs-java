@@ -1,9 +1,11 @@
 package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Component;
+import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.LinkedCompositions;
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
+import dev.dominion.ecs.engine.system.HashCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,43 +16,51 @@ class LinkedCompositionTest {
     @Test
     void getOrCreateWith1Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            linkedCompositions.getOrCreate(C1.class);
+            Composition composition = linkedCompositions.getOrCreate(C1.class);
+            Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             LinkedCompositions.Node root = linkedCompositions.getRoot();
             LinkedCompositions.Node link = root.getLink(C1.class);
             Assertions.assertNotNull(link);
             Assertions.assertTrue(link.hasComponentType(C1.class));
             Assertions.assertFalse(link.hasComponentType(C2.class));
 
-            SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-            cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(cTypes.sortedKeysHashCode()));
+                    .contains(HashCode.sortedInputHashCode(new int[]{
+                            linkedCompositions.getClassIndex().getIndex(C1.class)
+                    })));
         }
     }
 
     @Test
     void getOrCreateWith2Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            linkedCompositions.getOrCreate(C1.class, C2.class);
-            LinkedCompositions.Node root = linkedCompositions.getRoot();
+            Composition composition = linkedCompositions.getOrCreate(C1.class, C2.class);
+            Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
 
+            LinkedCompositions.Node root = linkedCompositions.getRoot();
             LinkedCompositions.Node c1Link = root.getLink(C1.class);
             Assertions.assertNotNull(c1Link);
             Assertions.assertTrue(c1Link.hasComponentType(C1.class));
             Assertions.assertFalse(c1Link.hasComponentType(C2.class));
+            Assertions.assertNull(c1Link.getComposition());
 
             LinkedCompositions.Node c2Link = root.getLink(C2.class);
             Assertions.assertNotNull(c2Link);
             Assertions.assertTrue(c2Link.hasComponentType(C2.class));
             Assertions.assertFalse(c2Link.hasComponentType(C1.class));
+            Assertions.assertNull(c2Link.getComposition());
 
-            SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
-            cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
+            LinkedCompositions.Node c1c2Link = c1Link.getLink(C2.class);
+            Assertions.assertNotNull(c1c2Link);
+            Assertions.assertTrue(c1c2Link.hasComponentType(C2.class));
+            Assertions.assertTrue(c1c2Link.hasComponentType(C1.class));
+            Assertions.assertNotNull(c1c2Link.getComposition());
+
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(cTypes.sortedKeysHashCode()));
-            cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
-            Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(cTypes.sortedKeysHashCode()));
+                    .contains(HashCode.sortedInputHashCode(new int[]{
+                            linkedCompositions.getClassIndex().getIndex(C1.class)
+                            , linkedCompositions.getClassIndex().getIndex(C2.class)
+                    })));
         }
     }
 

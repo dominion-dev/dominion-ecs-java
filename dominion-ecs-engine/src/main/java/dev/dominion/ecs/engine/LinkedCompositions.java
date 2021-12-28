@@ -81,12 +81,6 @@ public final class LinkedCompositions implements AutoCloseable {
     public final class NodeCache {
         private final Map<Long, Node> data = new ConcurrentHashMap<>();
 
-//        public static long longHashCode(Stream<Integer> ints) {
-//            return ints
-//                    .sorted()
-//                    .reduce(0, (sum, hashCode) -> 31 * sum + hashCode);
-//        }
-
         public Node getNode(long key) {
             return data.get(key);
         }
@@ -177,6 +171,10 @@ public final class LinkedCompositions implements AutoCloseable {
         public boolean hasComponentType(Class<? extends Component> componentType) {
             return componentTypes != null
                     && componentTypes.contains(classIndex.getIndex(componentType));
+        }
+
+        public Composition getComposition() {
+            return composition;
         }
     }
 }

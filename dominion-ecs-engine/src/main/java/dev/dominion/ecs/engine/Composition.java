@@ -23,4 +23,8 @@ public final class Composition {
         }
         return entity;
     }
+
+    public Class<? extends Component>[] getComponentTypes() {
+        return componentTypes;
+    }
 }
