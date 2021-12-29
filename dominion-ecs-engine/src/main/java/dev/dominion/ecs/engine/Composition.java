@@ -16,15 +16,25 @@ public final class Composition {
 
     public LongEntity createEntity(Component... components) {
         long id = tenant.nextId();
-        LongEntity entity = (tenant.register(id, new LongEntity(id, tenant)));
+        LongEntity entity = (tenant.register(id, new LongEntity(id, this)));
         //noinspection StatementWithEmptyBody
         if (componentTypes.length > 0) {
-            //todo: store components
+
         }
         return entity;
     }
 
+    public boolean destroyEntity(LongEntity entity) {
+        tenant.freeId(entity.getId());
+        entity.setComposition(null);
+        return true;
+    }
+
     public Class<? extends Component>[] getComponentTypes() {
         return componentTypes;
+    }
+
+    public ConcurrentPool.Tenant<LongEntity> getTenant() {
+        return tenant;
     }
 }

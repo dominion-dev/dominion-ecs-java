@@ -15,7 +15,7 @@ class CompositionTest {
             Composition composition = new Composition(tenant);
             LongEntity entity = composition.createEntity();
             Assertions.assertNotNull(entity);
-            Assertions.assertEquals(tenant, entity.getTenant());
+            Assertions.assertEquals(composition, entity.getComposition());
             LongEntity entry = concurrentPool.getEntry(entity.getId());
             Assertions.assertNotNull(entry);
             Assertions.assertEquals(entity, entry);

@@ -1,5 +1,6 @@
 package dev.dominion.ecs.test.engine;
 
+import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.LongEntity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
@@ -12,17 +13,25 @@ class EntityRepositoryTest {
     void createEntity() {
         EntityRepository entityRepository = new EntityRepository();
         LongEntity entity = (LongEntity) entityRepository.createEntity();
-        Assertions.assertNotNull(entity.getTenant());
-        Assertions.assertEquals(entity.getTenant().getPool().getEntry(entity.getId()), entity);
+        Assertions.assertNotNull(entity.getComposition());
+        Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
+    }
+
+    @Test
+    void createEntityWith1Component() {
+        EntityRepository entityRepository = new EntityRepository();
+        LongEntity entity = (LongEntity) entityRepository.createEntity(new C1());
+        Assertions.assertNotNull(entity.getComposition());
+        Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
     }
 
     @Test
     void destroyEntity() {
         EntityRepository entityRepository = new EntityRepository();
         LongEntity entity = (LongEntity) entityRepository.createEntity();
-        ConcurrentPool<LongEntity> pool = entity.getTenant().getPool();
+        ConcurrentPool<LongEntity> pool = entity.getComposition().getTenant().getPool();
         entityRepository.destroyEntity(entity);
-        Assertions.assertNull(entity.getTenant());
+        Assertions.assertNull(entity.getComposition());
         Assertions.assertNull(pool.getEntry(entity.getId()));
     }
 
@@ -31,12 +40,15 @@ class EntityRepositoryTest {
         EntityRepository entityRepository = new EntityRepository();
         LongEntity entity1 = (LongEntity) entityRepository.createEntity();
         LongEntity entity2 = (LongEntity) entityRepository.createEntity();
-        ConcurrentPool<LongEntity> pool = entity1.getTenant().getPool();
+        ConcurrentPool<LongEntity> pool = entity1.getComposition().getTenant().getPool();
         long id1 = entity1.getId();
         long id2 = entity2.getId();
         entityRepository.destroyEntity(entity1);
         Assertions.assertNull(pool.getEntry(id2));
         Assertions.assertEquals(entity2, pool.getEntry(id1));
         Assertions.assertEquals(id1, entity2.getId());
+    }
+
+    private static class C1 implements Component {
     }
 }

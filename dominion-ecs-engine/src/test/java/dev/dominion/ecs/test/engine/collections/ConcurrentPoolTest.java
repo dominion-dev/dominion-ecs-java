@@ -23,7 +23,7 @@ class ConcurrentPoolTest {
     public void register() {
         ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
         try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-            LongEntity entry = new LongEntity(1, tenant);
+            LongEntity entry = new LongEntity(1, null);
             Assertions.assertEquals(entry, tenant.register(1, entry));
             Assertions.assertEquals(entry, concurrentPool.getEntry(1));
         }

@@ -10,10 +10,11 @@ public class EntityRepository implements Dominion {
 
     @Override
     public Entity createEntity(Component... components) {
-        if (components.length == 0) {
-            return compositions.getOrCreate().createEntity();
-        }
-        return null;
+        return switch (components.length) {
+            case 0 -> compositions.getOrCreate().createEntity();
+            case 1 -> compositions.getOrCreate(components[0].getClass()).createEntity(components[0]);
+            default -> null;
+        };
     }
 
     @Override
@@ -24,9 +25,7 @@ public class EntityRepository implements Dominion {
     @Override
     public boolean destroyEntity(Entity entity) {
         LongEntity longEntity = (LongEntity) entity;
-        longEntity.getTenant().freeId(longEntity.getId());
-        longEntity.setTenant(null);
-        return true;
+        return longEntity.getComposition().destroyEntity(longEntity);
     }
 
     @Override
