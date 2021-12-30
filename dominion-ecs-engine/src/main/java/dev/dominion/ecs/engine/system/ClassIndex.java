@@ -89,6 +89,42 @@ public final class ClassIndex implements AutoCloseable {
         return unsafe.getInt(getIdentityAddress(identityHashCode));
     }
 
+    public int getIndexOrAddClass(Class<?> klass) {
+        int value;
+        long stamp = lock.tryOptimisticRead();
+        try {
+            for (; ; stamp = lock.writeLock()) {
+                if (stamp == 0L)
+                    continue;
+                // possibly racy reads
+                value = getIndex(klass);
+                if (!lock.validate(stamp))
+                    continue;
+                if (value != 0)
+                    break;
+                stamp = lock.tryConvertToWriteLock(stamp);
+                if (stamp == 0L)
+                    continue;
+                // exclusive access
+                value = add(klass);
+                break;
+            }
+            return value;
+        } finally {
+            if (StampedLock.isWriteLockStamp(stamp)) {
+                lock.unlockWrite(stamp);
+            }
+        }
+    }
+
+    public int[] getIndexOrAddClassBatch(Class<?>[] classes) {
+        int[] indexes = new int[classes.length];
+        for (int i = 0; i < classes.length; i++) {
+            indexes[i] = getIndexOrAddClass(classes[i]);
+        }
+        return indexes;
+    }
+
     private int getIdentityHashCode(Class<?> klass, int hashBits) {
         return System.identityHashCode(klass) >> (32 - hashBits);
     }

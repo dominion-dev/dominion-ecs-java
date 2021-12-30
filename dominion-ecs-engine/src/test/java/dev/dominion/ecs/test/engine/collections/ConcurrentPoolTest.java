@@ -23,7 +23,7 @@ class ConcurrentPoolTest {
     public void register() {
         ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
         try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-            LongEntity entry = new LongEntity(1, tenant);
+            LongEntity entry = new LongEntity(1, null);
             Assertions.assertEquals(entry, tenant.register(1, entry));
             Assertions.assertEquals(entry, concurrentPool.getEntry(1));
         }
@@ -79,8 +79,8 @@ class ConcurrentPoolTest {
         public void concurrentIds() throws InterruptedException {
             ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
             try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-                final int capacity = 1 << 22;
-                final ExecutorService pool = Executors.newFixedThreadPool(4);
+                final int capacity = 1 << 20;
+                final ExecutorService pool = Executors.newFixedThreadPool(2);
                 int removed = 0;
                 for (int i = 0; i < capacity; i++) {
                     if (i % 10 == 0) {

@@ -60,6 +60,20 @@ class ConcurrentIntMapTest {
     }
 
     @Test
+    public void concurrentComputeIfNull() throws InterruptedException {
+        final int capacity = 1 << 22;
+        SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>(capacity);
+        final ExecutorService pool = Executors.newFixedThreadPool(8);
+        for (int i = 0; i < capacity; i++) {
+            int finalI = i;
+            pool.execute(() -> concurrentIntMap.computeIfAbsent(finalI, k -> finalI));
+        }
+        pool.shutdown();
+        Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
+        Assertions.assertEquals(capacity, concurrentIntMap.size());
+    }
+
+    @Test
     public void cloneTest() {
         SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
         Assertions.assertTrue(concurrentIntMap.isEmpty());
@@ -71,6 +85,33 @@ class ConcurrentIntMapTest {
         concurrentIntMap.put(1, 1);
         Assertions.assertEquals(1, concurrentIntMap.get(1));
         Assertions.assertNull(cloned.get(1));
+    }
 
+    @Test
+    public void values() {
+        SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
+        concurrentIntMap.put(0, 10);
+        concurrentIntMap.put(1, 11);
+        Integer[] values = concurrentIntMap.values();
+        Assertions.assertArrayEquals(new Integer[]{10, 11}, values);
+    }
+
+    @Test
+    public void sortedKeysHashCode() {
+        SparseIntMap<Integer> map1 = new ConcurrentIntMap<>();
+        map1.put(1, 0);
+        map1.put(2, 0);
+        Assertions.assertEquals(31 + 2, map1.sortedKeysHashCode());
+        map1.put(3, 0);
+        map1.put(4, 0);
+        map1.put(5, 0);
+
+        SparseIntMap<Integer> map2 = new ConcurrentIntMap<>();
+        map2.put(5, 0);
+        map2.put(4, 0);
+        map2.put(3, 0);
+        map2.put(2, 0);
+        map2.put(1, 0);
+        Assertions.assertEquals(map2.sortedKeysHashCode(), map1.sortedKeysHashCode());
     }
 }

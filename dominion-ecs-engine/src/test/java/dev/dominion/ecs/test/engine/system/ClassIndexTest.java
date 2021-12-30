@@ -28,6 +28,24 @@ public class ClassIndexTest {
     }
 
     @Test
+    void getIndexOrAddClass() {
+        try (ClassIndex map = new ClassIndex()) {
+            Assertions.assertEquals(1, map.getIndexOrAddClass(C1.class));
+            Assertions.assertEquals(2, map.getIndexOrAddClass(C2.class));
+            Assertions.assertEquals(1, map.getIndexOrAddClass(C1.class));
+            Assertions.assertEquals(2, map.getIndexOrAddClass(C2.class));
+        }
+    }
+
+    @Test
+    void getIndexOrAddClassBatch() {
+        try (ClassIndex map = new ClassIndex()) {
+            Assertions.assertArrayEquals(new int[]{1, 2, 3}
+                    , map.getIndexOrAddClassBatch(new Class<?>[] {C1.class, C2.class, C3.class}));
+         }
+    }
+
+    @Test
     void reindex() {
         try (ClassIndex map = new ClassIndex(1)) {
             map.addClass(C1.class);

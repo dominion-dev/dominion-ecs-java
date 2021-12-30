@@ -1,22 +1,28 @@
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.system.HashCode;
+
+import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
-
     private final int[] dense;
     private final int[] sparse;
     private final Object[] values;
     private final StampedLock lock = new StampedLock();
     private final int capacity;
-    private AtomicInteger size = new AtomicInteger(0);
+    private final AtomicInteger size = new AtomicInteger(0);
+    private final AtomicBoolean isKeysHashCodeValid = new AtomicBoolean(false);
+    private long keysHashCode;
 
     private ConcurrentIntMap(int[] dense, int[] sparse, Object[] values) {
         this.dense = dense;
@@ -44,6 +50,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
         dense[i] = key;
         sparse[key] = i;
         values[i] = value;
+        isKeysHashCodeValid.set(false);
         return current;
     }
 
@@ -63,22 +70,29 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     @Override
     public V computeIfAbsent(int key, Function<Integer, ? extends V> mappingFunction) {
         V value;
-        long stamp = lock.readLock();
+        long stamp = lock.tryOptimisticRead();
         try {
-            while ((value = get(key)) == null) {
-                long ws = lock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    put(key, value = mappingFunction.apply(key));
+            for (; ; stamp = lock.writeLock()) {
+                if (stamp == 0L)
+                    continue;
+                // possibly racy reads
+                value = get(key);
+                if (!lock.validate(stamp))
+                    continue;
+                if (value != null)
                     break;
-                } else {
-                    lock.unlockRead(stamp);
-                    stamp = lock.writeLock();
-                }
+                stamp = lock.tryConvertToWriteLock(stamp);
+                if (stamp == 0L)
+                    continue;
+                // exclusive access
+                put(key, value = mappingFunction.apply(key));
+                break;
             }
             return value;
         } finally {
-            lock.unlock(stamp);
+            if (StampedLock.isWriteLockStamp(stamp)) {
+                lock.unlockWrite(stamp);
+            }
         }
     }
 
@@ -109,6 +123,37 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     }
 
     @Override
+    public Stream<Integer> keysStream() {
+        return IntStream.of(dense)
+                .limit(size.get())
+                .boxed();
+    }
+
+    public long sortedKeysHashCode() {
+        if (isKeysHashCodeValid.get()) {
+            return keysHashCode;
+        }
+        int length = size();
+        int[] keys = new int[length];
+        System.arraycopy(dense, 0, keys, 0, length);
+        keysHashCode = HashCode.sortedInputHashCode(keys);
+        isKeysHashCodeValid.set(true);
+        return keysHashCode;
+    }
+
+    @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
+    @Override
+    public V[] values() {
+        if (isEmpty()) {
+            return null;
+        }
+        int length = size.get();
+        V[] target = (V[]) Array.newInstance(values[0].getClass(), length);
+        System.arraycopy(values, 0, target, 0, length);
+        return target;
+    }
+
+    @Override
     public int getCapacity() {
         return capacity;
     }
@@ -123,7 +168,7 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
         System.arraycopy(sparse, 0, newSparse, 0, capacity);
         System.arraycopy(values, 0, newValues, 0, capacity);
         ConcurrentIntMap<V> cloned = new ConcurrentIntMap<>(newDense, newSparse, newValues);
-        cloned.size = size;
+        cloned.size.set(size.get());
         return cloned;
     }
 }

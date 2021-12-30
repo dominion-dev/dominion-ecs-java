@@ -7,11 +7,12 @@ import dev.dominion.ecs.engine.collections.ConcurrentPool;
 public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     private long id;
-    private ConcurrentPool.Tenant<LongEntity> tenant;
+    private Composition composition;
+    private Component singleComponent;
 
-    public LongEntity(long id, ConcurrentPool.Tenant<LongEntity> tenant) {
+    public LongEntity(long id, Composition composition) {
         this.id = id;
-        this.tenant = tenant;
+        this.composition = composition;
     }
 
     public long getId() {
@@ -22,12 +23,21 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         this.id = id;
     }
 
-    public ConcurrentPool.Tenant<LongEntity> getTenant() {
-        return tenant;
+    public Composition getComposition() {
+        return composition;
     }
 
-    void setTenant(ConcurrentPool.Tenant<LongEntity> tenant) {
-        this.tenant = tenant;
+    public void setComposition(Composition composition) {
+        this.composition = composition;
+    }
+
+    public Component getSingleComponent() {
+        return singleComponent;
+    }
+
+    public LongEntity setSingleComponent(Component singleComponent) {
+        this.singleComponent = singleComponent;
+        return this;
     }
 
     @Override
