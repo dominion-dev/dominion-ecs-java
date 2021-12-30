@@ -8,6 +8,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     private long id;
     private Composition composition;
+    private Component singleComponent;
 
     public LongEntity(long id, Composition composition) {
         this.id = id;
@@ -28,6 +29,15 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     public void setComposition(Composition composition) {
         this.composition = composition;
+    }
+
+    public Component getSingleComponent() {
+        return singleComponent;
+    }
+
+    public LongEntity setSingleComponent(Component singleComponent) {
+        this.singleComponent = singleComponent;
+        return this;
     }
 
     @Override

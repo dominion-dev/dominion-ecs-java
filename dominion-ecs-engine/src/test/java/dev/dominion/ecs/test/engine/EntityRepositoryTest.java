@@ -20,8 +20,10 @@ class EntityRepositoryTest {
     @Test
     void createEntityWith1Component() {
         EntityRepository entityRepository = new EntityRepository();
-        LongEntity entity = (LongEntity) entityRepository.createEntity(new C1());
+        C1 c1 = new C1();
+        LongEntity entity = (LongEntity) entityRepository.createEntity(c1);
         Assertions.assertNotNull(entity.getComposition());
+        Assertions.assertEquals(c1, entity.getSingleComponent());
         Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
     }
 
