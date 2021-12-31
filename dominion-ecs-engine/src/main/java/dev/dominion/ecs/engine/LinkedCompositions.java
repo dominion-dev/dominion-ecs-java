@@ -31,9 +31,16 @@ public final class LinkedCompositions implements AutoCloseable {
             case 0:
                 return root.composition;
             case 1:
-                Node link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
+                Node link = root.getLink(classIndex.getIndex(componentTypes[0]));
                 if (link == null) {
-                    link = root.getOrCreateLink(componentTypes[0]);
+                    link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
+                    if (link == null) {
+                        link = root.getOrCreateLink(componentTypes[0]);
+                    }
+                }
+                Composition composition = link.getComposition();
+                if (composition != null) {
+                    return composition;
                 }
                 return link.getOrCreateComposition();
             default:
