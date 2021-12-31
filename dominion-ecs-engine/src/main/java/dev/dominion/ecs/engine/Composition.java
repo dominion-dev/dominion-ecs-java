@@ -1,22 +1,20 @@
 package dev.dominion.ecs.engine;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 
 public final class Composition {
-    private final Class<? extends Component>[] componentTypes;
+    private final Class<?>[] componentTypes;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
     private final SparseIntMap<Class<?>> componentIndexes = new ConcurrentIntMap<>();
 
-    @SafeVarargs
-    public Composition(ConcurrentPool.Tenant<LongEntity> tenant, Class<? extends Component>... componentTypes) {
+    public Composition(ConcurrentPool.Tenant<LongEntity> tenant, Class<?>... componentTypes) {
         this.tenant = tenant;
         this.componentTypes = componentTypes;
     }
 
-    public LongEntity createEntity(Component... components) {
+    public LongEntity createEntity(Object... components) {
         long id = tenant.nextId();
         LongEntity entity = (tenant.register(id, new LongEntity(id, this)));
         return switch (componentTypes.length) {
@@ -32,7 +30,7 @@ public final class Composition {
         return true;
     }
 
-    public Class<? extends Component>[] getComponentTypes() {
+    public Class<?>[] getComponentTypes() {
         return componentTypes;
     }
 

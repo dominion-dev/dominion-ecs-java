@@ -19,9 +19,9 @@ public interface Dominion extends AutoCloseable {
                 .get();
     }
 
-    Entity createEntity(Component... components);
+    Entity createEntity(Object... components);
 
-    Entity createEntityAs(Entity prefab, Component... components);
+    Entity createEntityAs(Entity prefab, Object... components);
 
     boolean destroyEntity(Entity entity);
 }
