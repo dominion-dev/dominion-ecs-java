@@ -1,6 +1,5 @@
 package dev.dominion.ecs.test.engine;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.LongEntity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
@@ -51,6 +50,6 @@ class EntityRepositoryTest {
         Assertions.assertEquals(id1, entity2.getId());
     }
 
-    private static class C1 implements Component {
+    private static class C1 {
     }
 }

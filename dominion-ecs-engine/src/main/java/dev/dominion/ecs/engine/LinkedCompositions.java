@@ -1,6 +1,5 @@
 package dev.dominion.ecs.engine;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
@@ -25,15 +24,21 @@ public final class LinkedCompositions implements AutoCloseable {
         root.composition = new Composition(pool.newTenant());
     }
 
-    @SafeVarargs
-    public final Composition getOrCreate(Class<? extends Component>... componentTypes) {
+    public Composition getOrCreate(Class<?>... componentTypes) {
         switch (componentTypes.length) {
             case 0:
                 return root.composition;
             case 1:
-                Node link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
+                Node link = root.getLink(classIndex.getIndex(componentTypes[0]));
                 if (link == null) {
-                    link = root.getOrCreateLink(componentTypes[0]);
+                    link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
+                    if (link == null) {
+                        link = root.getOrCreateLink(componentTypes[0]);
+                    }
+                }
+                Composition composition = link.getComposition();
+                if (composition != null) {
+                    return composition;
                 }
                 return link.getOrCreateComposition();
             default:
@@ -47,16 +52,15 @@ public final class LinkedCompositions implements AutoCloseable {
         }
     }
 
-    private void traverseNode(Node currentNode, Class<? extends Component>[] componentTypes) {
-        for (Class<? extends Component> componentType : componentTypes) {
+    private void traverseNode(Node currentNode, Class<?>[] componentTypes) {
+        for (Class<?> componentType : componentTypes) {
             if (currentNode.hasComponentType(componentType)) continue;
             Node node = currentNode.getOrCreateLink(componentType);
             traverseNode(node, componentTypes);
         }
     }
 
-    @SafeVarargs
-    public final Set<Composition> query(Class<? extends Component>... componentTypes) {
+    public Set<Composition> query(Class<?>... componentTypes) {
         return null;
     }
 
@@ -85,7 +89,7 @@ public final class LinkedCompositions implements AutoCloseable {
             return data.get(key);
         }
 
-        public Node getOrCreateNode(SparseIntMap<Class<? extends Component>> componentTypes) {
+        public Node getOrCreateNode(SparseIntMap<Class<?>> componentTypes) {
             long key = componentTypes.sortedKeysHashCode();
             return data.computeIfAbsent(key, k -> new Node(componentTypes));
         }
@@ -96,21 +100,21 @@ public final class LinkedCompositions implements AutoCloseable {
     }
 
     public final class Node {
-        private final SparseIntMap<Class<? extends Component>> componentTypes;
+        private final SparseIntMap<Class<?>> componentTypes;
         private final SparseIntMap<Node> links = new ConcurrentIntMap<>();
         private final StampedLock lock = new StampedLock();
         private Composition composition;
 
-        public Node(SparseIntMap<Class<? extends Component>> componentTypes) {
+        public Node(SparseIntMap<Class<?>> componentTypes) {
             this.componentTypes = componentTypes;
         }
 
-        public Node getOrCreateLink(Class<? extends Component> componentType) {
+        public Node getOrCreateLink(Class<?> componentType) {
             int key = classIndex.getIndexOrAddClass(componentType);
             return links.computeIfAbsent(key,
                     k -> {
                         var cTypes = componentTypes == null ?
-                                new ConcurrentIntMap<Class<? extends Component>>() :
+                                new ConcurrentIntMap<Class<?>>() :
                                 componentTypes.clone();
                         cTypes.put(k, componentType);
                         return nodeCache.getOrCreateNode(cTypes);
@@ -122,7 +126,7 @@ public final class LinkedCompositions implements AutoCloseable {
             return links.get(key);
         }
 
-        public Node getLink(Class<? extends Component> componentType) {
+        public Node getLink(Class<?> componentType) {
             return getLink(classIndex.getIndex(componentType));
         }
 
@@ -168,7 +172,7 @@ public final class LinkedCompositions implements AutoCloseable {
                             .collect(Collectors.joining(","));
         }
 
-        public boolean hasComponentType(Class<? extends Component> componentType) {
+        public boolean hasComponentType(Class<?> componentType) {
             return componentTypes != null
                     && componentTypes.contains(classIndex.getIndex(componentType));
         }

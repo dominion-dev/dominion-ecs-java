@@ -1,6 +1,5 @@
 package dev.dominion.ecs.engine;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 
@@ -8,7 +7,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     private long id;
     private Composition composition;
-    private Component singleComponent;
+    private Object singleComponent;
 
     public LongEntity(long id, Composition composition) {
         this.id = id;
@@ -31,21 +30,21 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         this.composition = composition;
     }
 
-    public Component getSingleComponent() {
+    public Object getSingleComponent() {
         return singleComponent;
     }
 
-    public LongEntity setSingleComponent(Component singleComponent) {
+    public LongEntity setSingleComponent(Object singleComponent) {
         this.singleComponent = singleComponent;
         return this;
     }
 
     @Override
-    public void addComponents(Component... components) {
+    public void addComponents(Object... components) {
     }
 
     @Override
-    public void removeComponents(Component... components) {
+    public void removeComponents(Object... components) {
     }
 
     @Override

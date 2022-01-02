@@ -1,6 +1,5 @@
 package dev.dominion.ecs.test.api;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import org.junit.jupiter.api.Assertions;
@@ -34,12 +33,12 @@ public class DominionTest {
     public static class MockDominion implements Dominion {
 
         @Override
-        public Entity createEntity(Component... components) {
+        public Entity createEntity(Object... components) {
             return null;
         }
 
         @Override
-        public Entity createEntityAs(Entity prefab, Component... components) {
+        public Entity createEntityAs(Entity prefab, Object... components) {
             return null;
         }
 

@@ -1,6 +1,5 @@
 package dev.dominion.ecs.test.engine;
 
-import dev.dominion.ecs.api.Component;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.LinkedCompositions;
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
@@ -69,10 +68,10 @@ class LinkedCompositionTest {
         // todo
     }
 
-    private static class C1 implements Component {
+    private static class C1 {
     }
 
-    private static class C2 implements Component {
+    private static class C2 {
     }
 
     @Nested
@@ -104,7 +103,7 @@ class LinkedCompositionTest {
                 LinkedCompositions.Node node = linkedCompositions.new Node(null);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
 
-                SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
+                SparseIntMap<Class<?>> cTypes = new ConcurrentIntMap<>();
                 cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
                 node = linkedCompositions.new Node(cTypes);
                 Assertions.assertFalse(node.hasComponentType(C1.class));
@@ -115,7 +114,7 @@ class LinkedCompositionTest {
         @Test
         void toStringTest() {
             try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-                SparseIntMap<Class<? extends Component>> cTypes = new ConcurrentIntMap<>();
+                SparseIntMap<Class<?>> cTypes = new ConcurrentIntMap<>();
                 cTypes.put(linkedCompositions.getClassIndex().addClass(C1.class), C1.class);
                 cTypes.put(linkedCompositions.getClassIndex().addClass(C2.class), C2.class);
                 LinkedCompositions.Node node = linkedCompositions.new Node(cTypes);
