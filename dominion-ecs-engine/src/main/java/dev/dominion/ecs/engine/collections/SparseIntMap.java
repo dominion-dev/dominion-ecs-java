@@ -24,6 +24,8 @@ public interface SparseIntMap<V> extends Cloneable {
 
     Stream<Integer> keysStream();
 
+    void invalidateKeysHashCode();
+
     long sortedKeysHashCode();
 
     V[] values();
@@ -88,6 +90,11 @@ public interface SparseIntMap<V> extends Cloneable {
         @Override
         public Stream<Integer> keysStream() {
             return subject.keysStream();
+        }
+
+        @Override
+        public void invalidateKeysHashCode() {
+            subject.invalidateKeysHashCode();
         }
 
         @Override
