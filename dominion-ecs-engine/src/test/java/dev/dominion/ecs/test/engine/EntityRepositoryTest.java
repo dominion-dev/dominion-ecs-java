@@ -22,8 +22,21 @@ class EntityRepositoryTest {
         C1 c1 = new C1();
         LongEntity entity = (LongEntity) entityRepository.createEntity(c1);
         Assertions.assertNotNull(entity.getComposition());
-        Assertions.assertEquals(c1, entity.getSingleComponent());
         Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
+        Assertions.assertEquals(c1, entity.getSingleComponent());
+    }
+
+    @Test
+    void createEntityWith2Component() {
+        EntityRepository entityRepository = new EntityRepository();
+        var c1 = new C1();
+        var c2 = new C2();
+        LongEntity entity1 = (LongEntity) entityRepository.createEntity(c1, c2);
+        Assertions.assertNotNull(entity1.getComposition());
+        Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
+        Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponents());
+        LongEntity entity2 = (LongEntity) entityRepository.createEntity(c2, c1);
+        Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponents());
     }
 
     @Test
@@ -51,5 +64,8 @@ class EntityRepositoryTest {
     }
 
     private static class C1 {
+    }
+
+    private static class C2 {
     }
 }
