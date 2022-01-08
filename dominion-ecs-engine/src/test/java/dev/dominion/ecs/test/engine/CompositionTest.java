@@ -24,7 +24,7 @@ class CompositionTest {
     }
 
     @Test
-    void orderInPlaceComponentsByIndex() {
+    void sortComponentsInPlaceByIndex() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
@@ -54,7 +54,7 @@ class CompositionTest {
         var c8 = new C8();
         Assertions.assertArrayEquals(
                 new Object[]{c1, c2, c3, c4, c5, c6, c7, c8}
-                , composition.orderComponentsInPlaceByIndex(
+                , composition.sortComponentsInPlaceByIndex(
                         new Object[]{c7, c3, c6, c8, c2, c5, c4, c1}
                 )
         );

@@ -25,7 +25,7 @@ public final class Composition {
         }
     }
 
-    public Object[] orderComponentsInPlaceByIndex(Object[] components) {
+    public Object[] sortComponentsInPlaceByIndex(Object[] components) {
         int newIdx;
         for (int i = 0; i < components.length; i++) {
             newIdx = componentIndexes.get(classIndex.getIndex(components[i].getClass()));
@@ -52,7 +52,7 @@ public final class Composition {
         return switch (componentTypes.length) {
             case 0 -> entity;
             case 1 -> entity.setSingleComponent(components[0]);
-            default -> entity.setComponents(orderComponentsInPlaceByIndex(components));
+            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
         };
     }
 
