@@ -24,7 +24,7 @@ class LinkedCompositionTest {
             Assertions.assertFalse(link.hasComponentType(C2.class));
 
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(HashCode.sortedInputHashCode(new int[]{
+                    .contains(HashCode.longHashCode(new int[]{
                             linkedCompositions.getClassIndex().getIndex(C1.class)
                     })));
         }
@@ -56,7 +56,7 @@ class LinkedCompositionTest {
             Assertions.assertNotNull(c1c2Link.getComposition());
 
             Assertions.assertTrue(linkedCompositions.getNodeCache()
-                    .contains(HashCode.sortedInputHashCode(new int[]{
+                    .contains(HashCode.longHashCode(new int[]{
                             linkedCompositions.getClassIndex().getIndex(C1.class)
                             , linkedCompositions.getClassIndex().getIndex(C2.class)
                     })));

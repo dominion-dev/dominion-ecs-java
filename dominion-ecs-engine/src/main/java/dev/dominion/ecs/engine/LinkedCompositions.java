@@ -2,6 +2,7 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.HashCode;
@@ -21,7 +22,7 @@ public final class LinkedCompositions implements AutoCloseable {
 
     public LinkedCompositions() {
         root = new Node(null);
-        root.composition = new Composition(pool.newTenant());
+        root.composition = new Composition(pool.newTenant(), classIndex);
     }
 
     public Composition getOrCreate(Class<?>... componentTypes) {
@@ -36,20 +37,27 @@ public final class LinkedCompositions implements AutoCloseable {
                         link = root.getOrCreateLink(componentTypes[0]);
                     }
                 }
-                Composition composition = link.getComposition();
-                if (composition != null) {
-                    return composition;
-                }
-                return link.getOrCreateComposition();
+                return getLinkComposition(link);
             default:
-                long hashCode = HashCode.sortedInputHashCode(classIndex.getIndexOrAddClassBatch(componentTypes));
+                long hashCode = HashCode.longHashCode(
+                        IntArraySort.sort(classIndex.getIndexOrAddClassBatch(componentTypes)
+                                , classIndex.size() + 1)
+                );
                 link = nodeCache.getNode(hashCode);
                 if (link == null) {
                     traverseNode(root, componentTypes);
                     link = nodeCache.getNode(hashCode);
                 }
-                return link.getOrCreateComposition();
+                return getLinkComposition(link);
         }
+    }
+
+    private Composition getLinkComposition(Node link) {
+        Composition composition = link.getComposition();
+        if (composition != null) {
+            return composition;
+        }
+        return link.getOrCreateComposition();
     }
 
     private void traverseNode(Node currentNode, Class<?>[] componentTypes) {
@@ -151,7 +159,7 @@ public final class LinkedCompositions implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(pool.newTenant(), componentTypes.values());
+                    value = composition = new Composition(pool.newTenant(), classIndex, componentTypes.values());
                     break;
                 }
                 return value;
