@@ -1,39 +1,38 @@
 package dev.dominion.ecs.engine;
 
-import dev.dominion.ecs.engine.collections.ConcurrentIntMap;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
-import dev.dominion.ecs.engine.collections.SparseIntMap;
 import dev.dominion.ecs.engine.system.ClassIndex;
 
 public final class Composition {
+    private final static int componentIndexCapacity = 1 << 10;
     private final Class<?>[] componentTypes;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
     private final ClassIndex classIndex;
-    private final SparseIntMap<Integer> componentIndexes;
+    private final int[] componentIndex;
 
     public Composition(ConcurrentPool.Tenant<LongEntity> tenant, ClassIndex classIndex, Class<?>... componentTypes) {
         this.tenant = tenant;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
         if (componentTypes.length > 1) {
-            componentIndexes = new ConcurrentIntMap<>();
+            componentIndex = new int[componentIndexCapacity];
             for (int i = 0; i < componentTypes.length; i++) {
-                componentIndexes.put(classIndex.getIndex(componentTypes[i]), i);
+                componentIndex[classIndex.getIndex(componentTypes[i])] = i;
             }
         } else {
-            componentIndexes = null;
+            componentIndex = null;
         }
     }
 
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
         int newIdx;
         for (int i = 0; i < components.length; i++) {
-            newIdx = componentIndexes.get(classIndex.getIndex(components[i].getClass()));
+            newIdx = componentIndex[classIndex.getIndex(components[i].getClass())];
             if (newIdx != i) {
                 swapComponents(components, i, newIdx);
             }
         }
-        newIdx = componentIndexes.get(classIndex.getIndex(components[0].getClass()));
+        newIdx = componentIndex[classIndex.getIndex(components[0].getClass())];
         if (newIdx > 0) {
             swapComponents(components, 0, newIdx);
         }
