@@ -25,27 +25,36 @@ public final class LinkedCompositions implements AutoCloseable {
         root.composition = new Composition(pool.newTenant(), classIndex);
     }
 
-    public Composition getOrCreate(Class<?>... componentTypes) {
-        switch (componentTypes.length) {
+    private static Class<?>[] getClasses(Object[] components) {
+        Class<?>[] classes = new Class<?>[components.length];
+        for (int i = 0; i < components.length; i++) {
+            classes[i] = components[i].getClass();
+        }
+        return classes;
+    }
+
+    public Composition getOrCreate(Object[] components) {
+        switch (components.length) {
             case 0:
                 return root.composition;
             case 1:
-                Node link = root.getLink(classIndex.getIndex(componentTypes[0]));
+                Class<?> componentType = components[0].getClass();
+                Node link = root.getLink(classIndex.getIndex(componentType));
                 if (link == null) {
-                    link = root.getLink(classIndex.getIndexOrAddClass(componentTypes[0]));
+                    link = root.getLink(classIndex.getIndexOrAddClass(componentType));
                     if (link == null) {
-                        link = root.getOrCreateLink(componentTypes[0]);
+                        link = root.getOrCreateLink(componentType);
                     }
                 }
                 return getLinkComposition(link);
             default:
                 long hashCode = HashCode.longHashCode(
-                        IntArraySort.sort(classIndex.getIndexOrAddClassBatch(componentTypes)
+                        IntArraySort.sort(classIndex.getIndexOrAddClassBatch(components)
                                 , classIndex.size() + 1)
                 );
                 link = nodeCache.getNode(hashCode);
                 if (link == null) {
-                    traverseNode(root, componentTypes);
+                    traverseNode(root, getClasses(components));
                     link = nodeCache.getNode(hashCode);
                 }
                 return getLinkComposition(link);

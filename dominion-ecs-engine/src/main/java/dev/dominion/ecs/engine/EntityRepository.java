@@ -7,20 +7,13 @@ public final class EntityRepository implements Dominion {
 
     private final LinkedCompositions compositions = new LinkedCompositions();
 
-    private static Class<?>[] getClasses(Object[] components) {
-        Class<?>[] classes = new Class<?>[components.length];
-        for (int i = 0; i < components.length; i++) {
-            classes[i] = components[i].getClass();
-        }
-        return classes;
-    }
-
     @Override
     public Entity createEntity(Object... components) {
+        final Composition composition = compositions.getOrCreate(components);
         return switch (components.length) {
-            case 0 -> compositions.getOrCreate().createEntity();
-            case 1 -> compositions.getOrCreate(components[0].getClass()).createEntity(components[0]);
-            default -> compositions.getOrCreate(getClasses(components)).createEntity(components);
+            case 0 -> composition.createEntity();
+            case 1 -> composition.createEntity(components[0]);
+            default -> composition.createEntity(components);
         };
     }
 

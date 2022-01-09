@@ -9,13 +9,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-
 class LinkedCompositionTest {
 
     @Test
     void getOrCreateWith1Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            Composition composition = linkedCompositions.getOrCreate(C1.class);
+            Composition composition = linkedCompositions.getOrCreate(new Object[]{new C1()});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             LinkedCompositions.Node root = linkedCompositions.getRoot();
             LinkedCompositions.Node link = root.getLink(C1.class);
@@ -33,7 +32,7 @@ class LinkedCompositionTest {
     @Test
     void getOrCreateWith2Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
-            Composition composition = linkedCompositions.getOrCreate(C1.class, C2.class);
+            Composition composition = linkedCompositions.getOrCreate(new Object[]{new C1(), new C2()});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
 
             LinkedCompositions.Node root = linkedCompositions.getRoot();

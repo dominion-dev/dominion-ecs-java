@@ -125,6 +125,14 @@ public final class ClassIndex implements AutoCloseable {
         return indexes;
     }
 
+    public int[] getIndexOrAddClassBatch(Object[] objects) {
+        int[] indexes = new int[objects.length];
+        for (int i = 0; i < objects.length; i++) {
+            indexes[i] = getIndexOrAddClass(objects[i].getClass());
+        }
+        return indexes;
+    }
+
     private int getIdentityHashCode(Class<?> klass, int hashBits) {
         return System.identityHashCode(klass) >> (32 - hashBits);
     }
