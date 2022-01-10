@@ -48,11 +48,15 @@ public final class LinkedCompositions implements AutoCloseable {
                 }
                 return getLinkComposition(link);
             default:
-                long hashCode = HashCode.longHashCode(
-                        IntArraySort.sort(classIndex.getIndexOrAddClassBatch(components)
-                                , classIndex.size() + 1)
-                );
+                long hashCode = classIndex.longHashCode(components);
                 link = nodeCache.getNode(hashCode);
+                if (link == null) {
+                    hashCode = HashCode.longHashCode(
+                            IntArraySort.sort(classIndex.getIndexOrAddClassBatch(components)
+                                    , classIndex.size() + 1)
+                    );
+                    link = nodeCache.getNode(hashCode);
+                }
                 if (link == null) {
                     traverseNode(root, getClasses(components));
                     link = nodeCache.getNode(hashCode);
