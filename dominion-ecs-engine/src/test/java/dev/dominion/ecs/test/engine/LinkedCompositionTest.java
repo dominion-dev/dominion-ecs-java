@@ -11,6 +11,27 @@ import org.junit.jupiter.api.Test;
 
 class LinkedCompositionTest {
 
+    //
+//    @Test
+//    void testPermutations() {
+//        int j = recursiveLoop("", 0, 16, 0);
+//        System.out.println("j = " + j);
+//    }
+//
+//    int recursiveLoop(String origin, int start, int end, int j) {
+//        for (int i = start; i < end; i++) {
+//            String tag = origin + "-" + i;
+//            System.out.println(tag);
+//            int next = i + 1;
+//            j++;
+//            if (next < end) {
+//                j = recursiveLoop(tag, next, end, j);
+//            }
+//            if(i == 0) break;
+//        }
+//        return j;
+//    }
+//
     @Test
     void getOrCreateWith1Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
@@ -29,7 +50,7 @@ class LinkedCompositionTest {
         }
     }
 
-    @Test
+    //    @Test
     void getOrCreateWith2Component() {
         try (LinkedCompositions linkedCompositions = new LinkedCompositions()) {
             Composition composition = linkedCompositions.getOrCreate(new Object[]{new C1(), new C2()});

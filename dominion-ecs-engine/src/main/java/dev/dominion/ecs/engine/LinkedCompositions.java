@@ -33,6 +33,16 @@ public final class LinkedCompositions implements AutoCloseable {
         return classes;
     }
 
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    private SparseIntMap<Class<?>> getComponentTypes(Object[] components) {
+        SparseIntMap<Class<?>> componentTypes = new ConcurrentIntMap<>();
+        for (int i = 0; i < components.length; i++) {
+            Class<?> klass = components[i].getClass();
+            componentTypes.put(classIndex.getIndexOrAddClass(klass), klass);
+        }
+        return componentTypes;
+    }
+
     public Composition getOrCreate(Object[] components) {
         switch (components.length) {
             case 0:
@@ -58,8 +68,9 @@ public final class LinkedCompositions implements AutoCloseable {
                     link = nodeCache.getNode(hashCode);
                 }
                 if (link == null) {
-                    traverseNode(root, getClasses(components));
-                    link = nodeCache.getNode(hashCode);
+//                    traverseNode(root, getClasses(components), 0);
+//                    link = nodeCache.getNode(hashCode);
+                    link = nodeCache.getOrCreateNode(getComponentTypes(components));
                 }
                 return getLinkComposition(link);
         }
@@ -73,11 +84,15 @@ public final class LinkedCompositions implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
-    private void traverseNode(Node currentNode, Class<?>[] componentTypes) {
-        for (Class<?> componentType : componentTypes) {
+    private void traverseNode(Node currentNode, Class<?>[] componentTypes, int start) {
+        for (int i = start; i < componentTypes.length; i++) {
+            Class<?> componentType = componentTypes[i];
             if (currentNode.hasComponentType(componentType)) continue;
             Node node = currentNode.getOrCreateLink(componentType);
-            traverseNode(node, componentTypes);
+            int next = i + 1;
+            if (next < componentTypes.length) {
+                traverseNode(node, componentTypes, next);
+            }
         }
     }
 
