@@ -5,7 +5,7 @@ import dev.dominion.ecs.api.Entity;
 
 public final class EntityRepository implements Dominion {
 
-    private final LinkedCompositions compositions = new LinkedCompositions();
+    private final CompositionRepository compositions = new CompositionRepository();
 
     @Override
     public Entity createEntity(Object... components) {
