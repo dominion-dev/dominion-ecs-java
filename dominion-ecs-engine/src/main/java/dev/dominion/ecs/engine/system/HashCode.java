@@ -1,7 +1,5 @@
 package dev.dominion.ecs.engine.system;
 
-import java.util.Arrays;
-
 public final class HashCode {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
@@ -11,10 +9,5 @@ public final class HashCode {
             hashCode = 31 * hashCode + input[i];
         }
         return hashCode;
-    }
-
-    public static long sortedInputHashCode(int[] input) {
-        Arrays.sort(input);
-        return longHashCode(input);
     }
 }

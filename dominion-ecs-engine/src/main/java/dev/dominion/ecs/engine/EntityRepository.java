@@ -3,16 +3,17 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 
-public class EntityRepository implements Dominion {
+public final class EntityRepository implements Dominion {
 
-    private final LinkedCompositions compositions = new LinkedCompositions();
+    private final CompositionRepository compositions = new CompositionRepository();
 
     @Override
     public Entity createEntity(Object... components) {
+        final Composition composition = compositions.getOrCreate(components);
         return switch (components.length) {
-            case 0 -> compositions.getOrCreate().createEntity();
-            case 1 -> compositions.getOrCreate(components[0].getClass()).createEntity(components[0]);
-            default -> null;
+            case 0 -> composition.createEntity();
+            case 1 -> composition.createEntity(components[0]);
+            default -> composition.createEntity(components);
         };
     }
 

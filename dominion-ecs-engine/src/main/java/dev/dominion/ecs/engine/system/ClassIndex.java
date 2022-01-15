@@ -125,6 +125,36 @@ public final class ClassIndex implements AutoCloseable {
         return indexes;
     }
 
+    public int[] getIndexOrAddClassBatch(Object[] objects) {
+        int[] indexes = new int[objects.length];
+        for (int i = 0; i < objects.length; i++) {
+            indexes[i] = getIndexOrAddClass(objects[i].getClass());
+        }
+        return indexes;
+    }
+
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    public long longHashCode(Object[] objects) {
+        boolean[] checkArray = new boolean[index + 1];
+        int min = capacity, max = 0;
+        for (int i = 0; i < objects.length; i++) {
+            int value = getIndex(objects[i].getClass());
+            if (checkArray[value] && value != 0) {
+                throw new IllegalArgumentException("Duplicate object types are not allowed");
+            }
+            checkArray[value] = true;
+            min = Math.min(value, min);
+            max = Math.max(value, max);
+        }
+        long hashCode = 0;
+        for (int i = min; i <= max; i++) {
+            if (checkArray[i]) {
+                hashCode = 31 * hashCode + i;
+            }
+        }
+        return hashCode;
+    }
+
     private int getIdentityHashCode(Class<?> klass, int hashBits) {
         return System.identityHashCode(klass) >> (32 - hashBits);
     }
