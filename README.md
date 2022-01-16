@@ -27,7 +27,7 @@ several ways. Dominion mitigates Java performance pitfalls by setting a few key 
 - **_concurrency design_**: an ECS library must be fast and able to scale running on a multicore CPU. Otherwise, it
   makes little sense. Writing a highly concurrent library in Java requires non-blocking concurrency and using the right
   tools. Dominion implements concurrency by using even the more powerful StampedLock introduced by Java 8.
-- **_use Java 17 LTS_**: just by switching to the last JDK 17 you will get a performance boost for free. As already
-  tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html) the Java 17 is about
-  8-9% faster than Java 11. Dominion started using Java 17 from the beginning and all the benchmarks runs with this LTS
+- **_use Java 17 LTS_**: only by upgrading to the last JDK 17 you will get a performance boost for free. As already
+  tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about
+  8-9% faster than Java 11. Dominion started using Java 17 from the beginning and all benchmarks are run with this LTS
   version of Java.
