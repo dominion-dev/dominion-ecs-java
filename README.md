@@ -11,7 +11,7 @@ Dominion is:
   documentation
 - 🛠️ **_wip_**: this project is still in early stages and the API is not yet complete and not fully implemented, but
   every part already built comes with unit tests and benchmarks. There are currently no releases yet and first release
-  is scheduled for Q1 2022.
+  is scheduled for the first quarter of 2022.
 
 ### Performance
 
