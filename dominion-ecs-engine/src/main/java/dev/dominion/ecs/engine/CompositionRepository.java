@@ -137,6 +137,8 @@ public final class CompositionRepository implements AutoCloseable {
                     Node singleTypeNode = data.computeIfAbsent(typeKey, k -> new Node(componentType));
                     singleTypeNode.linkNode(key, node);
                 }
+            } else {
+                node.linkNode(key, node);
             }
             return node;
         }
