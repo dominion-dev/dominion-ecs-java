@@ -135,11 +135,12 @@ public final class ClassIndex implements AutoCloseable {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public long longHashCode(Object[] objects) {
-        boolean[] checkArray = new boolean[index + 1];
+        boolean[] checkArray = new boolean[index + objects.length + 1];
         int min = capacity, max = 0;
         for (int i = 0; i < objects.length; i++) {
             int value = getIndex(objects[i].getClass());
-            if (checkArray[value] && value != 0) {
+            value = value == 0 ? getIndexOrAddClass(objects[i].getClass()) : value;
+            if (checkArray[value]) {
                 throw new IllegalArgumentException("Duplicate object types are not allowed");
             }
             checkArray[value] = true;
