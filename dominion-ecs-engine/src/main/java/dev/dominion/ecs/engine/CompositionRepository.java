@@ -71,7 +71,7 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    public Collection<Node> query(Class<?>... componentTypes) {
+    public Collection<Node> findCompositionsWith(Class<?>... componentTypes) {
         switch (componentTypes.length) {
             case 0:
                 return null;

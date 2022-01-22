@@ -61,39 +61,39 @@ class CompositionRepositoryTest {
             Composition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(), new C2()});
             Composition compositionC2C3 = compositionRepository.getOrCreate(new Object[]{new C2(), new C3()});
 
-            Collection<CompositionRepository.Node> nodes = compositionRepository.query(C1.class);
+            Collection<CompositionRepository.Node> nodes = compositionRepository.findCompositionsWith(C1.class);
             Assertions.assertNotNull(nodes);
             List<CompositionRepository.Node> nodeList = nodes.stream().toList();
             Assertions.assertEquals(2, nodeList.size());
             Assertions.assertEquals(compositionC1, nodeList.get(0).getComposition());
             Assertions.assertEquals(compositionC1C2, nodeList.get(1).getComposition());
 
-            nodes = compositionRepository.query(C2.class);
+            nodes = compositionRepository.findCompositionsWith(C2.class);
             Assertions.assertNotNull(nodes);
             nodeList = nodes.stream().toList();
             Assertions.assertEquals(2, nodeList.size());
             Assertions.assertEquals(compositionC1C2, nodeList.get(0).getComposition());
             Assertions.assertEquals(compositionC2C3, nodeList.get(1).getComposition());
 
-            nodes = compositionRepository.query(C3.class);
+            nodes = compositionRepository.findCompositionsWith(C3.class);
             Assertions.assertNotNull(nodes);
             nodeList = nodes.stream().toList();
             Assertions.assertEquals(1, nodeList.size());
             Assertions.assertEquals(compositionC2C3, nodeList.get(0).getComposition());
 
-            nodes = compositionRepository.query(C2.class, C1.class);
+            nodes = compositionRepository.findCompositionsWith(C2.class, C1.class);
             Assertions.assertNotNull(nodes);
             nodeList = nodes.stream().toList();
             Assertions.assertEquals(1, nodeList.size());
             Assertions.assertEquals(compositionC1C2, nodeList.get(0).getComposition());
 
-            nodes = compositionRepository.query(C3.class, C2.class);
+            nodes = compositionRepository.findCompositionsWith(C3.class, C2.class);
             Assertions.assertNotNull(nodes);
             nodeList = nodes.stream().toList();
             Assertions.assertEquals(1, nodeList.size());
             Assertions.assertEquals(compositionC2C3, nodeList.get(0).getComposition());
 
-            nodes = compositionRepository.query(C3.class, C1.class);
+            nodes = compositionRepository.findCompositionsWith(C3.class, C1.class);
             Assertions.assertNotNull(nodes);
             nodeList = nodes.stream().toList();
             Assertions.assertEquals(0, nodeList.size());
