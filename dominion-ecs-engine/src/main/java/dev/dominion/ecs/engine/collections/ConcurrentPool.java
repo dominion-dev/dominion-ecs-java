@@ -29,7 +29,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         LinkedPage<T> currentPage = owner.currentPage;
         LinkedPage<T> newPage = new LinkedPage<>(id, currentPage);
         if (currentPage != null) {
-            currentPage.next = newPage;
+            currentPage.setNext(newPage);
         }
         return pages[id] = newPage;
     }
@@ -191,6 +191,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
         private LinkedPage<T> next;
+        private int sizeOffset;
 
         public LinkedPage(int id, LinkedPage<T> previous) {
             this.previous = previous;
@@ -243,8 +244,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return previous;
         }
 
+        private void setNext(LinkedPage<T> next) {
+            this.next = next;
+            sizeOffset = 1;
+        }
+
         public int size() {
-            return index.get() + (next == null ? 0 : 1);
+            return index.get() + sizeOffset;
         }
 
         public boolean isEmpty() {
