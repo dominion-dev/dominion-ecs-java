@@ -17,19 +17,18 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## About Performance
 
-Designing a high-performance Java library is always a challenge as the speed of code execution could be affected in
-several ways. Dominion mitigates Java performance pitfalls by setting a few key points:
+Designing a high performance Java library is always a challenge as the execution speed of Java code could be affected in
+many ways. Dominion mitigates Java performance pitfalls by setting a few key points:
 
 - **_do not use only the standard library_**: the Java standard library implements data structures and algorithms
   designed without making any assumption about the data as they are general purpose. Dominion implements some custom
   data structures and algorithms to increase performances and fill the gap with C/C++ ECS frameworks.
 - **_reduce garbage collection activities_**: GC could affect overall performances as its activities run concurrently
-  with user code and without direct control. To reduce GC activities significantly, Dominion implements pooling systems
-  to reuse arrays living in a heap and create off-heap data structures whenever possible.
+  with user code and without direct control. To reduce GC activities significantly, Dominion implements a pooling system
+  to reuse arrays living in a heap and creates off-heap data structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
   Otherwise, it makes little sense. Writing a highly concurrent library in Java requires non-blocking concurrency and
-  using the right tools. Dominion implements concurrency by using even the more powerful `StampedLock` introduced by
-  Java 8.
+  using the right tools. Dominion also implements concurrency using the powerful `StampedLock` introduced by Java 8.
 - **_use Java 17 LTS_**: only by upgrading to the last JDK 17 you will get a performance boost for free. As already
   tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9%
   faster than Java 11. Whenever possible and to further reduce memory footprint, the engine uses records (introduced by
