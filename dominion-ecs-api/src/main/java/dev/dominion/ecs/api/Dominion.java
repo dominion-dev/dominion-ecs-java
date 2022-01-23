@@ -24,4 +24,8 @@ public interface Dominion extends AutoCloseable {
     Entity createEntityAs(Entity prefab, Object... components);
 
     boolean destroyEntity(Entity entity);
+
+    <T> Results<Results.Comp1<T>> findComponents(Class<T> type);
+
+    <T1, T2> Results<Results.Comp2<T1, T2>> findComponents(Class<T1> type1, Class<T2> type2);
 }

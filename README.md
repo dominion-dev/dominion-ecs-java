@@ -1,5 +1,7 @@
 # Dominion
 
+[![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
+
 Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java and is
 also:
 

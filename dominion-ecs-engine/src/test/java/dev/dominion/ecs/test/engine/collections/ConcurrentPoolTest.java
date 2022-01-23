@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -51,27 +52,27 @@ class ConcurrentPoolTest {
         @Test
         public void freeId() {
             try (ConcurrentPool.Tenant<LongEntity> tenant = new ConcurrentPool<LongEntity>().newTenant()) {
-                Assertions.assertEquals(1, tenant.currentPageSize());
+                Assertions.assertEquals(0, tenant.currentPageSize());
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(2, tenant.currentPageSize());
+                Assertions.assertEquals(1, tenant.currentPageSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(3, tenant.currentPageSize()); // ready nextId == 2
+                Assertions.assertEquals(2, tenant.currentPageSize()); // ready nextId == 2
                 tenant.freeId(0); // 1 -> 0 : ready nextId == 1
-                Assertions.assertEquals(2, tenant.currentPageSize());
+                Assertions.assertEquals(1, tenant.currentPageSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(3, tenant.currentPageSize());
+                Assertions.assertEquals(2, tenant.currentPageSize());
                 Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 // move to the next page
                 for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY; i++) {
                     tenant.nextId();
                 }
-                Assertions.assertEquals(4, tenant.currentPageSize());
+                Assertions.assertEquals(3, tenant.currentPageSize());
                 Assertions.assertEquals(3, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 tenant.freeId(1);
-                Assertions.assertEquals(5, tenant.currentPageSize());
+                Assertions.assertEquals(4, tenant.currentPageSize());
                 Assertions.assertEquals(65535, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(6, tenant.currentPageSize());
+                Assertions.assertEquals(5, tenant.currentPageSize());
             }
         }
 
@@ -92,8 +93,35 @@ class ConcurrentPoolTest {
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-                Assertions.assertEquals(capacity + 1 - removed, concurrentPool.size());
+                Assertions.assertEquals(capacity - removed, concurrentPool.size());
                 Assertions.assertEquals((int) (capacity * .9), tenant.nextId());
+            }
+        }
+
+        @Test
+        public void iterator() {
+            try (ConcurrentPool.Tenant<Id> tenant = new ConcurrentPool<Id>().newTenant()) {
+                for (int i = 0; i < 1_000_000; i++) {
+                    long nextId = tenant.nextId();
+                    tenant.register(nextId, new Id(i));
+                }
+                Iterator<Id> iterator = tenant.iterator();
+                int i = 0;
+                while (iterator.hasNext()) {
+                    long id = iterator.next().id;
+                    Assertions.assertEquals(i++, id);
+                }
+            }
+        }
+
+        public record Id(long id) implements ConcurrentPool.Identifiable {
+            @Override
+            public long getId() {
+                return id;
+            }
+
+            @Override
+            public void setId(long id) {
             }
         }
     }

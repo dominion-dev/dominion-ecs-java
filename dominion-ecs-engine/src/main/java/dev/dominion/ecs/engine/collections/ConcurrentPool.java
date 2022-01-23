@@ -1,9 +1,6 @@
 package dev.dominion.ecs.engine.collections;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
@@ -29,7 +26,11 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
     private LinkedPage<T> newPage(Tenant<T> owner) {
         int id = pageIndex.incrementAndGet();
-        LinkedPage<T> newPage = new LinkedPage<>(id, owner.currentPage);
+        LinkedPage<T> currentPage = owner.currentPage;
+        LinkedPage<T> newPage = new LinkedPage<>(id, currentPage);
+        if (currentPage != null) {
+            currentPage.setNext(newPage);
+        }
         return pages[id] = newPage;
     }
 
@@ -71,12 +72,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
         private final ConcurrentLongStack stack;
+        private final LinkedPage<T> firstPage;
         private LinkedPage<T> currentPage;
         private long newId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
-            currentPage = pool.newPage(this);
+            firstPage = currentPage = pool.newPage(this);
             stack = new ConcurrentLongStack(1 << 16);
             nextId();
         }
@@ -139,6 +141,10 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return reusableId;
         }
 
+        public Iterator<T> iterator() {
+            return new PoolIterator<>(firstPage);
+        }
+
         public T register(long id, T entry) {
             return pool.getPage(id).set(id, entry);
         }
@@ -157,11 +163,35 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         }
     }
 
+    public static class PoolIterator<T extends Identifiable> implements Iterator<T> {
+        int next = 0;
+        private LinkedPage<T> currentPage;
+
+        public PoolIterator(LinkedPage<T> currentPage) {
+            this.currentPage = currentPage;
+        }
+
+        @SuppressWarnings("ConstantConditions")
+        @Override
+        public boolean hasNext() {
+            return currentPage.size() > next
+                    || ((next = 0) == 0 && (currentPage = currentPage.next) != null);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public T next() {
+            return (T) currentPage.data[next++];
+        }
+    }
+
     public static final class LinkedPage<T extends Identifiable> {
         private final Identifiable[] data = new Identifiable[PAGE_CAPACITY];
         private final LinkedPage<T> previous;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
+        private LinkedPage<T> next;
+        private int sizeOffset;
 
         public LinkedPage(int id, LinkedPage<T> previous) {
             this.previous = previous;
@@ -214,8 +244,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return previous;
         }
 
+        private void setNext(LinkedPage<T> next) {
+            this.next = next;
+            sizeOffset = 1;
+        }
+
         public int size() {
-            return index.get() + 1;
+            return index.get() + sizeOffset;
         }
 
         public boolean isEmpty() {
