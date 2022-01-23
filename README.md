@@ -1,4 +1,4 @@
-#<img src="dominion-logo-square.png" align="right" width="100">Dominion
+# <img src="dominion-logo-square.png" align="right" width="100">Dominion
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
