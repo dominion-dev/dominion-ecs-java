@@ -31,5 +31,6 @@ several ways. Dominion mitigates Java performance pitfalls by setting a few key 
   Java 8.
 - **_use Java 17 LTS_**: only by upgrading to the last JDK 17 you will get a performance boost for free. As already
   tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9%
-  faster than Java 11. Dominion started using Java 17 from the beginning and all benchmarks are run with this LTS
-  version of Java.
+  faster than Java 11. Whenever possible and to further reduce memory footprint, the engine uses records (introduced by
+  Java 14) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning
+  and all benchmarks are run with this LTS version of Java.
