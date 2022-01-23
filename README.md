@@ -6,9 +6,9 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## Features
 
-- 🚀 **_fast_** : not only is Dominion an insanely fast ECS for the Java platform, but it can also **be in the same
-  league as ECS for C/C++** (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
-- 🤏 **_tiny_**: just a high-performance Core Java library with a minimal footprint and no other dependencies
+- 🚀 **_fast_** : Dominion is not only an insanely fast ECS for the Java platform, it can also be in the same league as
+  ECS for C/C++ (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
+- 🤏 **_tiny_**: just a high-performance Core Java library with a minimal footprint and no dependencies
 - 🦾 **_easy_**: Dominion exposes a clean, self-explanatory API, and this readme alone will be enough to provide a
   complete usage documentation
 - 🛠️ **_a pre-alpha_**: the project is still in early stages and the API is not yet complete and not fully implemented,
@@ -36,3 +36,7 @@ many ways. Dominion mitigates Java performance pitfalls by setting a few key poi
   and all benchmarks are run with this LTS version of Java.
 
 ## Getting Started
+
+Dominion has not yet been released and the API is still under development and not yet ready to share detailed
+documentation. The "how to" to get started with Dominion will come very soon, as soon as the very first version is
+ready.
