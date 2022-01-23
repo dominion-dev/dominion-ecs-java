@@ -4,7 +4,6 @@ import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 
 public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
-
     private long id;
     private Composition composition;
     private Object singleComponent;
