@@ -3,18 +3,17 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
-Dominion ECS is:
-- 🚀 **_fast_** : not only is it an insanely fast ECS in the Java scenario, but it can also **be in the same league as
+## Features
+- 🚀 **_fast_** : not only Dominion is  an insanely fast ECS in the Java scenario, but it can also **be in the same league as
   ECS for C/C++** (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
 - 🤏 **_tiny_**: just a high-performance Core Java library with a minimal footprint and no other dependencies
-- 🦾 **_easy_**: exposes a clean, self-explanatory API, and this readme alone will be enough to provide a complete usage
+- 🦾 **_easy_**: Dominion exposes a clean, self-explanatory API, and this readme alone will be enough to provide a complete usage
   documentation
-- 🛠️ **_a pre-alpha_**: this project is still in early stages and the API is not yet complete and not fully
+- 🛠️ **_a pre-alpha_**: the project is still in early stages and the API is not yet complete and not fully
   implemented, but every part already built comes with unit tests and benchmarks. There are currently no releases yet
   and first release is scheduled for the first quarter of 2022.
 
 ## About Performance
-
 Designing a high-performance Java library is always a challenge as the speed of code execution could be affected in
 several ways. Dominion mitigates Java performance pitfalls by setting a few key points:
 
