@@ -1,8 +1,8 @@
 # <img src="dominion-logo-square.png" align="right" width="100">Dominion
 
-Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
-
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
+
+Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
 
 ## Features
 
