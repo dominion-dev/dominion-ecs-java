@@ -14,7 +14,7 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 - 🛠️ **_a pre-alpha_**: the project is still in early stages and the API is not yet complete and not fully implemented,
   but every part already built comes with unit tests and benchmarks. There are currently no releases yet and first
   release is scheduled for the first quarter of 2022.
-- 👉 **_on discord_**: [join the Dominion Discord!](https://discord.gg/BHMz3axqUG)
+- 👉 **_support on discord_**: [join the Dominion Discord!](https://discord.gg/BHMz3axqUG)
 
 ## About Performance
 
