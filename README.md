@@ -37,6 +37,16 @@ many ways. Dominion mitigates Java performance pitfalls by setting a few key poi
 
 ## Getting Started
 
-Dominion has not yet been released and the API is still under development and not yet ready to share detailed
+Dominion has not yet been released. The API is still under development and not yet ready to share detailed
 documentation. The "how to" to get started with Dominion will come very soon, as soon as the very first version is
-ready.
+ready. [Join the Discord community for updates](https://discord.gg/BHMz3axqUG).
+
+In the meantime, you can easily clone the repository and create a local build of the project and install it in your
+local Maven repository. In your local environment you must have already installed a JDK 17 (of your choice) and Maven,
+so in the root folder of the cloned project type the following command:
+
+`mvn clean install`
+
+With a build now available in your local repository you may
+run [Dominion benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark) to independently check the
+performance.
