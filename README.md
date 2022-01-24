@@ -18,7 +18,7 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## About Performance
 
-Designing a high performance Java library is always a challenge as the execution speed of Java code could be affected in
+Designing a high-performance Java library is quite a challenge as the execution speed of Java code could be affected in
 many ways. Dominion mitigates Java performance pitfalls by setting a few key points:
 
 - **_do not use only the standard library_**: the Java standard library implements data structures and algorithms
