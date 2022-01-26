@@ -35,6 +35,9 @@ public final class CompositionRepository implements AutoCloseable {
                     if (node == null) {
                         node = nodeCache.getOrCreateNode(key, componentType);
                     }
+                } else {
+                    // node may not yet be connected to itself
+                    node.linkNode(classIndex.getIndex(componentType), node);
                 }
                 return getNodeComposition(node);
             default:
