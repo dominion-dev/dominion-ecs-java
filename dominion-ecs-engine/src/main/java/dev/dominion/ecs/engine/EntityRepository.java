@@ -56,7 +56,20 @@ public final class EntityRepository implements Dominion {
         private Iterator<T> currentCompositionIterator;
 
         public AbstractResults(Collection<CompositionRepository.Node> nodes) {
-            nodesIterator = nodes.iterator();
+            nodesIterator = nodes != null ? nodes.iterator() : new Iterator<>() {
+                @Override
+                public boolean hasNext() {
+                    return false;
+                }
+
+                @Override
+                public CompositionRepository.Node next() {
+                    return null;
+                }
+            };
+        }
+
+        public void initCompositionIterator() {
             currentCompositionIterator = nodesIterator.hasNext() ?
                     compositionIterator(nodesIterator.next().getComposition()) :
                     new Iterator<>() {
@@ -107,6 +120,7 @@ public final class EntityRepository implements Dominion {
         public Comp1Results(Collection<CompositionRepository.Node> nodes, Class<T> type) {
             super(nodes);
             this.type = type;
+            initCompositionIterator();
         }
 
         @Override
@@ -123,6 +137,7 @@ public final class EntityRepository implements Dominion {
             super(nodes);
             this.type1 = type1;
             this.type2 = type2;
+            initCompositionIterator();
         }
 
         @Override

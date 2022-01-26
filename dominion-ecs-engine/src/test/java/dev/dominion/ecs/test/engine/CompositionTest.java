@@ -105,7 +105,6 @@ class CompositionTest {
         }
     }
 
-
     record C1(int id) {
     }
 
