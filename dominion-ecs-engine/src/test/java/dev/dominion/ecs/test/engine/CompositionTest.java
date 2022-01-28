@@ -1,11 +1,14 @@
 package dev.dominion.ecs.test.engine;
 
+import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.LongEntity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.Iterator;
 
 class CompositionTest {
 
@@ -44,14 +47,14 @@ class CompositionTest {
                 , C7.class
                 , C8.class
         );
-        var c1 = new C1();
-        var c2 = new C2();
-        var c3 = new C3();
-        var c4 = new C4();
-        var c5 = new C5();
-        var c6 = new C6();
-        var c7 = new C7();
-        var c8 = new C8();
+        var c1 = new C1(0);
+        var c2 = new C2(0);
+        var c3 = new C3(0);
+        var c4 = new C4(0);
+        var c5 = new C5(0);
+        var c6 = new C6(0);
+        var c7 = new C7(0);
+        var c8 = new C8(0);
         Assertions.assertArrayEquals(
                 new Object[]{c1, c2, c3, c4, c5, c6, c7, c8}
                 , composition.sortComponentsInPlaceByIndex(
@@ -60,27 +63,69 @@ class CompositionTest {
         );
     }
 
-    private static class C1 {
+    @Test
+    public void select1Comp() {
+        ClassIndex classIndex = new ClassIndex();
+        classIndex.addClass(C1.class);
+        ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
+        try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
+            Composition composition = new Composition(tenant, classIndex, C1.class);
+            for (int i = 0; i < 1_000_000; i++) {
+                composition.createEntity(new C1(i));
+            }
+            Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class);
+            int i = 0;
+            while (iterator.hasNext()) {
+                long id = iterator.next().comp().id;
+                Assertions.assertEquals(i++, id);
+            }
+        }
     }
 
-    private static class C2 {
+    @Test
+    public void select2Comp() {
+        ClassIndex classIndex = new ClassIndex();
+        classIndex.addClass(C1.class);
+        classIndex.addClass(C2.class);
+        ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
+        try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
+            Composition composition = new Composition(tenant, classIndex, C1.class, C2.class);
+            for (int i = 0; i < 1_000_000; i++) {
+                composition.createEntity(new C1(i), new C2(i + 1));
+            }
+            Iterator<Results.Comp2<C1, C2>> iterator = composition.select(C1.class, C2.class);
+            int i = 0;
+            while (iterator.hasNext()) {
+                Results.Comp2<C1, C2> next = iterator.next();
+                long id1 = next.comp1().id;
+                long id2 = next.comp2().id;
+                Assertions.assertEquals(i++, id1);
+                Assertions.assertEquals(i, id2);
+            }
+        }
     }
 
-    private static class C3 {
+    record C1(int id) {
     }
 
-    private static class C4 {
+    record C2(int id) {
     }
 
-    private static class C5 {
+    record C3(int id) {
     }
 
-    private static class C6 {
+    record C4(int id) {
     }
 
-    private static class C7 {
+    record C5(int id) {
     }
 
-    private static class C8 {
+    record C6(int id) {
+    }
+
+    record C7(int id) {
+    }
+
+    record C8(int id) {
     }
 }

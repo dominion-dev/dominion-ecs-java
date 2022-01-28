@@ -86,6 +86,23 @@ public final class Composition {
                 tenant.iterator());
     }
 
+    public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+        return new Comp3Iterator<>(
+                componentIndex[classIndex.getIndex(type1)],
+                componentIndex[classIndex.getIndex(type2)],
+                componentIndex[classIndex.getIndex(type3)],
+                tenant.iterator());
+    }
+
+    public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+        return new Comp4Iterator<>(
+                componentIndex[classIndex.getIndex(type1)],
+                componentIndex[classIndex.getIndex(type2)],
+                componentIndex[classIndex.getIndex(type3)],
+                componentIndex[classIndex.getIndex(type4)],
+                tenant.iterator());
+    }
+
     record Comp1Iterator<T>(int idx, Iterator<LongEntity> iterator) implements Iterator<Results.Comp1<T>> {
         @Override
         public boolean hasNext() {
@@ -112,7 +129,49 @@ public final class Composition {
         @Override
         public Results.Comp2<T1, T2> next() {
             LongEntity longEntity = iterator.next();
-            return new Results.Comp2<>((T1) longEntity.getComponents()[idx1], (T2) longEntity.getComponents()[idx2], longEntity);
+            Object[] components = longEntity.getComponents();
+            return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], longEntity);
+        }
+    }
+
+    record Comp3Iterator<T1, T2, T3>(int idx1, int idx2, int idx3,
+                                     Iterator<LongEntity> iterator) implements Iterator<Results.Comp3<T1, T2, T3>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Results.Comp3<T1, T2, T3> next() {
+            LongEntity longEntity = iterator.next();
+            Object[] components = longEntity.getComponents();
+            return new Results.Comp3<>(
+                    (T1) components[idx1],
+                    (T2) components[idx2],
+                    (T3) components[idx3],
+                    longEntity);
+        }
+    }
+
+    record Comp4Iterator<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
+                                         Iterator<LongEntity> iterator) implements Iterator<Results.Comp4<T1, T2, T3, T4>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Results.Comp4<T1, T2, T3, T4> next() {
+            LongEntity longEntity = iterator.next();
+            Object[] components = longEntity.getComponents();
+            return new Results.Comp4<>(
+                    (T1) components[idx1],
+                    (T2) components[idx2],
+                    (T3) components[idx3],
+                    (T4) components[idx4],
+                    longEntity);
         }
     }
 }
