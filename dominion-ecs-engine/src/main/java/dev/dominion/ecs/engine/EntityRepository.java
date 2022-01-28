@@ -46,6 +46,18 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
+    public <T1, T2, T3> Results<Results.Comp3<T1, T2, T3>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3);
+        return new Comp3Results<>(nodes, type1, type2, type3);
+    }
+
+    @Override
+    public <T1, T2, T3, T4> Results<Results.Comp4<T1, T2, T3, T4>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4);
+        return new Comp4Results<>(nodes, type1, type2, type3, type4);
+    }
+
+    @Override
     public void close() {
         compositions.close();
     }
@@ -153,6 +165,44 @@ public final class EntityRepository implements Dominion {
         @Override
         Iterator<Comp2<T1, T2>> compositionIterator(Composition composition) {
             return composition.select(type1, type2);
+        }
+    }
+
+    public final static class Comp3Results<T1, T2, T3> extends AbstractResults<Results.Comp3<T1, T2, T3>> {
+        private final Class<T1> type1;
+        private final Class<T2> type2;
+        private final Class<T3> type3;
+
+        public Comp3Results(Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+            super(nodes);
+            this.type1 = type1;
+            this.type2 = type2;
+            this.type3 = type3;
+        }
+
+        @Override
+        Iterator<Comp3<T1, T2, T3>> compositionIterator(Composition composition) {
+            return composition.select(type1, type2, type3);
+        }
+    }
+
+    public final static class Comp4Results<T1, T2, T3, T4> extends AbstractResults<Results.Comp4<T1, T2, T3, T4>> {
+        private final Class<T1> type1;
+        private final Class<T2> type2;
+        private final Class<T3> type3;
+        private final Class<T4> type4;
+
+        public Comp4Results(Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+            super(nodes);
+            this.type1 = type1;
+            this.type2 = type2;
+            this.type3 = type3;
+            this.type4 = type4;
+        }
+
+        @Override
+        Iterator<Comp4<T1, T2, T3, T4>> compositionIterator(Composition composition) {
+            return composition.select(type1, type2, type3, type4);
         }
     }
 }
