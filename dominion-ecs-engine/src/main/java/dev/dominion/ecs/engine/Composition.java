@@ -129,7 +129,8 @@ public final class Composition {
         @Override
         public Results.Comp2<T1, T2> next() {
             LongEntity longEntity = iterator.next();
-            return new Results.Comp2<>((T1) longEntity.getComponents()[idx1], (T2) longEntity.getComponents()[idx2], longEntity);
+            Object[] components = longEntity.getComponents();
+            return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], longEntity);
         }
     }
 
@@ -144,10 +145,11 @@ public final class Composition {
         @Override
         public Results.Comp3<T1, T2, T3> next() {
             LongEntity longEntity = iterator.next();
+            Object[] components = longEntity.getComponents();
             return new Results.Comp3<>(
-                    (T1) longEntity.getComponents()[idx1],
-                    (T2) longEntity.getComponents()[idx2],
-                    (T3) longEntity.getComponents()[idx3],
+                    (T1) components[idx1],
+                    (T2) components[idx2],
+                    (T3) components[idx3],
                     longEntity);
         }
     }
@@ -163,11 +165,12 @@ public final class Composition {
         @Override
         public Results.Comp4<T1, T2, T3, T4> next() {
             LongEntity longEntity = iterator.next();
+            Object[] components = longEntity.getComponents();
             return new Results.Comp4<>(
-                    (T1) longEntity.getComponents()[idx1],
-                    (T2) longEntity.getComponents()[idx2],
-                    (T3) longEntity.getComponents()[idx3],
-                    (T4) longEntity.getComponents()[idx4],
+                    (T1) components[idx1],
+                    (T2) components[idx2],
+                    (T3) components[idx3],
+                    (T4) components[idx4],
                     longEntity);
         }
     }
