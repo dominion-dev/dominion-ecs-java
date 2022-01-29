@@ -31,13 +31,16 @@ many ways. Dominion mitigates Java's performance pitfalls by taking a few action
   with user code and without direct control. To reduce GC activities significantly, Dominion implements a pooling system
   to reuse arrays living in a heap and creates off-heap data structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
-  Otherwise, it makes little sense. Writing a highly concurrent library in Java requires non-blocking concurrency and
-  using the right tools. Dominion also implements concurrency using the powerful `StampedLock` introduced by Java 8.
+  Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
+  as much as possible and leveraging the best tools - Dominion also implements concurrency using the
+  powerful [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html)
+  introduced in Java since version 8.
 - **_using Java 17 LTS_**: only by upgrading to the last JDK 17 you will get a performance boost for free. As already
   tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9%
-  faster than Java 11. Whenever possible and to further reduce memory footprint, the engine uses records (introduced by
-  Java 14) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning
-  and all benchmarks are run with this LTS version of Java.
+  faster than Java 11. Whenever possible and to further reduce memory footprint, the engine
+  uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) (officially introduced by Java
+    15) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning and
+        all benchmarks are run with this LTS version of Java.
 
 ## Getting Started
 
