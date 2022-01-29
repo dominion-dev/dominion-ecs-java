@@ -12,9 +12,10 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
   easily integrate Dominion into your game engine or framework or use it directly for your game or application.
 - ☕ **_SIMPLE_** : Dominion aims to be simple by design and exposes a clean, minimal, and self-explanatory API. This
   readme alone will provide a complete usage documentation
-- 🦾 **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG)
+- 🦾 **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
+  the availability of the new version.
 
-Dominion is still in early 🍼 stages and the API is not yet complete and not fully implemented, but every part already
+Dominion is still in early stages 🍼. The API is not yet complete and not fully implemented, but every part already
 built comes with unit tests and benchmarks. There are currently no releases yet and first release is scheduled for the
 first quarter of 2022.
 
