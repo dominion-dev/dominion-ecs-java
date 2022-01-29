@@ -22,7 +22,7 @@ first quarter of 2022.
 ## About Performance
 
 Designing a high-performance Java library is quite a challenge as the execution speed of Java code could be affected in
-many ways. Dominion mitigates Java performance pitfalls by setting a few key points:
+many ways. Dominion mitigates Java's performance pitfalls by taking a few actions:
 
 - **_not just using the standard library_**: the Java standard library implements data structures and algorithms
   designed without making any assumption about the data as they are general purpose. Dominion implements some custom
