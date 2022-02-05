@@ -49,11 +49,18 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     @Override
-    public void addComponents(Object... components) {
+    public Entity add(Object... components) {
+        return composition.getRepository().addComponents(this, components);
     }
 
     @Override
-    public void removeComponents(Object... components) {
+    public Entity remove(Object... components) {
+        return null;
+    }
+
+    @Override
+    public boolean contains(Object component) {
+        return false;
     }
 
     @Override
