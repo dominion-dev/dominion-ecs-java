@@ -9,11 +9,13 @@ import java.util.Iterator;
 public final class Composition {
     private final static int componentIndexCapacity = 1 << 10;
     private final Class<?>[] componentTypes;
+    private final CompositionRepository repository;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
 
-    public Composition(ConcurrentPool.Tenant<LongEntity> tenant, ClassIndex classIndex, Class<?>... componentTypes) {
+    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<LongEntity> tenant, ClassIndex classIndex, Class<?>... componentTypes) {
+        this.repository = repository;
         this.tenant = tenant;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
@@ -50,7 +52,19 @@ public final class Composition {
 
     public LongEntity createEntity(Object... components) {
         long id = tenant.nextId();
-        LongEntity entity = (tenant.register(id, new LongEntity(id, this)));
+        LongEntity entity = tenant.register(id, new LongEntity(id, this));
+        return switch (componentTypes.length) {
+            case 0 -> entity;
+            case 1 -> entity.setSingleComponent(components[0]);
+            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
+        };
+    }
+
+    public LongEntity attachEntity(LongEntity entity, Object... components) {
+        long id = tenant.nextId();
+        entity.setId(id);
+        entity.setComposition(this);
+        tenant.register(id, entity);
         return switch (componentTypes.length) {
             case 0 -> entity;
             case 1 -> entity.setSingleComponent(components[0]);
@@ -59,15 +73,23 @@ public final class Composition {
     }
 
     public boolean destroyEntity(LongEntity entity) {
-        tenant.freeId(entity.getId());
+        detachEntity(entity);
         entity.setComposition(null);
         entity.setSingleComponent(null);
         entity.setComponents(null);
         return true;
     }
 
+    public void detachEntity(LongEntity entity) {
+        tenant.freeId(entity.getId());
+    }
+
     public Class<?>[] getComponentTypes() {
         return componentTypes;
+    }
+
+    public CompositionRepository getRepository() {
+        return repository;
     }
 
     public ConcurrentPool.Tenant<LongEntity> getTenant() {
