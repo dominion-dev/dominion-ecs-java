@@ -2,6 +2,8 @@ package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
+import dev.dominion.ecs.engine.EntityRepository;
+import dev.dominion.ecs.engine.LongEntity;
 import dev.dominion.ecs.engine.system.HashCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -25,7 +27,7 @@ class CompositionRepositoryTest {
     @Test
     void getOrCreateWith1Component() {
         try (CompositionRepository compositionRepository = new CompositionRepository()) {
-            Composition composition = compositionRepository.getOrCreate(new Object[]{new C1()});
+            Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             Assertions.assertTrue(compositionRepository.getNodeCache()
                     .contains(HashCode.longHashCode(new int[]{
@@ -37,7 +39,7 @@ class CompositionRepositoryTest {
     @Test
     void getOrCreateWith2Component() {
         try (CompositionRepository compositionRepository = new CompositionRepository()) {
-            Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(), new C2()});
+            Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
             long longHashCode = HashCode.longHashCode(new int[]{
                     compositionRepository.getClassIndex().getIndex(C1.class)
@@ -57,10 +59,10 @@ class CompositionRepositoryTest {
     @Test
     void find() {
         try (CompositionRepository compositionRepository = new CompositionRepository()) {
-            Composition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1()});
-            Composition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(), new C2()});
-            Composition compositionC2C3 = compositionRepository.getOrCreate(new Object[]{new C2(), new C3()});
-            Composition compositionC2 = compositionRepository.getOrCreate(new Object[]{new C2()});
+            Composition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
+            Composition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
+            Composition compositionC2C3 = compositionRepository.getOrCreate(new Object[]{new C2(0), new C3(0)});
+            Composition compositionC2 = compositionRepository.getOrCreate(new Object[]{new C2(0)});
 
             Collection<CompositionRepository.Node> nodes = compositionRepository.find(C1.class);
             Assertions.assertNotNull(nodes);
@@ -102,13 +104,51 @@ class CompositionRepositoryTest {
         }
     }
 
-    private static class C1 {
+    @Test
+    void addComponents() {
+        var c1 = new C1(0);
+        var c2 = new C2(0);
+        var c3 = new C3(0);
+        var c4 = new C4(0);
+        try (EntityRepository entityRepository = new EntityRepository()) {
+            LongEntity entity = (LongEntity) entityRepository.createEntity();
+            CompositionRepository repository = entity.getComposition().getRepository();
+            LongEntity entityPostAdd = (LongEntity) repository.addComponents(entity, c1);
+            Assertions.assertEquals(entityPostAdd, entity);
+            Assertions.assertEquals(c1, entityPostAdd.getSingleComponent());
+
+            entity = (LongEntity) entityRepository.createEntity(c1);
+            entityPostAdd = (LongEntity) repository.addComponents(entity);
+            Assertions.assertEquals(c1, entityPostAdd.getSingleComponent());
+
+            entityPostAdd = (LongEntity) repository.addComponents(entity, c2);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());
+
+            entity = (LongEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (LongEntity) repository.addComponents(entity, c3);
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+
+            entity = (LongEntity) entityRepository.createEntity(c1);
+            entityPostAdd = (LongEntity) repository.addComponents(entity, c2, c3);
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+
+            entity = (LongEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (LongEntity) repository.addComponents(entity, c3, c4);
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4}, entityPostAdd.getComponents());
+        }
     }
 
-    private static class C2 {
+
+    record C1(int id) {
     }
 
-    private static class C3 {
+    record C2(int id) {
+    }
+
+    record C3(int id) {
+    }
+
+    record C4(int id) {
     }
 
     @Nested

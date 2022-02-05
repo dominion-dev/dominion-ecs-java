@@ -2,9 +2,11 @@ package dev.dominion.ecs.api;
 
 public interface Entity {
 
-    void addComponents(Object... components);
+    Entity add(Object... components);
 
-    void removeComponents(Object... components);
+    Entity remove(Object... components);
+
+    boolean contains(Object component);
 
     <S extends Enum<S>> void setState(S state);
 

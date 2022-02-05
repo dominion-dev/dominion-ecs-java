@@ -1,5 +1,6 @@
 package dev.dominion.ecs.engine;
 
+import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.system.ClassIndex;
@@ -19,7 +20,7 @@ public final class CompositionRepository implements AutoCloseable {
 
     public CompositionRepository() {
         root = new Node();
-        root.composition = new Composition(pool.newTenant(), classIndex);
+        root.composition = new Composition(this, pool.newTenant(), classIndex);
     }
 
     public Composition getOrCreate(Object[] components) {
@@ -72,6 +73,37 @@ public final class CompositionRepository implements AutoCloseable {
         }
         return link.getOrCreateComposition();
     }
+
+
+    public Entity addComponents(LongEntity entity, Object... components) {
+        if (components.length == 0) {
+            return entity;
+        }
+        int componentsLength = components.length;
+        Composition prevComposition = entity.getComposition();
+        Object[] entityComponents = entity.getComponents();
+        int prevComponentsLength = prevComposition.getComponentTypes().length;
+        if (prevComponentsLength == 0) {
+            Composition composition = getOrCreate(components);
+            prevComposition.detachEntity(entity);
+            return composition.attachEntity(entity, components);
+        }
+        Object[] newComponentArray = new Object[prevComponentsLength + componentsLength];
+        if (prevComponentsLength == 1) {
+            newComponentArray[0] = entity.getSingleComponent();
+        } else {
+            System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
+        }
+        if (componentsLength == 1) {
+            newComponentArray[prevComponentsLength] = components[0];
+        } else {
+            System.arraycopy(components, 0, newComponentArray, prevComponentsLength, componentsLength);
+        }
+        Composition composition = getOrCreate(newComponentArray);
+        prevComposition.detachEntity(entity);
+        return composition.attachEntity(entity, newComponentArray);
+    }
+
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Collection<Node> find(Class<?>... componentTypes) {
@@ -186,7 +218,7 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(pool.newTenant(), classIndex, componentTypes);
+                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), classIndex, componentTypes);
                     break;
                 }
                 return value;
