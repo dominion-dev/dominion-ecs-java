@@ -79,17 +79,26 @@ public final class CompositionRepository implements AutoCloseable {
         if (components.length == 0) {
             return entity;
         }
+        int componentsLength = components.length;
         Composition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();
-        int prevComponentsLength = entityComponents.length;
+        int prevComponentsLength = prevComposition.getComponentTypes().length;
         if (prevComponentsLength == 0) {
             Composition composition = getOrCreate(components);
             prevComposition.detachEntity(entity);
             return composition.attachEntity(entity, components);
         }
-        Object[] newComponentArray = new Object[prevComponentsLength + components.length];
-        System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
-        System.arraycopy(components, 0, newComponentArray, prevComponentsLength + 1, components.length);
+        Object[] newComponentArray = new Object[prevComponentsLength + componentsLength];
+        if (prevComponentsLength == 1) {
+            newComponentArray[0] = entity.getSingleComponent();
+        } else {
+            System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
+        }
+        if (componentsLength == 1) {
+            newComponentArray[prevComponentsLength] = components[0];
+        } else {
+            System.arraycopy(components, 0, newComponentArray, prevComponentsLength, componentsLength);
+        }
         Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
         return composition.attachEntity(entity, newComponentArray);
