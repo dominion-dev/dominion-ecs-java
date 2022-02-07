@@ -163,18 +163,4 @@ public final class ConcurrentIntMap<V> implements SparseIntMap<V> {
     public int getCapacity() {
         return capacity;
     }
-
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
-    @Override
-    public SparseIntMap<V> clone() {
-        int[] newDense = new int[capacity];
-        int[] newSparse = new int[capacity];
-        Object[] newValues = new Object[capacity];
-        System.arraycopy(dense, 0, newDense, 0, capacity);
-        System.arraycopy(sparse, 0, newSparse, 0, capacity);
-        System.arraycopy(values, 0, newValues, 0, capacity);
-        ConcurrentIntMap<V> cloned = new ConcurrentIntMap<>(newDense, newSparse, newValues);
-        cloned.size.set(size.get());
-        return cloned;
-    }
 }

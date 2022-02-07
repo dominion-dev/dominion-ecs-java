@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public interface SparseIntMap<V> extends Cloneable {
+public interface SparseIntMap<V> {
 
     V put(int key, V value);
 
@@ -31,8 +31,6 @@ public interface SparseIntMap<V> extends Cloneable {
     V[] values();
 
     int getCapacity();
-
-    SparseIntMap<V> clone();
 
     @SuppressWarnings("ClassCanBeRecord")
     final class UnmodifiableView<V> implements SparseIntMap<V> {
@@ -110,12 +108,6 @@ public interface SparseIntMap<V> extends Cloneable {
         @Override
         public int getCapacity() {
             return subject.getCapacity();
-        }
-
-        @SuppressWarnings("MethodDoesntCallSuperMethod")
-        @Override
-        public SparseIntMap<V> clone() {
-            return subject.clone();
         }
     }
 }
