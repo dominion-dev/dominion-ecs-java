@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
-public final class ObjectArrayCache {
+public final class ObjectArrayPool {
     public static final int INITIAL_CAPACITY = 1 << 10;
     private final SparseIntMap<Stack> arraysByLengthMap = new ConcurrentIntMap<>();
 
