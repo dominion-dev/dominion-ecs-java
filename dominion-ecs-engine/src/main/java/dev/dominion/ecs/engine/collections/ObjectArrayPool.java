@@ -50,7 +50,7 @@ public final class ObjectArrayPool {
                     int index;
                     if (size.get() < capacity - 1) {
                         index = size.incrementAndGet();
-                        if (!lock.validate(stamp)) {
+                        if (index >= capacity || !lock.validate(stamp)) {
                             size.decrementAndGet();
                             stamp = lock.writeLock();
                             continue;

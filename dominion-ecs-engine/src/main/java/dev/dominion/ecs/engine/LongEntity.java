@@ -8,6 +8,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     private Composition composition;
     private Object singleComponent;
     private Object[] components;
+    private boolean isComponentArrayFromCache;
 
     public LongEntity(long id, Composition composition) {
         this.id = id;
@@ -69,5 +70,13 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public void setEnabled(boolean enabled) {
+    }
+
+    public boolean isComponentArrayFromCache() {
+        return isComponentArrayFromCache;
+    }
+
+    void flagComponentArrayFromCache() {
+        isComponentArrayFromCache = true;
     }
 }

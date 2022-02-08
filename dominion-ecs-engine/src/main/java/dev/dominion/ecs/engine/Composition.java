@@ -2,6 +2,7 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 
 import java.util.Iterator;
@@ -11,12 +12,14 @@ public final class Composition {
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
+    private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
 
-    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<LongEntity> tenant, ClassIndex classIndex, Class<?>... componentTypes) {
+    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<LongEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
+        this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
         if (componentTypes.length > 1) {
@@ -76,7 +79,13 @@ public final class Composition {
         detachEntity(entity);
         entity.setComposition(null);
         entity.setSingleComponent(null);
-        entity.setComponents(null);
+        Object[] components = entity.getComponents();
+        if (components != null) {
+            if (entity.isComponentArrayFromCache()) {
+                arrayPool.push(components);
+            }
+            entity.setComponents(null);
+        }
         return true;
     }
 
