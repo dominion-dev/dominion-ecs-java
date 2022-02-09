@@ -73,19 +73,6 @@ class ConcurrentIntMapTest {
         Assertions.assertEquals(capacity, concurrentIntMap.size());
     }
 
-    @Test
-    public void cloneTest() {
-        SparseIntMap<Integer> concurrentIntMap = new ConcurrentIntMap<>();
-        Assertions.assertTrue(concurrentIntMap.isEmpty());
-        concurrentIntMap.put(0, 0);
-        Assertions.assertFalse(concurrentIntMap.isEmpty());
-        SparseIntMap<Integer> cloned = concurrentIntMap.clone();
-        Assertions.assertFalse(cloned.isEmpty());
-        Assertions.assertEquals(0, cloned.get(0));
-        concurrentIntMap.put(1, 1);
-        Assertions.assertEquals(1, concurrentIntMap.get(1));
-        Assertions.assertNull(cloned.get(1));
-    }
 
     @Test
     public void values() {

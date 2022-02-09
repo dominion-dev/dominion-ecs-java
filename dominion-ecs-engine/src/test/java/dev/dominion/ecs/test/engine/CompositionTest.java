@@ -16,7 +16,7 @@ class CompositionTest {
     void createEntity() {
         ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
         try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null);
+            Composition composition = new Composition(null, tenant, null, null);
             LongEntity entity = composition.createEntity();
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
@@ -37,7 +37,7 @@ class CompositionTest {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        Composition composition = new Composition(null, null, classIndex
+        Composition composition = new Composition(null, null, null, classIndex
                 , C1.class
                 , C2.class
                 , C3.class
@@ -69,7 +69,7 @@ class CompositionTest {
         classIndex.addClass(C1.class);
         ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
         try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, classIndex, C1.class);
+            Composition composition = new Composition(null, tenant, null, classIndex, C1.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i));
             }
@@ -89,7 +89,7 @@ class CompositionTest {
         classIndex.addClass(C2.class);
         ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
         try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, classIndex, C1.class, C2.class);
+            Composition composition = new Composition(null, tenant, null, classIndex, C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i), new C2(i + 1));
             }

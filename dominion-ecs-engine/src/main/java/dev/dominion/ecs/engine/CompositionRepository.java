@@ -3,6 +3,7 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.IntArraySort;
+import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.HashCode;
 
@@ -13,14 +14,15 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
 
-    private final ClassIndex classIndex = new ClassIndex();
     private final ConcurrentPool<LongEntity> pool = new ConcurrentPool<>();
+    private final ObjectArrayPool arrayPool = new ObjectArrayPool();
+    private final ClassIndex classIndex = new ClassIndex();
     private final NodeCache nodeCache = new NodeCache();
     private final Node root;
 
     public CompositionRepository() {
         root = new Node();
-        root.composition = new Composition(this, pool.newTenant(), classIndex);
+        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
     }
 
     public Composition getOrCreate(Object[] components) {
@@ -88,7 +90,8 @@ public final class CompositionRepository implements AutoCloseable {
             prevComposition.detachEntity(entity);
             return composition.attachEntity(entity, components);
         }
-        Object[] newComponentArray = new Object[prevComponentsLength + componentsLength];
+        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + componentsLength);
+        entity.flagComponentArrayFromCache();
         if (prevComponentsLength == 1) {
             newComponentArray[0] = entity.getSingleComponent();
         } else {
@@ -218,7 +221,7 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), classIndex, componentTypes);
+                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), arrayPool, classIndex, componentTypes);
                     break;
                 }
                 return value;

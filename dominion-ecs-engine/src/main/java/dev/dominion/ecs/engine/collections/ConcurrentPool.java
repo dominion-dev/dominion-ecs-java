@@ -100,7 +100,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                     int pageIndex;
                     if (currentPage.hasCapacity()) {
                         pageIndex = currentPage.incrementIndex();
-                        if (!lock.validate(stamp)) {
+                        if (pageIndex >= PAGE_CAPACITY || !lock.validate(stamp)) {
                             currentPage.decrementIndex();
                             stamp = lock.writeLock();
                             continue;
