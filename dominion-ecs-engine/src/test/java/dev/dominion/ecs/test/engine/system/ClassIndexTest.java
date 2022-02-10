@@ -4,6 +4,11 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ClassIndexTest {
 
     @Test
@@ -76,6 +81,28 @@ public class ClassIndexTest {
             map.clear();
             Assertions.assertTrue(map.isEmpty());
             Assertions.assertTrue(map.getCapacity() > 2);
+        }
+    }
+
+    @Test
+    void concurrentGetIndexOrAddClass() throws InterruptedException {
+        try (ClassIndex map = new ClassIndex(1)) {
+            final int capacity = 1 << 12;
+            final ExecutorService executorService = Executors.newFixedThreadPool(8);
+            AtomicInteger errors = new AtomicInteger(0);
+            for (int i = 0; i < capacity; i++) {
+                executorService.execute(() -> {
+                    int hashCode = (int) (Math.random() * (1 << 30));
+                    var index = map.addClassByHashCode(null, hashCode);
+                    if (map.getIndexByHashCode(hashCode) != index) {
+                        errors.incrementAndGet();
+                    }
+                });
+            }
+            executorService.shutdown();
+            Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+            Assertions.assertEquals(capacity, map.size());
+            Assertions.assertEquals(0, errors.get());
         }
     }
 
