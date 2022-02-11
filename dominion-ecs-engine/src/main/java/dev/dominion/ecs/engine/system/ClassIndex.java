@@ -17,10 +17,11 @@ public final class ClassIndex implements AutoCloseable {
     public static final int MAX_HASH_BITS = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final StampedLock lock = new StampedLock();
-    private final Map<Integer, Class<?>> controlData = new HashMap<>(1 << 10);
+    private final Map<Integer, Integer> controlData = new HashMap<>(1 << 10);
+    private Memory memory;
     private int capacity;
     private int index = 0;
-    private Memory memory;
+
 
     public ClassIndex() {
         this(DEFAULT_HASH_BITS);
@@ -32,11 +33,14 @@ public final class ClassIndex implements AutoCloseable {
         memory = new Memory(ensureCapacity(0, 1 << hashBits), hashBits);
     }
 
+    private static long getIdentityAddress(long identityHashCode, long address) {
+        return address + (identityHashCode << INT_BYTES_SHIFT);
+    }
+
     private long ensureCapacity(long address, int newCapacity) {
         long newAddress = address;
         if (newCapacity != capacity) {
             newAddress = unsafe.reallocateMemory(address, (long) newCapacity << INT_BYTES_SHIFT);
-            System.out.println("newCapacity = " + newCapacity);
         }
         unsafe.setMemory(newAddress, (long) newCapacity << INT_BYTES_SHIFT, (byte) 0);
         capacity = newCapacity;
@@ -60,23 +64,21 @@ public final class ClassIndex implements AutoCloseable {
 
     private int add(Class<?> newClass, int hashCode) {
         final int identityHashCode = capHashCode(hashCode, memory.hashBits);
-        final long i = getIdentityAddress(identityHashCode);
+        final long i = getIdentityAddress(identityHashCode, memory.address);
         int currentIndex = unsafe.getInt(i);
         if (currentIndex == 0) {
             unsafe.putInt(i, ++index);
-            controlData.put(index, newClass);
+            controlData.put(index, hashCode);
             return index;
         } else {
-            final Class<?> currentClass = controlData.get(currentIndex);
-            if (currentClass == null || currentClass != newClass) {
+            int currentHashCode = controlData.get(currentIndex);
+            if (currentHashCode != hashCode) {
                 if (memory.hashBits < MAX_HASH_BITS) {
                     reindexAll();
                     return add(newClass, hashCode);
                 } else {
                     throw new RuntimeException(
-                            "An hash(" + memory.hashBits + "bits) collision has been detected between "
-                                    + newClass + "-" + getIdentityHashCode(newClass, memory.hashBits) + " class and previous "
-                                    + currentClass + "-" + getIdentityHashCode(currentClass, memory.hashBits) + " class");
+                            "An hash(" + memory.hashBits + "bits) collision has been detected");
                 }
             }
         }
@@ -85,11 +87,12 @@ public final class ClassIndex implements AutoCloseable {
 
     private void reindexAll() {
         int hashBits = memory.hashBits + 1;
-        memory = new Memory(ensureCapacity(memory.address, 1 << hashBits), hashBits);
-        for (Map.Entry<Integer, Class<?>> entry : controlData.entrySet()) {
-            final int newIdentityHashCode = getIdentityHashCode(entry.getValue(), hashBits);
-            unsafe.putInt(getIdentityAddress(newIdentityHashCode), entry.getKey());
+        Memory newMemory = new Memory(ensureCapacity(memory.address, 1 << hashBits), hashBits);
+        for (Map.Entry<Integer, Integer> entry : controlData.entrySet()) {
+            final int newIdentityHashCode = capHashCode(entry.getValue(), hashBits);
+            unsafe.putInt(getIdentityAddress(newIdentityHashCode, newMemory.address), entry.getKey());
         }
+        memory = newMemory;
     }
 
     public int getIndex(Class<?> klass) {
@@ -97,9 +100,16 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int getIndexByHashCode(int hashCode) {
-        final int identityHashCode = capHashCode(hashCode, memory.hashBits);
-//        System.out.println("identityHashCode = " + identityHashCode);
-        return unsafe.getInt(getIdentityAddress(identityHashCode));
+        long stamp = lock.tryOptimisticRead();
+        for (; ; ) {
+            int identityHashCode = capHashCode(hashCode, memory.hashBits);
+            int index = unsafe.getInt(getIdentityAddress(identityHashCode, memory.address));
+            if (!lock.validate(stamp)) {
+                stamp = lock.tryOptimisticRead();
+                continue;
+            }
+            return index;
+        }
     }
 
     public int getIndexOrAddClass(Class<?> klass) {
@@ -173,16 +183,8 @@ public final class ClassIndex implements AutoCloseable {
         return hashCode;
     }
 
-    private int getIdentityHashCode(Class<?> klass, int hashBits) {
-        return System.identityHashCode(klass) >> (32 - hashBits);
-    }
-
     private int capHashCode(int hashCode, int hashBits) {
         return hashCode >> (32 - hashBits);
-    }
-
-    private long getIdentityAddress(long identityHashCode) {
-        return memory.address + (identityHashCode << INT_BYTES_SHIFT);
     }
 
     public int getHashBits() {

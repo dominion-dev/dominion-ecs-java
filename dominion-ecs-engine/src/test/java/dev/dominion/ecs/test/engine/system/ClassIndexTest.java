@@ -87,14 +87,17 @@ public class ClassIndexTest {
     @Test
     void concurrentGetIndexOrAddClass() throws InterruptedException {
         try (ClassIndex map = new ClassIndex(1)) {
-            final int capacity = 1 << 12;
+            final int capacity = 1 << 9;
             final ExecutorService executorService = Executors.newFixedThreadPool(8);
             AtomicInteger errors = new AtomicInteger(0);
             for (int i = 0; i < capacity; i++) {
                 executorService.execute(() -> {
                     int hashCode = (int) (Math.random() * (1 << 30));
                     var index = map.addClassByHashCode(null, hashCode);
-                    if (map.getIndexByHashCode(hashCode) != index) {
+                    int rIndex;
+                    while ((rIndex = map.getIndexByHashCode(hashCode)) != index) {
+                        System.out.println("rIndex = " + rIndex);
+                        System.out.println("index = " + index);
                         errors.incrementAndGet();
                     }
                 });
