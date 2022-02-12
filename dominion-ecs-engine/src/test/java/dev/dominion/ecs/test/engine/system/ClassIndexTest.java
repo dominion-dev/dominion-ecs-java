@@ -70,12 +70,12 @@ public class ClassIndexTest {
             AtomicInteger errors = new AtomicInteger(0);
             for (int i = 0; i < capacity; i++) {
                 executorService.execute(() -> {
-                    int hashCode = (int) (Math.random() * (1 << 30));
-                    var index = map.addHashCode(hashCode);
+                    Object newClass = new Object();
+                    var wIndex = map.addObject(newClass);
                     int rIndex;
-                    if ((rIndex = map.getIndexByHashCode(hashCode)) != index) {
+                    if ((rIndex = map.getObjectIndex(newClass)) != wIndex) {
                         System.out.println("rIndex = " + rIndex);
-                        System.out.println("index = " + index);
+                        System.out.println("wIndex = " + wIndex);
                         errors.incrementAndGet();
                     }
                 });

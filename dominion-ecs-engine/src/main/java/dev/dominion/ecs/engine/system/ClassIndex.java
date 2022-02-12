@@ -18,8 +18,7 @@ public final class ClassIndex implements AutoCloseable {
     public static final int MIN_HASH_BITS = 14;
     public static final int MAX_HASH_BITS = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final Map<Integer, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
-    private final Map<Integer, Integer> fallbackMap = new ConcurrentHashMap<>(1 << 10);
+    private final Map<Object, Integer> fallbackMap = new ConcurrentHashMap<>(1 << 10);
     private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
     private final AtomicInteger index = new AtomicInteger(0);
     private final int hashBits;
@@ -52,30 +51,27 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int addClass(Class<?> newClass) {
-        return addHashCode(System.identityHashCode(newClass));
+        return addObject(newClass);
     }
 
-    public int addHashCode(int hashCode) {
+    public int addObject(Object newClass) {
         if (useFallbackMap.get()) {
-            return fallbackMap.computeIfAbsent(hashCode, k -> index.incrementAndGet());
+            return fallbackMap.computeIfAbsent(newClass, k -> index.incrementAndGet());
         }
-        final int identityHashCode = capHashCode(hashCode, hashBits);
+        final int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBits);
         final long i = getIdentityAddress(identityHashCode, memoryAddress);
         int currentIndex = unsafe.getInt(i);
         if (currentIndex == 0) {
             int idx = index.incrementAndGet();
             unsafe.putInt(i, idx);
-            controlMap.put(idx, hashCode);
-            fallbackMap.put(hashCode, idx);
+            fallbackMap.put(newClass, idx);
             return idx;
         } else {
-            int currentHashCode = controlMap.get(currentIndex);
-            if (currentHashCode != hashCode) {
+            if (!fallbackMap.containsKey(newClass)) {
                 useFallbackMap.set(true);
-                System.out.println("USE FALLBACK MAP");
+//                System.out.println("USE FALLBACK MAP");
                 int idx = index.incrementAndGet();
-                fallbackMap.put(hashCode, idx);
-                controlMap.put(idx, hashCode);
+                fallbackMap.put(newClass, idx);
                 return idx;
             }
         }
@@ -83,27 +79,27 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int getIndex(Class<?> klass) {
-        return getIndexByHashCode(System.identityHashCode(klass));
+        return getObjectIndex(klass);
     }
 
-    public int getIndexByHashCode(int hashCode) {
+    public int getObjectIndex(Object klass) {
         if (useFallbackMap.get()) {
-            return fallbackMap.get(hashCode);
+            return fallbackMap.get(klass);
         }
-        int identityHashCode = capHashCode(hashCode, hashBits);
+        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBits);
         return unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
     }
 
     public int getIndexOrAddClass(Class<?> klass) {
-        return getIndexOrAddHashCode(System.identityHashCode(klass));
+        return getIndexOrAddObject(klass);
     }
 
-    public int getIndexOrAddHashCode(int hashCode) {
-        int value = getIndexByHashCode(hashCode);
+    public int getIndexOrAddObject(Object klass) {
+        int value = getObjectIndex(klass);
         if (value != 0) {
             return value;
         }
-        return addHashCode(hashCode);
+        return addObject(klass);
     }
 
     public int[] getIndexOrAddClassBatch(Class<?>[] classes) {
@@ -165,16 +161,19 @@ public final class ClassIndex implements AutoCloseable {
         return index.get() == 0;
     }
 
+    public void useUseFallbackMap() {
+        useFallbackMap.set(true);
+    }
+
     public void clear() {
         memoryAddress = ensureCapacity(memoryAddress, capacity);
         index.set(0);
-        controlMap.clear();
         fallbackMap.clear();
     }
 
     @Override
     public void close() {
-        controlMap.clear();
+        fallbackMap.clear();
         unsafe.freeMemory(memoryAddress);
     }
 }
