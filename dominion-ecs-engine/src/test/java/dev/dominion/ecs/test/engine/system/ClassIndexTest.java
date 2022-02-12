@@ -4,6 +4,11 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ClassIndexTest {
 
     @Test
@@ -46,36 +51,39 @@ public class ClassIndexTest {
     }
 
     @Test
-    void reindex() {
-        try (ClassIndex map = new ClassIndex(1)) {
-            map.addClass(C1.class);
-            map.addClass(C1.class);
-            Assertions.assertEquals(1, map.getHashBits());
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            map.addClass(C2.class);
-            Assertions.assertTrue(map.getHashBits() > 1);
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            Assertions.assertEquals(2, map.getIndex(C2.class));
-            map.addClass(C3.class);
-            Assertions.assertTrue(map.getHashBits() > 2);
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            Assertions.assertEquals(2, map.getIndex(C2.class));
-            Assertions.assertEquals(3, map.getIndex(C3.class));
-        }
-    }
-
-    @Test
-    void sizeAndCapacity() {
-        try (ClassIndex map = new ClassIndex(1)) {
-            Assertions.assertEquals(2, map.getCapacity());
+    void size() {
+        try (ClassIndex map = new ClassIndex(14)) {
             map.addClass(C1.class);
             map.addClass(C2.class);
             map.addClass(C3.class);
             Assertions.assertEquals(3, map.size());
-            Assertions.assertTrue(map.getCapacity() > 2);
             map.clear();
             Assertions.assertTrue(map.isEmpty());
-            Assertions.assertTrue(map.getCapacity() > 2);
+        }
+    }
+
+    @Test
+    void concurrentGetIndexOrAddClass() throws InterruptedException {
+        try (ClassIndex map = new ClassIndex()) {
+            final int capacity = 1 << 10;
+            final ExecutorService executorService = Executors.newFixedThreadPool(4);
+            AtomicInteger errors = new AtomicInteger(0);
+            for (int i = 0; i < capacity; i++) {
+                executorService.execute(() -> {
+                    Object newClass = new Object();
+                    var wIndex = map.addObject(newClass);
+                    int rIndex;
+                    if ((rIndex = map.getObjectIndex(newClass)) != wIndex) {
+                        System.out.println("rIndex = " + rIndex);
+                        System.out.println("wIndex = " + wIndex);
+                        errors.incrementAndGet();
+                    }
+                });
+            }
+            executorService.shutdown();
+            Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+            Assertions.assertEquals(capacity, map.size());
+            Assertions.assertEquals(0, errors.get());
         }
     }
 

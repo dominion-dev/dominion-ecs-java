@@ -7,31 +7,37 @@ package dev.dominion.ecs.engine.system;
 
 import sun.misc.Unsafe;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ClassIndex implements AutoCloseable {
+    public final static int INT_BYTES_SHIFT = 2;
+    public static final int DEFAULT_HASH_BITS = 20;
+    public static final int MIN_HASH_BITS = 14;
+    public static final int MAX_HASH_BITS = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final static int INT_BYTES_SHIFT = 2;
-    private static final int DEFAULT_HASH_BITS = 14;
-    private static final int MAX_HASH_BITS = 24;
-    private final StampedLock lock = new StampedLock();
-    private final Map<Integer, Class<?>> controlData = new HashMap<>(1 << 10);
-    private long address;
-    private int hashBits;
+    private final Map<Object, Integer> fallbackMap = new ConcurrentHashMap<>(1 << 10);
+    private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
+    private final AtomicInteger index = new AtomicInteger(0);
+    private final int hashBits;
+    private long memoryAddress;
     private int capacity;
-    private int index = 0;
 
     public ClassIndex() {
         this(DEFAULT_HASH_BITS);
     }
 
     public ClassIndex(int hashBits) {
-        if (hashBits < 1 || hashBits > MAX_HASH_BITS)
-            throw new IllegalArgumentException("Hash cannot be less than 1 or greater than " + MAX_HASH_BITS + " bits");
+        if (hashBits < MIN_HASH_BITS || hashBits > MAX_HASH_BITS)
+            throw new IllegalArgumentException("Hash cannot be less than " + MIN_HASH_BITS + " or greater than " + MAX_HASH_BITS + " bits");
         this.hashBits = hashBits;
-        address = ensureCapacity(0, 1 << hashBits);
+        memoryAddress = ensureCapacity(0, 1 << hashBits);
+    }
+
+    private static long getIdentityAddress(long identityHashCode, long address) {
+        return address + (identityHashCode << INT_BYTES_SHIFT);
     }
 
     private long ensureCapacity(long address, int newCapacity) {
@@ -45,81 +51,55 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int addClass(Class<?> newClass) {
-        long stamp = lock.writeLock();
-        int index;
-        try {
-            index = add(newClass);
-        } finally {
-            lock.unlockWrite(stamp);
-        }
-        return index;
+        return addObject(newClass);
     }
 
-    private int add(Class<?> newClass) {
-        final int identityHashCode = getIdentityHashCode(newClass, hashBits);
-        final long i = getIdentityAddress(identityHashCode);
+    public int addObject(Object newClass) {
+        if (useFallbackMap.get()) {
+            return fallbackMap.computeIfAbsent(newClass, k -> index.incrementAndGet());
+        }
+        final int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBits);
+        final long i = getIdentityAddress(identityHashCode, memoryAddress);
         int currentIndex = unsafe.getInt(i);
         if (currentIndex == 0) {
-            unsafe.putInt(i, ++index);
-            controlData.put(index, newClass);
-            return index;
+            int idx = index.incrementAndGet();
+            unsafe.putInt(i, idx);
+            fallbackMap.put(newClass, idx);
+            return idx;
         } else {
-            final Class<?> currentClass = controlData.get(currentIndex);
-            assert currentClass != null : currentIndex + " cannot be null in ClassIndex.controlData map";
-            if (currentClass != newClass) {
-                if (hashBits < MAX_HASH_BITS) {
-                    reindexAll(++hashBits);
-                    return add(newClass);
-                } else {
-                    throw new RuntimeException(
-                            "An hash(" + hashBits + "bits) collision has been detected between "
-                                    + newClass.getName() + "-" + getIdentityHashCode(newClass, hashBits) + " class and previous "
-                                    + currentClass.getName() + "-" + getIdentityHashCode(currentClass, hashBits) + " class");
-                }
+            if (!fallbackMap.containsKey(newClass)) {
+                useFallbackMap.set(true);
+//                System.out.println("USE FALLBACK MAP");
+                int idx = index.incrementAndGet();
+                fallbackMap.put(newClass, idx);
+                return idx;
             }
         }
         return currentIndex;
     }
 
-    private void reindexAll(int hashBits) {
-        address = ensureCapacity(address, 1 << hashBits);
-        for (Map.Entry<Integer, Class<?>> entry : controlData.entrySet()) {
-            final int newIdentityHashCode = getIdentityHashCode(entry.getValue(), hashBits);
-            unsafe.putInt(getIdentityAddress(newIdentityHashCode), entry.getKey());
-        }
+    public int getIndex(Class<?> klass) {
+        return getObjectIndex(klass);
     }
 
-    public int getIndex(Class<?> klass) {
-        final int identityHashCode = getIdentityHashCode(klass, hashBits);
-        return unsafe.getInt(getIdentityAddress(identityHashCode));
+    public int getObjectIndex(Object klass) {
+        if (useFallbackMap.get()) {
+            return fallbackMap.get(klass);
+        }
+        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBits);
+        return unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
     }
 
     public int getIndexOrAddClass(Class<?> klass) {
-        int value;
-        long stamp = lock.tryOptimisticRead();
-        try {
-            for (; ; stamp = lock.writeLock()) {
-                if (stamp == 0L)
-                    continue;
-                // possibly racy reads
-                value = getIndex(klass);
-                if (!lock.validate(stamp))
-                    continue;
-                if (value != 0)
-                    break;
-                stamp = lock.tryConvertToWriteLock(stamp);
-                if (stamp == 0L)
-                    continue;
-                // exclusive access
-                value = add(klass);
-                break;
-            }
+        return getIndexOrAddObject(klass);
+    }
+
+    public int getIndexOrAddObject(Object klass) {
+        int value = getObjectIndex(klass);
+        if (value != 0) {
             return value;
-        } finally {
-            if (StampedLock.isWriteLockStamp(stamp)) {
-                lock.unlockWrite(stamp);
-            }
         }
+        return addObject(klass);
     }
 
     public int[] getIndexOrAddClassBatch(Class<?>[] classes) {
@@ -140,7 +120,7 @@ public final class ClassIndex implements AutoCloseable {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public long longHashCode(Object[] objects) {
-        boolean[] checkArray = new boolean[index + objects.length + 1];
+        boolean[] checkArray = new boolean[index.get() + objects.length + 1];
         int min = capacity, max = 0;
         for (int i = 0; i < objects.length; i++) {
             int value = getIndex(objects[i].getClass());
@@ -161,12 +141,8 @@ public final class ClassIndex implements AutoCloseable {
         return hashCode;
     }
 
-    private int getIdentityHashCode(Class<?> klass, int hashBits) {
-        return System.identityHashCode(klass) >> (32 - hashBits);
-    }
-
-    private long getIdentityAddress(long identityHashCode) {
-        return address + (identityHashCode << INT_BYTES_SHIFT);
+    private int capHashCode(int hashCode, int hashBits) {
+        return hashCode >> (32 - hashBits);
     }
 
     public int getHashBits() {
@@ -178,27 +154,26 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int size() {
-        return index;
+        return index.get();
     }
 
     public boolean isEmpty() {
-        return index == 0;
+        return index.get() == 0;
+    }
+
+    public void useUseFallbackMap() {
+        useFallbackMap.set(true);
     }
 
     public void clear() {
-        long stamp = lock.writeLock();
-        try {
-            address = ensureCapacity(address, capacity);
-            index = 0;
-            controlData.clear();
-        } finally {
-            lock.unlockWrite(stamp);
-        }
+        memoryAddress = ensureCapacity(memoryAddress, capacity);
+        index.set(0);
+        fallbackMap.clear();
     }
 
     @Override
     public void close() {
-        unsafe.freeMemory(address);
-        controlData.clear();
+        fallbackMap.clear();
+        unsafe.freeMemory(memoryAddress);
     }
 }
