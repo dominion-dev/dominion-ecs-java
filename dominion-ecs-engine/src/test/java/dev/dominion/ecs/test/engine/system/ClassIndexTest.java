@@ -51,51 +51,29 @@ public class ClassIndexTest {
     }
 
     @Test
-    void reindex() {
-        try (ClassIndex map = new ClassIndex(1)) {
-            map.addClass(C1.class);
-            map.addClass(C1.class);
-            Assertions.assertEquals(1, map.getHashBits());
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            map.addClass(C2.class);
-            Assertions.assertTrue(map.getHashBits() > 1);
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            Assertions.assertEquals(2, map.getIndex(C2.class));
-            map.addClass(C3.class);
-            Assertions.assertTrue(map.getHashBits() > 2);
-            Assertions.assertEquals(1, map.getIndex(C1.class));
-            Assertions.assertEquals(2, map.getIndex(C2.class));
-            Assertions.assertEquals(3, map.getIndex(C3.class));
-        }
-    }
-
-    @Test
-    void sizeAndCapacity() {
-        try (ClassIndex map = new ClassIndex(1)) {
-            Assertions.assertEquals(2, map.getCapacity());
+    void size() {
+        try (ClassIndex map = new ClassIndex(14)) {
             map.addClass(C1.class);
             map.addClass(C2.class);
             map.addClass(C3.class);
             Assertions.assertEquals(3, map.size());
-            Assertions.assertTrue(map.getCapacity() > 2);
             map.clear();
             Assertions.assertTrue(map.isEmpty());
-            Assertions.assertTrue(map.getCapacity() > 2);
         }
     }
 
     @Test
     void concurrentGetIndexOrAddClass() throws InterruptedException {
-        try (ClassIndex map = new ClassIndex(1)) {
-            final int capacity = 1 << 9;
-            final ExecutorService executorService = Executors.newFixedThreadPool(8);
+        try (ClassIndex map = new ClassIndex()) {
+            final int capacity = 1 << 10;
+            final ExecutorService executorService = Executors.newFixedThreadPool(4);
             AtomicInteger errors = new AtomicInteger(0);
             for (int i = 0; i < capacity; i++) {
                 executorService.execute(() -> {
                     int hashCode = (int) (Math.random() * (1 << 30));
-                    var index = map.addClassByHashCode(null, hashCode);
+                    var index = map.addHashCode(hashCode);
                     int rIndex;
-                    while ((rIndex = map.getIndexByHashCode(hashCode)) != index) {
+                    if ((rIndex = map.getIndexByHashCode(hashCode)) != index) {
                         System.out.println("rIndex = " + rIndex);
                         System.out.println("index = " + index);
                         errors.incrementAndGet();
