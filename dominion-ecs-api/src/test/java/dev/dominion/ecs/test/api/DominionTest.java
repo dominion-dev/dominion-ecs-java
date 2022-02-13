@@ -79,16 +79,6 @@ public class DominionTest {
         }
 
         @Override
-        public <T1, T2, T3, T4, T5, T6, T7> Results<Results.Comp7<T1, T2, T3, T4, T5, T6, T7>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7) {
-            return null;
-        }
-
-        @Override
-        public <T1, T2, T3, T4, T5, T6, T7, T8> Results<Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7, Class<T8> type8) {
-            return null;
-        }
-
-        @Override
         public void close() {
         }
     }

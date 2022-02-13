@@ -71,18 +71,6 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public <T1, T2, T3, T4, T5, T6, T7> Results<Results.Comp7<T1, T2, T3, T4, T5, T6, T7>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4, type5, type6, type7);
-        return new Comp7Results<>(nodes, type1, type2, type3, type4, type5, type6, type7);
-    }
-
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8> Results<Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7, Class<T8> type8) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4, type5, type6, type7, type8);
-        return new Comp8Results<>(nodes, type1, type2, type3, type4, type5, type6, type7, type8);
-    }
-
-    @Override
     public void close() {
         compositions.close();
     }
@@ -274,60 +262,6 @@ public final class EntityRepository implements Dominion {
         @Override
         Iterator<Comp6<T1, T2, T3, T4, T5, T6>> compositionIterator(Composition composition) {
             return composition.select(type1, type2, type3, type4, type5, type6);
-        }
-    }
-
-    public final static class Comp7Results<T1, T2, T3, T4, T5, T6, T7> extends AbstractResults<Results.Comp7<T1, T2, T3, T4, T5, T6, T7>> {
-        private final Class<T1> type1;
-        private final Class<T2> type2;
-        private final Class<T3> type3;
-        private final Class<T4> type4;
-        private final Class<T5> type5;
-        private final Class<T6> type6;
-        private final Class<T7> type7;
-
-        public Comp7Results(Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7) {
-            super(nodes);
-            this.type1 = type1;
-            this.type2 = type2;
-            this.type3 = type3;
-            this.type4 = type4;
-            this.type5 = type5;
-            this.type6 = type6;
-            this.type7 = type7;
-        }
-
-        @Override
-        Iterator<Comp7<T1, T2, T3, T4, T5, T6, T7>> compositionIterator(Composition composition) {
-            return composition.select(type1, type2, type3, type4, type5, type6, type7);
-        }
-    }
-
-    public final static class Comp8Results<T1, T2, T3, T4, T5, T6, T7, T8> extends AbstractResults<Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> {
-        private final Class<T1> type1;
-        private final Class<T2> type2;
-        private final Class<T3> type3;
-        private final Class<T4> type4;
-        private final Class<T5> type5;
-        private final Class<T6> type6;
-        private final Class<T7> type7;
-        private final Class<T8> type8;
-
-        public Comp8Results(Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7, Class<T8> type8) {
-            super(nodes);
-            this.type1 = type1;
-            this.type2 = type2;
-            this.type3 = type3;
-            this.type4 = type4;
-            this.type5 = type5;
-            this.type6 = type6;
-            this.type7 = type7;
-            this.type8 = type8;
-        }
-
-        @Override
-        Iterator<Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> compositionIterator(Composition composition) {
-            return composition.select(type1, type2, type3, type4, type5, type6, type7, type8);
         }
     }
 }

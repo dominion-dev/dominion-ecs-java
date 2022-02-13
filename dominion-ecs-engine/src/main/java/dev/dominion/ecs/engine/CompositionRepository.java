@@ -130,7 +130,7 @@ public final class CompositionRepository implements AutoCloseable {
                     }
                     currentCompositions = currentCompositions == null ?
                             node.copyLinkedNodeMap() :
-                            retainAll(currentCompositions, node.getLinkedNodes())
+                            retainAll(currentCompositions, node.linkedNodes)
                     ;
                 }
                 return currentCompositions == null ? null : currentCompositions.values();
@@ -163,6 +163,7 @@ public final class CompositionRepository implements AutoCloseable {
 
     @Override
     public void close() {
+        nodeCache.clear();
         classIndex.close();
         pool.close();
     }
@@ -192,6 +193,10 @@ public final class CompositionRepository implements AutoCloseable {
 
         public boolean contains(long key) {
             return data.containsKey(key);
+        }
+
+        public void clear() {
+            data.clear();
         }
     }
 

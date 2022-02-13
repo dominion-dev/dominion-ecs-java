@@ -52,13 +52,11 @@ public class ClassIndexTest {
 
     @Test
     void size() {
-        try (ClassIndex map = new ClassIndex(14)) {
+        try (ClassIndex map = new ClassIndex()) {
             map.addClass(C1.class);
             map.addClass(C2.class);
             map.addClass(C3.class);
             Assertions.assertEquals(3, map.size());
-            map.clear();
-            Assertions.assertTrue(map.isEmpty());
         }
     }
 

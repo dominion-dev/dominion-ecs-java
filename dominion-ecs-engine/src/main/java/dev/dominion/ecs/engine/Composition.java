@@ -160,30 +160,6 @@ public final class Composition {
                 tenant.iterator());
     }
 
-    public <T1, T2, T3, T4, T5, T6, T7> Iterator<Results.Comp7<T1, T2, T3, T4, T5, T6, T7>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7) {
-        return new Comp7Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
-                componentIndex[classIndex.getIndex(type6)],
-                componentIndex[classIndex.getIndex(type7)],
-                tenant.iterator());
-    }
-
-    public <T1, T2, T3, T4, T5, T6, T7, T8> Iterator<Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Class<T7> type7, Class<T8> type8) {
-        return new Comp8Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
-                componentIndex[classIndex.getIndex(type6)],
-                componentIndex[classIndex.getIndex(type7)],
-                componentIndex[classIndex.getIndex(type8)],
-                tenant.iterator());
-    }
 
     record Comp1Iterator<T>(int idx, Iterator<LongEntity> iterator) implements Iterator<Results.Comp1<T>> {
         @Override
@@ -298,57 +274,6 @@ public final class Composition {
                     (T4) components[idx4],
                     (T5) components[idx5],
                     (T6) components[idx6],
-                    longEntity);
-        }
-    }
-
-    record Comp7Iterator<T1, T2, T3, T4, T5, T6, T7>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                     int idx7,
-                                                     Iterator<LongEntity> iterator) implements Iterator<Results.Comp7<T1, T2, T3, T4, T5, T6, T7>> {
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Results.Comp7<T1, T2, T3, T4, T5, T6, T7> next() {
-            LongEntity longEntity = iterator.next();
-            Object[] components = longEntity.getComponents();
-            return new Results.Comp7<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
-                    (T6) components[idx6],
-                    (T7) components[idx7],
-                    longEntity);
-        }
-    }
-
-    record Comp8Iterator<T1, T2, T3, T4, T5, T6, T7, T8>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                         int idx7, int idx8,
-                                                         Iterator<LongEntity> iterator) implements Iterator<Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8>> {
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public Results.Comp8<T1, T2, T3, T4, T5, T6, T7, T8> next() {
-            LongEntity longEntity = iterator.next();
-            Object[] components = longEntity.getComponents();
-            return new Results.Comp8<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
-                    (T6) components[idx6],
-                    (T7) components[idx7],
-                    (T8) components[idx8],
                     longEntity);
         }
     }
