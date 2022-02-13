@@ -22,8 +22,7 @@ public final class ClassIndex implements AutoCloseable {
     private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
     private final AtomicInteger index = new AtomicInteger(0);
     private final int hashBits;
-    private long memoryAddress;
-    private int capacity;
+    private final long memoryAddress;
 
     public ClassIndex() {
         this(DEFAULT_HASH_BITS);
@@ -33,21 +32,13 @@ public final class ClassIndex implements AutoCloseable {
         if (hashBits < MIN_HASH_BITS || hashBits > MAX_HASH_BITS)
             throw new IllegalArgumentException("Hash cannot be less than " + MIN_HASH_BITS + " or greater than " + MAX_HASH_BITS + " bits");
         this.hashBits = hashBits;
-        memoryAddress = ensureCapacity(0, 1 << hashBits);
+        int capacity = (1 << hashBits) << INT_BYTES_SHIFT;
+        memoryAddress = unsafe.allocateMemory(capacity);
+        unsafe.setMemory(memoryAddress, capacity, (byte) 0);
     }
 
     private static long getIdentityAddress(long identityHashCode, long address) {
         return address + (identityHashCode << INT_BYTES_SHIFT);
-    }
-
-    private long ensureCapacity(long address, int newCapacity) {
-        long newAddress = address;
-        if (newCapacity != capacity) {
-            newAddress = unsafe.reallocateMemory(address, (long) newCapacity << INT_BYTES_SHIFT);
-        }
-        unsafe.setMemory(newAddress, (long) newCapacity << INT_BYTES_SHIFT, (byte) 0);
-        capacity = newCapacity;
-        return newAddress;
     }
 
     public int addClass(Class<?> newClass) {
@@ -68,10 +59,9 @@ public final class ClassIndex implements AutoCloseable {
             return idx;
         } else {
             if (!fallbackMap.containsKey(newClass)) {
-                useFallbackMap.set(true);
-//                System.out.println("USE FALLBACK MAP");
                 int idx = index.incrementAndGet();
                 fallbackMap.put(newClass, idx);
+                useFallbackMap.set(true);
                 return idx;
             }
         }
@@ -121,7 +111,7 @@ public final class ClassIndex implements AutoCloseable {
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public long longHashCode(Object[] objects) {
         boolean[] checkArray = new boolean[index.get() + objects.length + 1];
-        int min = capacity, max = 0;
+        int min = Integer.MAX_VALUE, max = 0;
         for (int i = 0; i < objects.length; i++) {
             int value = getIndex(objects[i].getClass());
             value = value == 0 ? getIndexOrAddClass(objects[i].getClass()) : value;
@@ -145,14 +135,6 @@ public final class ClassIndex implements AutoCloseable {
         return hashCode >> (32 - hashBits);
     }
 
-    public int getHashBits() {
-        return hashBits;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
     public int size() {
         return index.get();
     }
@@ -163,12 +145,6 @@ public final class ClassIndex implements AutoCloseable {
 
     public void useUseFallbackMap() {
         useFallbackMap.set(true);
-    }
-
-    public void clear() {
-        memoryAddress = ensureCapacity(memoryAddress, capacity);
-        index.set(0);
-        fallbackMap.clear();
     }
 
     @Override
