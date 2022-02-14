@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ClassIndex implements AutoCloseable {
     public final static int INT_BYTES_SHIFT = 2;
-    public static final int DEFAULT_HASH_BITS = 20;
+    public static final int DEFAULT_HASH_BITS = 20; // 1MB -> about 1K classes
     public static final int MIN_HASH_BITS = 14;
     public static final int MAX_HASH_BITS = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
@@ -49,8 +49,8 @@ public final class ClassIndex implements AutoCloseable {
         if (useFallbackMap.get()) {
             return fallbackMap.computeIfAbsent(newClass, k -> index.incrementAndGet());
         }
-        final int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBits);
-        final long i = getIdentityAddress(identityHashCode, memoryAddress);
+        int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBits);
+        long i = getIdentityAddress(identityHashCode, memoryAddress);
         int currentIndex = unsafe.getInt(i);
         if (currentIndex == 0) {
             int idx = index.incrementAndGet();
