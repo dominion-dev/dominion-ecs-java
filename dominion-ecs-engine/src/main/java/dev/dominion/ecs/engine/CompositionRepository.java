@@ -99,6 +99,7 @@ public final class CompositionRepository implements AutoCloseable {
         entity.flagComponentArrayFromCache();
         if (prevComponentsLength == 1) {
             newComponentArray[0] = entity.getSingleComponent();
+            entity.setSingleComponent(null);
         } else {
             System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
         }

@@ -13,7 +13,7 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import java.util.Iterator;
 
 public final class Composition {
-    private final static int componentIndexCapacity = 1 << 10;
+    public final static int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
@@ -27,25 +27,39 @@ public final class Composition {
         this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
-        if (componentTypes.length > 1) {
-            componentIndex = new int[componentIndexCapacity];
+        if (isMultiComponent()) {
+            componentIndex = new int[COMPONENT_INDEX_CAPACITY];
             for (int i = 0; i < componentTypes.length; i++) {
-                componentIndex[classIndex.getIndex(componentTypes[i])] = i;
+                componentIndex[classIndex.getIndex(componentTypes[i])] = i + 1;
             }
         } else {
             componentIndex = null;
         }
     }
 
+    private boolean isMultiComponent() {
+        return componentTypes.length > 1;
+    }
+
+    public int fetchComponentIndex(Class<?> componentType) {
+        return componentIndex[classIndex.getIndex(componentType)] - 1;
+    }
+
+    public boolean hasComponentType(Class<?> componentType) {
+        return isMultiComponent() ?
+                componentIndex != null && componentIndex[classIndex.getIndex(componentType)] > 0 :
+                componentTypes.length == 1 && componentTypes[0] == componentType;
+    }
+
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
         int newIdx;
         for (int i = 0; i < components.length; i++) {
-            newIdx = componentIndex[classIndex.getIndex(components[i].getClass())];
+            newIdx = fetchComponentIndex(components[i].getClass());
             if (newIdx != i) {
                 swapComponents(components, i, newIdx);
             }
         }
-        newIdx = componentIndex[classIndex.getIndex(components[0].getClass())];
+        newIdx = fetchComponentIndex(components[0].getClass());
         if (newIdx > 0) {
             swapComponents(components, 0, newIdx);
         }
@@ -111,52 +125,52 @@ public final class Composition {
     }
 
     public <T> Iterator<Results.Comp1<T>> select(Class<T> type) {
-        int idx = componentIndex == null ? -1 : componentIndex[classIndex.getIndex(type)];
+        int idx = componentIndex == null ? -1 : fetchComponentIndex(type);
         return new Comp1Iterator<>(idx, tenant.iterator());
     }
 
     public <T1, T2> Iterator<Results.Comp2<T1, T2>> select(Class<T1> type1, Class<T2> type2) {
         return new Comp2Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
                 tenant.iterator());
     }
 
     public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
         return new Comp3Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
                 tenant.iterator());
     }
 
     public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
         return new Comp4Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
                 tenant.iterator());
     }
 
     public <T1, T2, T3, T4, T5> Iterator<Results.Comp5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
         return new Comp5Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
+                fetchComponentIndex(type5),
                 tenant.iterator());
     }
 
     public <T1, T2, T3, T4, T5, T6> Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
         return new Comp6Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
-                componentIndex[classIndex.getIndex(type6)],
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
+                fetchComponentIndex(type5),
+                fetchComponentIndex(type6),
                 tenant.iterator());
     }
 
