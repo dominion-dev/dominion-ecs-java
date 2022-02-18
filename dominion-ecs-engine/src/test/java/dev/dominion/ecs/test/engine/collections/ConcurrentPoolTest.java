@@ -70,7 +70,7 @@ class ConcurrentPoolTest {
                 Assertions.assertEquals(3, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 tenant.freeId(1);
                 Assertions.assertEquals(4, tenant.currentPageSize());
-                Assertions.assertEquals(65535, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(ConcurrentPool.PAGE_CAPACITY - 1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(5, tenant.currentPageSize());
             }
