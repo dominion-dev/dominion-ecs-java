@@ -132,6 +132,9 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
         public long freeId(long id) {
             LinkedPage<T> page = pool.getPage(id);
+            if(page == null) {
+                return -1;
+            }
             if (page.isEmpty()) {
                 stack.push(id);
                 return id;
