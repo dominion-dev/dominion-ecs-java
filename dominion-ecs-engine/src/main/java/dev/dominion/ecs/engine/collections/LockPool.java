@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
@@ -16,12 +17,12 @@ public final class LockPool {
     private LockPool() {
     }
 
-    public void push(StampedLock lock) {
+    public StampedLock push(StampedLock lock) {
         int idx;
         if ((idx = size.incrementAndGet()) >= data.length) {
-            return;
+            return lock;
         }
-        data[idx] = lock;
+        return data[idx] = lock;
     }
 
     public StampedLock pop() {
@@ -36,5 +37,10 @@ public final class LockPool {
 
     public int getSize() {
         return size.get() + 1;
+    }
+
+    public void clear() {
+        Arrays.fill(data, null);
+        size.set(-1);
     }
 }
