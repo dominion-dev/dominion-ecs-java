@@ -7,13 +7,31 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
+
+import java.util.concurrent.locks.StampedLock;
 
 public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
+    private static final UncheckedReferenceUpdater<LongEntity, StampedLock> lockUpdater;
+
+    static {
+        UncheckedReferenceUpdater<LongEntity, StampedLock> updater = null;
+        try {
+            updater = new UncheckedReferenceUpdater<>(LongEntity.class, StampedLock.class, "lock");
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        lockUpdater = updater;
+    }
+
     private long id;
     private Composition composition;
     private Object singleComponent;
     private Object[] components;
     private boolean isComponentArrayFromCache;
+    @SuppressWarnings("unused")
+    private volatile StampedLock lock;
+
 
     public LongEntity(long id, Composition composition) {
         this.id = id;
@@ -56,7 +74,15 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public Entity add(Object... components) {
-        return composition.getRepository().addComponents(this, components);
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
+        long stamp = lock.writeLock();
+        try {
+            return composition.getRepository().addComponents(this, components);
+        } finally {
+            lock.unlockWrite(stamp);
+        }
     }
 
     @Override
