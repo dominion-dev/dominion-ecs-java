@@ -13,7 +13,7 @@ public final class UncheckedReferenceUpdater<T, V> {
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final long offset;
 
-    public UncheckedReferenceUpdater(Class<T> tClass, Class<V> vClass, String fieldName) throws NoSuchFieldException {
+    public UncheckedReferenceUpdater(Class<T> tClass, String fieldName) throws NoSuchFieldException {
         Field field = tClass.getDeclaredField(fieldName);
         offset = unsafe.objectFieldOffset(field);
     }

@@ -121,7 +121,8 @@ class ConcurrentPoolTest {
             }
 
             @Override
-            public void setId(long id) {
+            public long setId(long id) {
+                return id;
             }
         }
     }

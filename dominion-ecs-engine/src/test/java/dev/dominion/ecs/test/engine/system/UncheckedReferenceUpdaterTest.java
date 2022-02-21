@@ -16,7 +16,7 @@ class UncheckedReferenceUpdaterTest {
 
         AClass aClass = new AClass();
         UncheckedReferenceUpdater<AClass, Long> updater =
-                new UncheckedReferenceUpdater<>(AClass.class, Long.class, "aField");
+                new UncheckedReferenceUpdater<>(AClass.class, "aField");
         Assertions.assertTrue(updater.compareAndSet(aClass, aClass.aField, 10L));
         Assertions.assertEquals(10L, aClass.aField);
         Assertions.assertFalse(updater.compareAndSet(aClass, 9L, 11L));

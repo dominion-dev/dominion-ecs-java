@@ -17,7 +17,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     static {
         UncheckedReferenceUpdater<LongEntity, StampedLock> updater = null;
         try {
-            updater = new UncheckedReferenceUpdater<>(LongEntity.class, StampedLock.class, "lock");
+            updater = new UncheckedReferenceUpdater<>(LongEntity.class, "lock");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -25,7 +25,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     private long id;
-    private Data data;
+    private volatile Data data;
     private boolean isComponentArrayFromCache;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
@@ -39,8 +39,8 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public long setId(long id) {
+        return this.id = id;
     }
 
     public Composition getComposition() {

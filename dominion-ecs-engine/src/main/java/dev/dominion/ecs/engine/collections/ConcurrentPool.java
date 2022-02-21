@@ -70,7 +70,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     public interface Identifiable {
         long getId();
 
-        void setId(long id);
+        long setId(long id);
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
@@ -132,7 +132,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
         public long freeId(long id) {
             LinkedPage<T> page = pool.getPage(id);
-            if(page == null) {
+            if (page == null) {
                 return -1;
             }
             if (page.isEmpty()) {
