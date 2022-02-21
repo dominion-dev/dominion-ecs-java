@@ -6,6 +6,8 @@ import dev.dominion.ecs.engine.LongEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,7 +32,7 @@ class LongEntityTest {
 
     @Test
     void concurrentAdd() throws InterruptedException {
-        int capacity = 1 << 18;
+        int capacity = 1 << 16;
         int threadCount = 3;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         Entity[] entities = new Entity[capacity];
@@ -94,7 +96,9 @@ class LongEntityTest {
             Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
 
             for (int i = 0; i < capacity; i++) {
-                Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4, c5}, ((LongEntity) entities[i]).getComponents());
+                Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4, c5},
+                        Arrays.stream(((LongEntity) entities[i]).getComponents())
+                                .sorted(Comparator.comparing(comp -> comp.getClass().getName())).toArray());
             }
         }
     }
@@ -137,7 +141,6 @@ class LongEntityTest {
         }
     }
 
-
     record C1(int id) {
     }
 
@@ -151,8 +154,5 @@ class LongEntityTest {
     }
 
     record C5(int id) {
-    }
-
-    record C6(int id) {
     }
 }
