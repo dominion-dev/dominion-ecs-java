@@ -11,6 +11,8 @@ public interface Entity {
 
     Entity remove(Object... components);
 
+    boolean has(Class<?> componentType);
+
     boolean contains(Object component);
 
     <S extends Enum<S>> void setState(S state);

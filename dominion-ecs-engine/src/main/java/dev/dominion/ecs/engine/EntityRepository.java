@@ -20,7 +20,7 @@ public final class EntityRepository implements Dominion {
     @Override
     public Entity createEntity(Object... components) {
         Composition composition = compositions.getOrCreate(components);
-        return composition.createEntity(components);
+        return composition.createEntity(components.length == 0 ? null : components);
     }
 
     @Override

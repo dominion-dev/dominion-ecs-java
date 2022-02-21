@@ -13,7 +13,7 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import java.util.Iterator;
 
 public final class Composition {
-    private final static int componentIndexCapacity = 1 << 10;
+    public final static int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ConcurrentPool.Tenant<LongEntity> tenant;
@@ -27,25 +27,43 @@ public final class Composition {
         this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
-        if (componentTypes.length > 1) {
-            componentIndex = new int[componentIndexCapacity];
-            for (int i = 0; i < componentTypes.length; i++) {
-                componentIndex[classIndex.getIndex(componentTypes[i])] = i;
+        if (isMultiComponent()) {
+            componentIndex = new int[COMPONENT_INDEX_CAPACITY];
+            for (int i = 0; i < length(); i++) {
+                componentIndex[classIndex.getIndex(componentTypes[i])] = i + 1;
             }
         } else {
             componentIndex = null;
         }
     }
 
+    public int length() {
+        return componentTypes.length;
+    }
+
+    public boolean isMultiComponent() {
+        return length() > 1;
+    }
+
+    public int fetchComponentIndex(Class<?> componentType) {
+        return componentIndex[classIndex.getIndex(componentType)] - 1;
+    }
+
+    public boolean hasComponentType(Class<?> componentType) {
+        return isMultiComponent() ?
+                componentIndex != null && componentIndex[classIndex.getIndex(componentType)] > 0 :
+                length() == 1 && componentTypes[0] == componentType;
+    }
+
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
         int newIdx;
         for (int i = 0; i < components.length; i++) {
-            newIdx = componentIndex[classIndex.getIndex(components[i].getClass())];
+            newIdx = fetchComponentIndex(components[i].getClass());
             if (newIdx != i) {
                 swapComponents(components, i, newIdx);
             }
         }
-        newIdx = componentIndex[classIndex.getIndex(components[0].getClass())];
+        newIdx = fetchComponentIndex(components[0].getClass());
         if (newIdx > 0) {
             swapComponents(components, 0, newIdx);
         }
@@ -60,42 +78,31 @@ public final class Composition {
 
     public LongEntity createEntity(Object... components) {
         long id = tenant.nextId();
-        LongEntity entity = tenant.register(id, new LongEntity(id, this));
-        return switch (componentTypes.length) {
-            case 0 -> entity;
-            case 1 -> entity.setSingleComponent(components[0]);
-            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
-        };
-    }
-
-    public LongEntity attachEntity(LongEntity entity, Object... components) {
-        long id = tenant.nextId();
-        entity.setId(id);
-        entity.setComposition(this);
-        tenant.register(id, entity);
-        return switch (componentTypes.length) {
-            case 0 -> entity;
-            case 1 -> entity.setSingleComponent(components[0]);
-            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
-        };
+        return tenant.register(id, new LongEntity(id, this,
+                isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
     public boolean destroyEntity(LongEntity entity) {
         detachEntity(entity);
-        entity.setComposition(null);
-        entity.setSingleComponent(null);
         Object[] components = entity.getComponents();
-        if (components != null) {
-            if (entity.isComponentArrayFromCache()) {
-                arrayPool.push(components);
-            }
-            entity.setComponents(null);
+        if (components != null && entity.isComponentArrayFromCache()) {
+            arrayPool.push(components);
         }
+        entity.setData(null);
         return true;
     }
 
-    public void detachEntity(LongEntity entity) {
+    public LongEntity attachEntity(LongEntity entity, Object... components) {
+        return tenant.register(entity.setId(tenant.nextId()), switch (length()) {
+            case 0 -> entity.setData(new LongEntity.Data(this, null));
+            case 1 -> entity.setData(new LongEntity.Data(this, components));
+            default -> entity.setData(new LongEntity.Data(this, sortComponentsInPlaceByIndex(components)));
+        });
+    }
+
+    public LongEntity detachEntity(LongEntity entity) {
         tenant.freeId(entity.getId());
+        return entity;
     }
 
     public Class<?>[] getComponentTypes() {
@@ -111,98 +118,107 @@ public final class Composition {
     }
 
     public <T> Iterator<Results.Comp1<T>> select(Class<T> type) {
-        int idx = componentIndex == null ? -1 : componentIndex[classIndex.getIndex(type)];
-        return new Comp1Iterator<>(idx, tenant.iterator());
+        int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
+        return new Comp1Iterator<>(idx, tenant.iterator(), this);
     }
 
     public <T1, T2> Iterator<Results.Comp2<T1, T2>> select(Class<T1> type1, Class<T2> type2) {
         return new Comp2Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                tenant.iterator());
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                tenant.iterator(), this);
     }
 
     public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
         return new Comp3Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                tenant.iterator());
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                tenant.iterator(), this);
     }
 
     public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
         return new Comp4Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                tenant.iterator());
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
+                tenant.iterator(), this);
     }
 
     public <T1, T2, T3, T4, T5> Iterator<Results.Comp5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
         return new Comp5Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
-                tenant.iterator());
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
+                fetchComponentIndex(type5),
+                tenant.iterator(), this);
     }
 
     public <T1, T2, T3, T4, T5, T6> Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
         return new Comp6Iterator<>(
-                componentIndex[classIndex.getIndex(type1)],
-                componentIndex[classIndex.getIndex(type2)],
-                componentIndex[classIndex.getIndex(type3)],
-                componentIndex[classIndex.getIndex(type4)],
-                componentIndex[classIndex.getIndex(type5)],
-                componentIndex[classIndex.getIndex(type6)],
-                tenant.iterator());
+                fetchComponentIndex(type1),
+                fetchComponentIndex(type2),
+                fetchComponentIndex(type3),
+                fetchComponentIndex(type4),
+                fetchComponentIndex(type5),
+                fetchComponentIndex(type6),
+                tenant.iterator(), this);
     }
 
 
-    record Comp1Iterator<T>(int idx, Iterator<LongEntity> iterator) implements Iterator<Results.Comp1<T>> {
+    record Comp1Iterator<T>(int idx, Iterator<LongEntity> iterator,
+                            Composition composition) implements Iterator<Results.Comp1<T>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp1<T> next() {
-            LongEntity longEntity = iterator.next();
-            T comp = (T) (idx < 0 ? longEntity.getSingleComponent() : longEntity.getComponents()[idx]);
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
+            T comp = (T) longEntity.getComponents()[idx];
             return new Results.Comp1<>(comp, longEntity);
         }
     }
 
     record Comp2Iterator<T1, T2>(int idx1, int idx2,
-                                 Iterator<LongEntity> iterator) implements Iterator<Results.Comp2<T1, T2>> {
+                                 Iterator<LongEntity> iterator,
+                                 Composition composition) implements Iterator<Results.Comp2<T1, T2>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp2<T1, T2> next() {
-            LongEntity longEntity = iterator.next();
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
             Object[] components = longEntity.getComponents();
             return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], longEntity);
         }
     }
 
     record Comp3Iterator<T1, T2, T3>(int idx1, int idx2, int idx3,
-                                     Iterator<LongEntity> iterator) implements Iterator<Results.Comp3<T1, T2, T3>> {
+                                     Iterator<LongEntity> iterator,
+                                     Composition composition) implements Iterator<Results.Comp3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp3<T1, T2, T3> next() {
-            LongEntity longEntity = iterator.next();
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
             Object[] components = longEntity.getComponents();
             return new Results.Comp3<>(
                     (T1) components[idx1],
@@ -213,16 +229,19 @@ public final class Composition {
     }
 
     record Comp4Iterator<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
-                                         Iterator<LongEntity> iterator) implements Iterator<Results.Comp4<T1, T2, T3, T4>> {
+                                         Iterator<LongEntity> iterator,
+                                         Composition composition) implements Iterator<Results.Comp4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp4<T1, T2, T3, T4> next() {
-            LongEntity longEntity = iterator.next();
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
             Object[] components = longEntity.getComponents();
             return new Results.Comp4<>(
                     (T1) components[idx1],
@@ -234,16 +253,19 @@ public final class Composition {
     }
 
     record Comp5Iterator<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
-                                             Iterator<LongEntity> iterator) implements Iterator<Results.Comp5<T1, T2, T3, T4, T5>> {
+                                             Iterator<LongEntity> iterator,
+                                             Composition composition) implements Iterator<Results.Comp5<T1, T2, T3, T4, T5>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp5<T1, T2, T3, T4, T5> next() {
-            LongEntity longEntity = iterator.next();
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
             Object[] components = longEntity.getComponents();
             return new Results.Comp5<>(
                     (T1) components[idx1],
@@ -256,16 +278,19 @@ public final class Composition {
     }
 
     record Comp6Iterator<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                 Iterator<LongEntity> iterator) implements Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> {
+                                                 Iterator<LongEntity> iterator,
+                                                 Composition composition) implements Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp6<T1, T2, T3, T4, T5, T6> next() {
-            LongEntity longEntity = iterator.next();
+            LongEntity longEntity;
+            while ((longEntity = iterator.next()).getComposition() != composition) {
+            }
             Object[] components = longEntity.getComponents();
             return new Results.Comp6<>(
                     (T1) components[idx1],
