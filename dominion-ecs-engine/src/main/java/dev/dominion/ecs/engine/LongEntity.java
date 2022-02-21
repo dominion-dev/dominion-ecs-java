@@ -25,17 +25,14 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     private long id;
-    private Composition composition;
-    private Object singleComponent;
-    private Object[] components;
+    private Data data;
     private boolean isComponentArrayFromCache;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
-
-    public LongEntity(long id, Composition composition) {
+    public LongEntity(long id, Composition composition, Object... components) {
         this.id = id;
-        this.composition = composition;
+        data = new Data(composition, components);
     }
 
     public long getId() {
@@ -47,28 +44,19 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     public Composition getComposition() {
-        return composition;
-    }
-
-    public void setComposition(Composition composition) {
-        this.composition = composition;
-    }
-
-    public Object getSingleComponent() {
-        return singleComponent;
-    }
-
-    public LongEntity setSingleComponent(Object singleComponent) {
-        this.singleComponent = singleComponent;
-        return this;
+        return data.composition;
     }
 
     public Object[] getComponents() {
-        return components;
+        return data.components;
     }
 
-    public LongEntity setComponents(Object[] components) {
-        this.components = components;
+    public Data getData() {
+        return data;
+    }
+
+    LongEntity setData(Data data) {
+        this.data = data;
         return this;
     }
 
@@ -79,7 +67,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         }
         long stamp = lock.writeLock();
         try {
-            return composition.getRepository().addComponents(this, components);
+            return data.composition.getRepository().addComponents(this, components);
         } finally {
             lock.unlockWrite(stamp);
         }
@@ -92,17 +80,18 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public boolean has(Class<?> componentType) {
-        return composition.hasComponentType(componentType);
+        return data.composition.hasComponentType(componentType);
     }
 
     @Override
     public boolean contains(Object component) {
         int idx;
-        return singleComponent != null ?
-                singleComponent.equals(component) :
-                components != null
-                        && (idx = composition.fetchComponentIndex(component.getClass())) > -1
-                        && components[idx].equals(component);
+        return data.components != null && (
+                data.composition.isMultiComponent() ?
+                        (idx = data.composition.fetchComponentIndex(component.getClass())) > -1
+                                && data.components[idx].equals(component) :
+                        data.components[0].equals(component)
+        );
     }
 
     @Override
@@ -119,5 +108,8 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     void flagComponentArrayFromCache() {
         isComponentArrayFromCache = true;
+    }
+
+    public record Data(Composition composition, Object[] components) {
     }
 }

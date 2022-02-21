@@ -20,13 +20,10 @@ class LongEntityTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             LongEntity entity = (LongEntity) entityRepository.createEntity();
-            Assertions.assertNull(entity.getSingleComponent());
             Assertions.assertNull(entity.getComponents());
             entity.add(c1);
-            Assertions.assertEquals(c1, entity.getSingleComponent());
-            Assertions.assertNull(entity.getComponents());
+            Assertions.assertEquals(c1, entity.getComponents()[0]);
             entity.add(c2);
-            Assertions.assertNull(entity.getSingleComponent());
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entity.getComponents());
         }
     }

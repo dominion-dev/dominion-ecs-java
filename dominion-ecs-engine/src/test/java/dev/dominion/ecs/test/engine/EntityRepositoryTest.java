@@ -24,7 +24,7 @@ class EntityRepositoryTest {
             LongEntity entity = (LongEntity) entityRepository.createEntity(c1);
             Assertions.assertNotNull(entity.getComposition());
             Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
-            Assertions.assertEquals(c1, entity.getSingleComponent());
+            Assertions.assertEquals(c1, entity.getComponents()[0]);
         }
     }
 
@@ -48,7 +48,7 @@ class EntityRepositoryTest {
             LongEntity entity = (LongEntity) entityRepository.createEntity();
             ConcurrentPool<LongEntity> pool = entity.getComposition().getTenant().getPool();
             entityRepository.destroyEntity(entity);
-            Assertions.assertNull(entity.getComposition());
+            Assertions.assertNull(entity.getData());
             Assertions.assertNull(pool.getEntry(entity.getId()));
         }
     }

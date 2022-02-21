@@ -115,11 +115,11 @@ class CompositionRepositoryTest {
             CompositionRepository repository = entity.getComposition().getRepository();
             LongEntity entityPostAdd = (LongEntity) repository.addComponents(entity, c1);
             Assertions.assertEquals(entityPostAdd, entity);
-            Assertions.assertEquals(c1, entityPostAdd.getSingleComponent());
+            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
 
             entity = (LongEntity) entityRepository.createEntity(c1);
             entityPostAdd = (LongEntity) repository.addComponents(entity);
-            Assertions.assertEquals(c1, entityPostAdd.getSingleComponent());
+            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
 
             entityPostAdd = (LongEntity) repository.addComponents(entity, c2);
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());

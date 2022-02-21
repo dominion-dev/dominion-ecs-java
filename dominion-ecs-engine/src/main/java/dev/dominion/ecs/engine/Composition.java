@@ -29,7 +29,7 @@ public final class Composition {
         this.componentTypes = componentTypes;
         if (isMultiComponent()) {
             componentIndex = new int[COMPONENT_INDEX_CAPACITY];
-            for (int i = 0; i < componentTypes.length; i++) {
+            for (int i = 0; i < length(); i++) {
                 componentIndex[classIndex.getIndex(componentTypes[i])] = i + 1;
             }
         } else {
@@ -37,8 +37,12 @@ public final class Composition {
         }
     }
 
-    private boolean isMultiComponent() {
-        return componentTypes.length > 1;
+    public int length() {
+        return componentTypes.length;
+    }
+
+    public boolean isMultiComponent() {
+        return length() > 1;
     }
 
     public int fetchComponentIndex(Class<?> componentType) {
@@ -48,7 +52,7 @@ public final class Composition {
     public boolean hasComponentType(Class<?> componentType) {
         return isMultiComponent() ?
                 componentIndex != null && componentIndex[classIndex.getIndex(componentType)] > 0 :
-                componentTypes.length == 1 && componentTypes[0] == componentType;
+                length() == 1 && componentTypes[0] == componentType;
     }
 
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
@@ -74,37 +78,28 @@ public final class Composition {
 
     public LongEntity createEntity(Object... components) {
         long id = tenant.nextId();
-        LongEntity entity = tenant.register(id, new LongEntity(id, this));
-        return switch (componentTypes.length) {
-            case 0 -> entity;
-            case 1 -> entity.setSingleComponent(components[0]);
-            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
-        };
+        return tenant.register(id, new LongEntity(id, this,
+                isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
     public LongEntity attachEntity(LongEntity entity, Object... components) {
         long id = tenant.nextId();
         entity.setId(id);
-        entity.setComposition(this);
         tenant.register(id, entity);
-        return switch (componentTypes.length) {
-            case 0 -> entity;
-            case 1 -> entity.setSingleComponent(components[0]);
-            default -> entity.setComponents(sortComponentsInPlaceByIndex(components));
+        return switch (length()) {
+            case 0 -> entity.setData(new LongEntity.Data(this, null));
+            case 1 -> entity.setData(new LongEntity.Data(this, components));
+            default -> entity.setData(new LongEntity.Data(this, sortComponentsInPlaceByIndex(components)));
         };
     }
 
     public boolean destroyEntity(LongEntity entity) {
         detachEntity(entity);
-        entity.setComposition(null);
-        entity.setSingleComponent(null);
         Object[] components = entity.getComponents();
-        if (components != null) {
-            if (entity.isComponentArrayFromCache()) {
-                arrayPool.push(components);
-            }
-            entity.setComponents(null);
+        if (components != null && entity.isComponentArrayFromCache()) {
+            arrayPool.push(components);
         }
+        entity.setData(null);
         return true;
     }
 
@@ -125,7 +120,7 @@ public final class Composition {
     }
 
     public <T> Iterator<Results.Comp1<T>> select(Class<T> type) {
-        int idx = componentIndex == null ? -1 : fetchComponentIndex(type);
+        int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
         return new Comp1Iterator<>(idx, tenant.iterator());
     }
 
@@ -185,7 +180,7 @@ public final class Composition {
         @Override
         public Results.Comp1<T> next() {
             LongEntity longEntity = iterator.next();
-            T comp = (T) (idx < 0 ? longEntity.getSingleComponent() : longEntity.getComponents()[idx]);
+            T comp = (T) longEntity.getComponents()[idx];
             return new Results.Comp1<>(comp, longEntity);
         }
     }
