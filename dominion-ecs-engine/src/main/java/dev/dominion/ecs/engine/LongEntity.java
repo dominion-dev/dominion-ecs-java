@@ -80,7 +80,10 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public boolean has(Class<?> componentType) {
-        return data.composition.hasComponentType(componentType);
+        return data.components != null && (
+                data.composition.isMultiComponent() ?
+                        data.composition.fetchComponentIndex(componentType) > -1 :
+                        data.components[0].getClass().equals(componentType));
     }
 
     @Override
