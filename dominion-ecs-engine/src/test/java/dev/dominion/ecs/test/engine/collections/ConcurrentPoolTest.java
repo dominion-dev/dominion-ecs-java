@@ -135,7 +135,6 @@ class ConcurrentPoolTest {
             ConcurrentPool.LinkedPage<LongEntity> page = new ConcurrentPool.LinkedPage<>(0, null);
             Assertions.assertEquals(0, page.incrementIndex());
             Assertions.assertEquals(1, page.incrementIndex());
-            Assertions.assertEquals(0, page.decrementIndex());
         }
 
         @Test
@@ -148,8 +147,6 @@ class ConcurrentPoolTest {
             Assertions.assertTrue(page.hasCapacity());
             page.incrementIndex();
             Assertions.assertFalse(page.hasCapacity());
-            page.decrementIndex();
-            Assertions.assertTrue(page.hasCapacity());
         }
 
         @Test

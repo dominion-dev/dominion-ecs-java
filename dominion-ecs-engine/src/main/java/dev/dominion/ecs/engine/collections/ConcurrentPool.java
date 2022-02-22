@@ -215,10 +215,6 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return index.incrementAndGet();
         }
 
-        public int decrementIndex() {
-            return index.decrementAndGet();
-        }
-
         public int remove(long id, boolean doNotUpdateIndex) {
             int indexToBeReused = (int) id & OBJECT_INDEX_BIT_MASK;
             for (; ; ) {
