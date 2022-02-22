@@ -103,11 +103,16 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                     // possibly racy reads
                     returnValue = newId;
                     int pageIndex;
-                    if (currentPage.hasCapacity()) {
-                        pageIndex = currentPage.incrementIndex();
-                        if (pageIndex >= PAGE_CAPACITY || !lock.validate(stamp)) {
-                            currentPage.decrementIndex();
-                            stamp = lock.writeLock();
+                    if ((pageIndex = currentPage.index.get()) < PAGE_CAPACITY - 1) {
+                        boolean incremented = false;
+                        while (!incremented && (pageIndex = currentPage.index.get()) < PAGE_CAPACITY - 1) {
+                            if (currentPage.index.compareAndSet(pageIndex, pageIndex + 1)) {
+                                incremented = true;
+                                pageIndex++;
+                            }
+                        }
+                        if (!incremented) {
+                            stamp = lock.tryOptimisticRead();
                             continue;
                         }
                     } else {
