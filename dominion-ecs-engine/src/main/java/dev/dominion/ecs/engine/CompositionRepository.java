@@ -31,7 +31,8 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public Composition getOrCreate(Object[] components) {
-        switch (components.length) {
+        int componentsLength = components == null ? 0 : components.length;
+        switch (componentsLength) {
             case 0:
                 return root.composition;
             case 1:
@@ -112,6 +113,40 @@ public final class CompositionRepository implements AutoCloseable {
         }
         entity.flagComponentArrayFromCache();
         return composition.attachEntity(entity, newComponentArray);
+    }
+
+
+    public Object removeComponentType(LongEntity entity, Class<?> componentType) {
+        if (componentType == null) {
+            return null;
+        }
+        Composition prevComposition = entity.getComposition();
+        Object[] entityComponents = entity.getComponents();
+        int prevComponentsLength = prevComposition.length();
+        if (prevComponentsLength == 0) {
+            return null;
+        }
+        Object[] newComponentArray;
+        if (prevComponentsLength == 1) {
+            newComponentArray = null;
+        } else {
+            newComponentArray = arrayPool.pop(prevComponentsLength - 1);
+            int removedIndex = prevComposition.fetchComponentIndex(componentType);
+            if (removedIndex > 0) {
+                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
+            }
+            if (removedIndex < prevComponentsLength - 1) {
+                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, prevComponentsLength - (removedIndex + 1));
+            }
+        }
+        Composition composition = getOrCreate(newComponentArray);
+        prevComposition.detachEntity(entity);
+        if (entity.isComponentArrayFromCache()) {
+            arrayPool.push(entityComponents);
+        }
+        entity.flagComponentArrayFromCache();
+        composition.attachEntity(entity, newComponentArray);
+        return null;
     }
 
 

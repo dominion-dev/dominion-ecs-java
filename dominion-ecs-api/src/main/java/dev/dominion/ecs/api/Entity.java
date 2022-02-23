@@ -9,7 +9,9 @@ public interface Entity {
 
     Entity add(Object... components);
 
-    Entity remove(Object... components);
+    Object remove(Object component);
+
+    Object removeType(Class<?> componentType);
 
     boolean has(Class<?> componentType);
 
