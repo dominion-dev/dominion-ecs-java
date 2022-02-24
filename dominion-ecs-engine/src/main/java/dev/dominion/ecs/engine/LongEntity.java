@@ -74,13 +74,43 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     @Override
-    public Entity remove(Object... components) {
-        return null;
+    public Object remove(Object component) {
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
+        long stamp = lock.writeLock();
+        try {
+            if (!contains(component)) {
+                return null;
+            }
+            return data.composition.getRepository().removeComponentType(this, component.getClass());
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
+    @Override
+    public Object removeType(Class<?> componentType) {
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
+        long stamp = lock.writeLock();
+        try {
+            if (!has(componentType)) {
+                return null;
+            }
+            return data.composition.getRepository().removeComponentType(this, componentType);
+        } finally {
+            lock.unlockWrite(stamp);
+        }
     }
 
     @Override
     public boolean has(Class<?> componentType) {
-        return data.composition.hasComponentType(componentType);
+        return data.components != null && (
+                data.composition.isMultiComponent() ?
+                        data.composition.fetchComponentIndex(componentType) > -1 :
+                        data.components[0].getClass().equals(componentType));
     }
 
     @Override

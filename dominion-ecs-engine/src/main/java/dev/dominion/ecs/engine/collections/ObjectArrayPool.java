@@ -53,11 +53,16 @@ public final class ObjectArrayPool {
                     }
                     // possibly racy reads
                     int index;
-                    if (size.get() < capacity - 1) {
-                        index = size.incrementAndGet();
-                        if (index >= capacity || !lock.validate(stamp)) {
-                            size.decrementAndGet();
-                            stamp = lock.writeLock();
+                    if ((index = size.get()) < capacity - 1) {
+                        boolean incremented = false;
+                        while (!incremented && (index = size.get()) < capacity - 1) {
+                            if (size.compareAndSet(index, index + 1)) {
+                                incremented = true;
+                                index++;
+                            }
+                        }
+                        if (!incremented) {
+                            stamp = lock.tryOptimisticRead();
                             continue;
                         }
                     } else {
@@ -72,6 +77,7 @@ public final class ObjectArrayPool {
                         index = size.incrementAndGet();
                     }
                     data[index] = new SoftReference<>(objectArray);
+                    Arrays.fill(objectArray, null);
                     return objectArray;
                 }
             } finally {
@@ -88,7 +94,6 @@ public final class ObjectArrayPool {
                         "Required array length " + capacity + " is too large");
             }
             data = Arrays.copyOf(data, capacity);
-//            System.out.println("new capacity = " + capacity);
         }
 
         public Object[] pop() {

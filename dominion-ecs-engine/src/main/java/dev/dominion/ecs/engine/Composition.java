@@ -49,12 +49,6 @@ public final class Composition {
         return componentIndex[classIndex.getIndex(componentType)] - 1;
     }
 
-    public boolean hasComponentType(Class<?> componentType) {
-        return isMultiComponent() ?
-                componentIndex != null && componentIndex[classIndex.getIndex(componentType)] > 0 :
-                length() == 1 && componentTypes[0] == componentType;
-    }
-
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
         int newIdx;
         for (int i = 0; i < components.length; i++) {

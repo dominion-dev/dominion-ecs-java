@@ -24,7 +24,9 @@ class ObjectArrayPoolTest {
     void push() {
         ObjectArrayPool pool = new ObjectArrayPool();
         Object[] arrayObjects = pool.pop(1);
+        arrayObjects[0] = 1;
         pool.push(arrayObjects);
+        Assertions.assertNull(arrayObjects[0]);
         Assertions.assertEquals(1, pool.size(1));
         Object[] arrayObjects2 = pool.pop(1);
         Assertions.assertEquals(0, pool.size(1));
