@@ -62,8 +62,8 @@ public class ClassIndexTest {
 
     @Test
     void concurrentGetIndexOrAddClass() throws InterruptedException {
-        try (ClassIndex map = new ClassIndex()) {
-            final int capacity = 1 << 10;
+        try (ClassIndex map = new ClassIndex(22, false)) {
+            final int capacity = 1 << 8;
             final ExecutorService executorService = Executors.newFixedThreadPool(4);
             AtomicInteger errors = new AtomicInteger(0);
             for (int i = 0; i < capacity; i++) {
