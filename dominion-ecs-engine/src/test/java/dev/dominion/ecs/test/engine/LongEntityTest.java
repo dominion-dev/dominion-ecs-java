@@ -1,6 +1,7 @@
 package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Entity;
+import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.LongEntity;
 import org.junit.jupiter.api.Assertions;
@@ -105,6 +106,48 @@ class LongEntityTest {
 
     @Test
     void remove() {
+        try (EntityRepository entityRepository = new EntityRepository()) {
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            var c3 = new C3(0);
+            LongEntity entity = (LongEntity) entityRepository.createEntity(c1, c2, c3);
+            Assertions.assertEquals(c2, entity.remove(c2));
+            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
+            Assertions.assertEquals(c1, entity.remove(c1));
+            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Assertions.assertEquals(c3, entity.remove(c3));
+            Assertions.assertNull(entity.getComponents());
+        }
+    }
+
+    @Test
+    void addAndRemove() {
+        try (EntityRepository entityRepository = new EntityRepository()) {
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            var c3 = new C3(0);
+            LongEntity entity = (LongEntity) entityRepository.createEntity(c1, c2, c3);
+            Composition compositionV3 = entity.getComposition();
+            entity.remove(c2);
+            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
+            Composition compositionV2 = entity.getComposition();
+            entity.remove(c1);
+            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Composition compositionV1 = entity.getComposition();
+            entity.remove(c3);
+            Assertions.assertNull(entity.getComponents());
+            entity.add(c3);
+            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Assertions.assertEquals(compositionV1, entity.getComposition());
+            entity.add(c2);
+            Assertions.assertArrayEquals(new Object[]{c3, c2}, entity.getComponents());
+            Assertions.assertNotEquals(compositionV2, entity.getComposition());
+            entity.remove(c2);
+            entity.add(c1);
+            Assertions.assertEquals(compositionV2, entity.getComposition());
+            entity.add(c2);
+            Assertions.assertEquals(compositionV3, entity.getComposition());
+        }
     }
 
     @Test

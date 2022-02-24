@@ -81,7 +81,7 @@ class ConcurrentPoolTest {
             ConcurrentPool<LongEntity> concurrentPool = new ConcurrentPool<>();
             try (ConcurrentPool.Tenant<LongEntity> tenant = concurrentPool.newTenant()) {
                 final int capacity = 1 << 20;
-                final ExecutorService pool = Executors.newFixedThreadPool(4);
+                final ExecutorService pool = Executors.newFixedThreadPool(2);
                 int removed = 0;
                 for (int i = 0; i < capacity; i++) {
                     if (i % 10 == 0) {

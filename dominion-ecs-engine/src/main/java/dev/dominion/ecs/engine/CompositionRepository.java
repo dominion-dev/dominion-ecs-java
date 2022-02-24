@@ -127,11 +127,14 @@ public final class CompositionRepository implements AutoCloseable {
             return null;
         }
         Object[] newComponentArray;
+        Object removed;
         if (prevComponentsLength == 1) {
             newComponentArray = null;
+            removed = entityComponents[0];
         } else {
             newComponentArray = arrayPool.pop(prevComponentsLength - 1);
             int removedIndex = prevComposition.fetchComponentIndex(componentType);
+            removed = entityComponents[removedIndex];
             if (removedIndex > 0) {
                 System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
             }
@@ -146,7 +149,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         entity.flagComponentArrayFromCache();
         composition.attachEntity(entity, newComponentArray);
-        return null;
+        return removed;
     }
 
 
