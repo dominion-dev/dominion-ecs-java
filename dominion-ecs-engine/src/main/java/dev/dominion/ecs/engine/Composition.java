@@ -173,10 +173,11 @@ public final class Composition {
         @Override
         public Results.Comp1<T> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            T comp = (T) longEntity.getComponents()[idx];
-            return new Results.Comp1<>(comp, longEntity);
+            Object[] components = data.components();
+            return new Results.Comp1<>((T) components[idx], longEntity);
         }
     }
 
@@ -192,9 +193,10 @@ public final class Composition {
         @Override
         public Results.Comp2<T1, T2> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            Object[] components = longEntity.getComponents();
+            Object[] components = data.components();
             return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], longEntity);
         }
     }
@@ -211,9 +213,10 @@ public final class Composition {
         @Override
         public Results.Comp3<T1, T2, T3> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            Object[] components = longEntity.getComponents();
+            Object[] components = data.components();
             return new Results.Comp3<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
@@ -234,9 +237,10 @@ public final class Composition {
         @Override
         public Results.Comp4<T1, T2, T3, T4> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            Object[] components = longEntity.getComponents();
+            Object[] components = data.components();
             return new Results.Comp4<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
@@ -258,9 +262,10 @@ public final class Composition {
         @Override
         public Results.Comp5<T1, T2, T3, T4, T5> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            Object[] components = longEntity.getComponents();
+            Object[] components = data.components();
             return new Results.Comp5<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
@@ -283,9 +288,10 @@ public final class Composition {
         @Override
         public Results.Comp6<T1, T2, T3, T4, T5, T6> next() {
             LongEntity longEntity;
-            while ((longEntity = iterator.next()).getComposition() != composition) {
+            LongEntity.Data data;
+            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
             }
-            Object[] components = longEntity.getComponents();
+            Object[] components = data.components();
             return new Results.Comp6<>(
                     (T1) components[idx1],
                     (T2) components[idx2],

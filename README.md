@@ -57,3 +57,6 @@ in the root folder of the cloned project, type the following command:
 With a Dominion build now available in your local repository you may build and run
 the [Dominion benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark) to independently check the
 performance.
+
+## Support Dominion
+If you want to support Dominion project, consider giving it a **Star** ⭐️
