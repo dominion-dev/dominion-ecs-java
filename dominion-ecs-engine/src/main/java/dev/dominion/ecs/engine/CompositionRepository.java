@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
 
-    private final ConcurrentPool<LongEntity> pool = new ConcurrentPool<>();
+    private final ConcurrentPool<IntEntity> pool = new ConcurrentPool<>();
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
     private final ClassIndex classIndex = new ClassIndex();
     private final NodeCache nodeCache = new NodeCache();
@@ -83,7 +83,7 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
 
-    public Entity addComponents(LongEntity entity, Object... components) {
+    public Entity addComponents(IntEntity entity, Object... components) {
         if (components.length == 0) {
             return entity;
         }
@@ -116,7 +116,7 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
 
-    public Object removeComponentType(LongEntity entity, Class<?> componentType) {
+    public Object removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
             return null;
         }

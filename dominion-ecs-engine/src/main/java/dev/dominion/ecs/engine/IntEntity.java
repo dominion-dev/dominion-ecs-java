@@ -11,36 +11,45 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 
 import java.util.concurrent.locks.StampedLock;
 
-public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
-    private static final UncheckedReferenceUpdater<LongEntity, StampedLock> lockUpdater;
+public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
+    private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
-        UncheckedReferenceUpdater<LongEntity, StampedLock> updater = null;
+        UncheckedReferenceUpdater<IntEntity, StampedLock> updater = null;
         try {
-            updater = new UncheckedReferenceUpdater<>(LongEntity.class, "lock");
+            updater = new UncheckedReferenceUpdater<>(IntEntity.class, "lock");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
         lockUpdater = updater;
     }
 
-    private long id;
+    private int id;
+    private int linkedId;
     private volatile Data data;
     private boolean isComponentArrayFromCache;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
-    public LongEntity(long id, Composition composition, Object... components) {
+    public IntEntity(int id, Composition composition, Object... components) {
         this.id = id;
         data = new Data(composition, components);
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public long setId(long id) {
+    public int setId(int id) {
         return this.id = id;
+    }
+
+    public int getLinkedId() {
+        return linkedId;
+    }
+
+    public int setLinkedId(int linkedId) {
+        return this.linkedId = linkedId;
     }
 
     public Composition getComposition() {
@@ -55,7 +64,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         return data;
     }
 
-    LongEntity setData(Data data) {
+    IntEntity setData(Data data) {
         this.data = data;
         return this;
     }

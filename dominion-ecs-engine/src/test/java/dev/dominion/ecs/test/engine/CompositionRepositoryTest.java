@@ -3,7 +3,7 @@ package dev.dominion.ecs.test.engine;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
 import dev.dominion.ecs.engine.EntityRepository;
-import dev.dominion.ecs.engine.LongEntity;
+import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.system.HashCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -111,29 +111,29 @@ class CompositionRepositoryTest {
         var c3 = new C3(0);
         var c4 = new C4(0);
         try (EntityRepository entityRepository = new EntityRepository()) {
-            LongEntity entity = (LongEntity) entityRepository.createEntity();
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
             CompositionRepository repository = entity.getComposition().getRepository();
-            LongEntity entityPostAdd = (LongEntity) repository.addComponents(entity, c1);
+            IntEntity entityPostAdd = (IntEntity) repository.addComponents(entity, c1);
             Assertions.assertEquals(entityPostAdd, entity);
             Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
 
-            entity = (LongEntity) entityRepository.createEntity(c1);
-            entityPostAdd = (LongEntity) repository.addComponents(entity);
+            entity = (IntEntity) entityRepository.createEntity(c1);
+            entityPostAdd = (IntEntity) repository.addComponents(entity);
             Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
 
-            entityPostAdd = (LongEntity) repository.addComponents(entity, c2);
+            entityPostAdd = (IntEntity) repository.addComponents(entity, c2);
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());
 
-            entity = (LongEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (LongEntity) repository.addComponents(entity, c3);
+            entity = (IntEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (IntEntity) repository.addComponents(entity, c3);
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
 
-            entity = (LongEntity) entityRepository.createEntity(c1);
-            entityPostAdd = (LongEntity) repository.addComponents(entity, c2, c3);
+            entity = (IntEntity) entityRepository.createEntity(c1);
+            entityPostAdd = (IntEntity) repository.addComponents(entity, c2, c3);
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
 
-            entity = (LongEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (LongEntity) repository.addComponents(entity, c3, c4);
+            entity = (IntEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (IntEntity) repository.addComponents(entity, c3, c4);
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4}, entityPostAdd.getComponents());
         }
     }

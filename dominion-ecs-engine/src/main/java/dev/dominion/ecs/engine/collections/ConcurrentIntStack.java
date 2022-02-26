@@ -10,39 +10,39 @@ import sun.misc.Unsafe;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class ConcurrentLongStack implements AutoCloseable {
-    private static final int LONG_BYTES = 8;
+public final class ConcurrentIntStack implements AutoCloseable {
+    private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final AtomicInteger index = new AtomicInteger(-LONG_BYTES);
+    private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
     private final long address;
     private final int capacity;
 
-    public ConcurrentLongStack(int capacity) {
+    public ConcurrentIntStack(int capacity) {
         this.capacity = capacity;
         address = unsafe.allocateMemory(capacity);
     }
 
-    public long pop() {
+    public int pop() {
         int i = index.get();
         if (i < 0) {
-            return Long.MIN_VALUE;
+            return Integer.MIN_VALUE;
         }
-        long returnValue = unsafe.getLong(address + i);
-        return index.compareAndSet(i, i - LONG_BYTES) ? returnValue : Long.MIN_VALUE;
+        int returnValue = unsafe.getInt(address + i);
+        return index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
     }
 
-    public boolean push(long value) {
-        long offset = index.addAndGet(LONG_BYTES);
+    public boolean push(int value) {
+        long offset = index.addAndGet(INT_BYTES);
         if (offset < capacity) {
-            unsafe.putLong(address + offset, value);
+            unsafe.putInt(address + offset, value);
             return true;
         }
-        index.addAndGet(-LONG_BYTES);
+        index.addAndGet(-INT_BYTES);
         return false;
     }
 
     public int size() {
-        return (index.get() >> 3) + 1;
+        return (index.get() >> 2) + 1;
     }
 
     @Override

@@ -31,8 +31,8 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public boolean destroyEntity(Entity entity) {
-        LongEntity longEntity = (LongEntity) entity;
-        return longEntity.getComposition().destroyEntity(longEntity);
+        IntEntity intEntity = (IntEntity) entity;
+        return intEntity.getComposition().destroyEntity(intEntity);
     }
 
     @Override

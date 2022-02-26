@@ -16,12 +16,12 @@ public final class Composition {
     public final static int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
-    private final ConcurrentPool.Tenant<LongEntity> tenant;
+    private final ConcurrentPool.Tenant<IntEntity> tenant;
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
 
-    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<LongEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
+    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<IntEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
         this.arrayPool = arrayPool;
@@ -70,13 +70,13 @@ public final class Composition {
         components[i] = temp;
     }
 
-    public LongEntity createEntity(Object... components) {
-        long id = tenant.nextId();
-        return tenant.register(id, new LongEntity(id, this,
+    public IntEntity createEntity(Object... components) {
+        int id = tenant.nextId();
+        return tenant.register(id, new IntEntity(id, this,
                 isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
-    public boolean destroyEntity(LongEntity entity) {
+    public boolean destroyEntity(IntEntity entity) {
         detachEntity(entity);
         Object[] components = entity.getComponents();
         if (components != null && entity.isComponentArrayFromCache()) {
@@ -86,15 +86,15 @@ public final class Composition {
         return true;
     }
 
-    public LongEntity attachEntity(LongEntity entity, Object... components) {
+    public IntEntity attachEntity(IntEntity entity, Object... components) {
         return tenant.register(entity.setId(tenant.nextId()), switch (length()) {
-            case 0 -> entity.setData(new LongEntity.Data(this, null));
-            case 1 -> entity.setData(new LongEntity.Data(this, components));
-            default -> entity.setData(new LongEntity.Data(this, sortComponentsInPlaceByIndex(components)));
+            case 0 -> entity.setData(new IntEntity.Data(this, null));
+            case 1 -> entity.setData(new IntEntity.Data(this, components));
+            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components)));
         });
     }
 
-    public LongEntity detachEntity(LongEntity entity) {
+    public IntEntity detachEntity(IntEntity entity) {
         tenant.freeId(entity.getId());
         return entity;
     }
@@ -107,7 +107,7 @@ public final class Composition {
         return repository;
     }
 
-    public ConcurrentPool.Tenant<LongEntity> getTenant() {
+    public ConcurrentPool.Tenant<IntEntity> getTenant() {
         return tenant;
     }
 
@@ -162,7 +162,7 @@ public final class Composition {
     }
 
 
-    record Comp1Iterator<T>(int idx, Iterator<LongEntity> iterator,
+    record Comp1Iterator<T>(int idx, Iterator<IntEntity> iterator,
                             Composition composition) implements Iterator<Results.Comp1<T>> {
         @Override
         public boolean hasNext() {
@@ -172,17 +172,17 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp1<T> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp1<>((T) components[idx], longEntity);
+            return new Results.Comp1<>((T) components[idx], intEntity);
         }
     }
 
     record Comp2Iterator<T1, T2>(int idx1, int idx2,
-                                 Iterator<LongEntity> iterator,
+                                 Iterator<IntEntity> iterator,
                                  Composition composition) implements Iterator<Results.Comp2<T1, T2>> {
         @Override
         public boolean hasNext() {
@@ -192,17 +192,17 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp2<T1, T2> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], longEntity);
+            return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], intEntity);
         }
     }
 
     record Comp3Iterator<T1, T2, T3>(int idx1, int idx2, int idx3,
-                                     Iterator<LongEntity> iterator,
+                                     Iterator<IntEntity> iterator,
                                      Composition composition) implements Iterator<Results.Comp3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
@@ -212,21 +212,21 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp3<T1, T2, T3> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
             return new Results.Comp3<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
                     (T3) components[idx3],
-                    longEntity);
+                    intEntity);
         }
     }
 
     record Comp4Iterator<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
-                                         Iterator<LongEntity> iterator,
+                                         Iterator<IntEntity> iterator,
                                          Composition composition) implements Iterator<Results.Comp4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
@@ -236,9 +236,9 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp4<T1, T2, T3, T4> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
             return new Results.Comp4<>(
@@ -246,12 +246,12 @@ public final class Composition {
                     (T2) components[idx2],
                     (T3) components[idx3],
                     (T4) components[idx4],
-                    longEntity);
+                    intEntity);
         }
     }
 
     record Comp5Iterator<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
-                                             Iterator<LongEntity> iterator,
+                                             Iterator<IntEntity> iterator,
                                              Composition composition) implements Iterator<Results.Comp5<T1, T2, T3, T4, T5>> {
         @Override
         public boolean hasNext() {
@@ -261,9 +261,9 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp5<T1, T2, T3, T4, T5> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
             return new Results.Comp5<>(
@@ -272,12 +272,12 @@ public final class Composition {
                     (T3) components[idx3],
                     (T4) components[idx4],
                     (T5) components[idx5],
-                    longEntity);
+                    intEntity);
         }
     }
 
     record Comp6Iterator<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                 Iterator<LongEntity> iterator,
+                                                 Iterator<IntEntity> iterator,
                                                  Composition composition) implements Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
@@ -287,9 +287,9 @@ public final class Composition {
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
         public Results.Comp6<T1, T2, T3, T4, T5, T6> next() {
-            LongEntity longEntity;
-            LongEntity.Data data;
-            while ((data = (longEntity = iterator.next()).getData()).composition() != composition) {
+            IntEntity intEntity;
+            IntEntity.Data data;
+            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
             return new Results.Comp6<>(
@@ -299,7 +299,7 @@ public final class Composition {
                     (T4) components[idx4],
                     (T5) components[idx5],
                     (T6) components[idx6],
-                    longEntity);
+                    intEntity);
         }
     }
 }

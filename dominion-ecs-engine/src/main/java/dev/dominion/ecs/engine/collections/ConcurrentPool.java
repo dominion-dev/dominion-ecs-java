@@ -9,18 +9,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
-/**
- * The ID bit schema:
- * <----------------------------- 64 ----------------------------->
- * <------------- 32 -------------><------------- 32 ------------->
- * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
- */
 public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
     public static final int NUM_OF_PAGES_BIT_SIZE = 14;
     public static final int PAGE_CAPACITY_BIT_SIZE = 16;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
     public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
-    public static final long PAGE_INDEX_BIT_MASK_SHIFTED = (long) PAGE_INDEX_BIT_MASK << PAGE_CAPACITY_BIT_SIZE;
+    public static final int PAGE_INDEX_BIT_MASK_SHIFTED = PAGE_INDEX_BIT_MASK << PAGE_CAPACITY_BIT_SIZE;
     public static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
     public static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
 
@@ -39,12 +33,12 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         return pages[id] = newPage;
     }
 
-    private LinkedPage<T> getPage(long id) {
-        int pageId = (int) ((id >> PAGE_CAPACITY_BIT_SIZE) & PAGE_INDEX_BIT_MASK);
+    private LinkedPage<T> getPage(int id) {
+        int pageId = (id >> PAGE_CAPACITY_BIT_SIZE) & PAGE_INDEX_BIT_MASK;
         return pages[pageId];
     }
 
-    public T getEntry(long id) {
+    public T getEntry(int id) {
         return getPage(id).get(id);
     }
 
@@ -68,29 +62,29 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public interface Identifiable {
-        long getId();
+        int getId();
 
-        long setId(long id);
+        int setId(int id);
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
-        private final ConcurrentLongStack stack;
+        private final ConcurrentIntStack stack;
         private final LinkedPage<T> firstPage;
         private LinkedPage<T> currentPage;
-        private long newId;
+        private int newId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
             firstPage = currentPage = pool.newPage(this);
-            stack = new ConcurrentLongStack(1 << 16);
+            stack = new ConcurrentIntStack(1 << 16);
             nextId();
         }
 
-        public long nextId() {
-            long returnValue = stack.pop();
-            if (returnValue != Long.MIN_VALUE) {
+        public int nextId() {
+            int returnValue = stack.pop();
+            if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
             long stamp = lock.tryOptimisticRead();
@@ -135,7 +129,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             }
         }
 
-        public long freeId(long id) {
+        public int freeId(int id) {
             LinkedPage<T> page = pool.getPage(id);
             if (page == null) {
                 return -1;
@@ -158,7 +152,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return new PoolIterator<>(firstPage);
         }
 
-        public T register(long id, T entry) {
+        public T register(int id, T entry) {
             return pool.getPage(id).set(id, entry);
         }
 
@@ -215,8 +209,8 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return index.incrementAndGet();
         }
 
-        public int remove(long id, boolean doNotUpdateIndex) {
-            int indexToBeReused = (int) id & OBJECT_INDEX_BIT_MASK;
+        public int remove(int id, boolean doNotUpdateIndex) {
+            int indexToBeReused = id & OBJECT_INDEX_BIT_MASK;
             for (; ; ) {
                 int lastIndex = doNotUpdateIndex ? index.get() : index.decrementAndGet();
                 if (lastIndex >= PAGE_CAPACITY) {
@@ -236,13 +230,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         }
 
         @SuppressWarnings("unchecked")
-        public T get(long id) {
-            return (T) data[(int) id & OBJECT_INDEX_BIT_MASK];
+        public T get(int id) {
+            return (T) data[id & OBJECT_INDEX_BIT_MASK];
         }
 
         @SuppressWarnings("unchecked")
-        public T set(long id, T value) {
-            return (T) (data[(int) id & OBJECT_INDEX_BIT_MASK] = value);
+        public T set(int id, T value) {
+            return (T) (data[id & OBJECT_INDEX_BIT_MASK] = value);
         }
 
         public boolean hasCapacity() {

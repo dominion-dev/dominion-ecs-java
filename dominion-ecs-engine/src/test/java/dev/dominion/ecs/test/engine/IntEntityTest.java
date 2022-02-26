@@ -3,7 +3,7 @@ package dev.dominion.ecs.test.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.EntityRepository;
-import dev.dominion.ecs.engine.LongEntity;
+import dev.dominion.ecs.engine.IntEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,14 +15,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class LongEntityTest {
+class IntEntityTest {
 
     @Test
     void add() {
         try (EntityRepository entityRepository = new EntityRepository()) {
             var c1 = new C1(0);
             var c2 = new C2(0);
-            LongEntity entity = (LongEntity) entityRepository.createEntity();
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
             Assertions.assertNull(entity.getComponents());
             entity.add(c1);
             Assertions.assertEquals(c1, entity.getComponents()[0]);
@@ -98,7 +98,7 @@ class LongEntityTest {
 
             for (int i = 0; i < capacity; i++) {
                 Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4, c5},
-                        Arrays.stream(((LongEntity) entities[i]).getComponents())
+                        Arrays.stream(((IntEntity) entities[i]).getComponents())
                                 .sorted(Comparator.comparing(comp -> comp.getClass().getName())).toArray());
             }
         }
@@ -110,7 +110,7 @@ class LongEntityTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
-            LongEntity entity = (LongEntity) entityRepository.createEntity(c1, c2, c3);
+            IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Assertions.assertEquals(c2, entity.remove(c2));
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
             Assertions.assertEquals(c1, entity.remove(c1));
@@ -126,7 +126,7 @@ class LongEntityTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
-            LongEntity entity = (LongEntity) entityRepository.createEntity(c1, c2, c3);
+            IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Composition compositionV3 = entity.getComposition();
             entity.remove(c2);
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
@@ -155,9 +155,9 @@ class LongEntityTest {
         try (EntityRepository entityRepository = new EntityRepository()) {
             var c1 = new C1(0);
             var c2 = new C2(0);
-            LongEntity entity = (LongEntity) entityRepository.createEntity();
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
             Assertions.assertFalse(entity.has(C1.class));
-            LongEntity entity2 = (LongEntity) entityRepository.createEntity(c1);
+            IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
             Assertions.assertTrue(entity2.has(C1.class));
             entity.add(c1);
             Assertions.assertTrue(entity.has(C1.class));
@@ -172,9 +172,9 @@ class LongEntityTest {
         try (EntityRepository entityRepository = new EntityRepository()) {
             var c1 = new C1(0);
             var c2 = new C2(0);
-            LongEntity entity = (LongEntity) entityRepository.createEntity();
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
             Assertions.assertFalse(entity.contains(c1));
-            LongEntity entity2 = (LongEntity) entityRepository.createEntity(c1);
+            IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
             Assertions.assertTrue(entity2.contains(c1));
             entity.add(c1);
             Assertions.assertTrue(entity.contains(c1));
