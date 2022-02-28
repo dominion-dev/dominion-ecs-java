@@ -38,13 +38,13 @@ class ConcurrentPoolTest {
             try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>().newTenant()) {
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(0, (tenant.nextId() >> ConcurrentPool.PAGE_CAPACITY_BIT_SIZE)
-                        & ConcurrentPool.PAGE_INDEX_BIT_MASK);
-                for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY; i++) {
+                Assertions.assertEquals(0, (tenant.nextId() >> ConcurrentPool.CHUNK_CAPACITY_BIT_LENGTH)
+                        & ConcurrentPool.CHUNK_INDEX_BIT_MASK);
+                for (int i = 0; i < ConcurrentPool.CHUNK_CAPACITY; i++) {
                     tenant.nextId();
                 }
-                Assertions.assertEquals(1, (tenant.nextId() >> ConcurrentPool.PAGE_CAPACITY_BIT_SIZE)
-                        & ConcurrentPool.PAGE_INDEX_BIT_MASK);
+                Assertions.assertEquals(1, (tenant.nextId() >> ConcurrentPool.CHUNK_CAPACITY_BIT_LENGTH)
+                        & ConcurrentPool.CHUNK_INDEX_BIT_MASK);
                 Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
             }
         }
@@ -52,27 +52,27 @@ class ConcurrentPoolTest {
         @Test
         public void freeId() {
             try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>().newTenant()) {
-                Assertions.assertEquals(0, tenant.currentPageSize());
+                Assertions.assertEquals(0, tenant.currentChunkSize());
                 Assertions.assertEquals(0, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(1, tenant.currentPageSize());
+                Assertions.assertEquals(1, tenant.currentChunkSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(2, tenant.currentPageSize()); // ready nextId == 2
+                Assertions.assertEquals(2, tenant.currentChunkSize()); // ready nextId == 2
                 tenant.freeId(0); // 1 -> 0 : ready nextId == 1
-                Assertions.assertEquals(1, tenant.currentPageSize());
+                Assertions.assertEquals(1, tenant.currentChunkSize());
                 Assertions.assertEquals(1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(2, tenant.currentPageSize());
+                Assertions.assertEquals(2, tenant.currentChunkSize());
                 Assertions.assertEquals(2, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                // move to the next page
-                for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY; i++) {
+                // move to the next chunk
+                for (int i = 0; i < ConcurrentPool.CHUNK_CAPACITY; i++) {
                     tenant.nextId();
                 }
-                Assertions.assertEquals(3, tenant.currentPageSize());
+                Assertions.assertEquals(3, tenant.currentChunkSize());
                 Assertions.assertEquals(3, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 tenant.freeId(1);
-                Assertions.assertEquals(4, tenant.currentPageSize());
-                Assertions.assertEquals(ConcurrentPool.PAGE_CAPACITY - 1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
+                Assertions.assertEquals(4, tenant.currentChunkSize());
+                Assertions.assertEquals(ConcurrentPool.CHUNK_CAPACITY - 1, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
                 Assertions.assertEquals(4, tenant.nextId() & ConcurrentPool.OBJECT_INDEX_BIT_MASK);
-                Assertions.assertEquals(5, tenant.currentPageSize());
+                Assertions.assertEquals(5, tenant.currentChunkSize());
             }
         }
 
@@ -148,35 +148,35 @@ class ConcurrentPoolTest {
     }
 
     @Nested
-    public class LinkedPageTest {
+    public class LinkedChunkTest {
 
         @Test
         public void size() {
-            ConcurrentPool.LinkedPage<IntEntity> page = new ConcurrentPool.LinkedPage<>(0, null);
-            Assertions.assertEquals(0, page.incrementIndex());
-            Assertions.assertEquals(1, page.incrementIndex());
+            ConcurrentPool.LinkedChunk<IntEntity> chunk = new ConcurrentPool.LinkedChunk<>(0, null);
+            Assertions.assertEquals(0, chunk.incrementIndex());
+            Assertions.assertEquals(1, chunk.incrementIndex());
         }
 
         @Test
         public void capacity() {
-            ConcurrentPool.LinkedPage<IntEntity> page = new ConcurrentPool.LinkedPage<>(0, null);
-            Assertions.assertTrue(page.hasCapacity());
-            for (int i = 0; i < ConcurrentPool.PAGE_CAPACITY - 1; i++) {
-                page.incrementIndex();
+            ConcurrentPool.LinkedChunk<IntEntity> chunk = new ConcurrentPool.LinkedChunk<>(0, null);
+            Assertions.assertTrue(chunk.hasCapacity());
+            for (int i = 0; i < ConcurrentPool.CHUNK_CAPACITY - 1; i++) {
+                chunk.incrementIndex();
             }
-            Assertions.assertTrue(page.hasCapacity());
-            page.incrementIndex();
-            Assertions.assertFalse(page.hasCapacity());
+            Assertions.assertTrue(chunk.hasCapacity());
+            chunk.incrementIndex();
+            Assertions.assertFalse(chunk.hasCapacity());
         }
 
         @Test
         public void data() {
-            ConcurrentPool.LinkedPage<IntEntity> previous = new ConcurrentPool.LinkedPage<>(0, null);
-            ConcurrentPool.LinkedPage<IntEntity> page = new ConcurrentPool.LinkedPage<>(0, previous);
+            ConcurrentPool.LinkedChunk<IntEntity> previous = new ConcurrentPool.LinkedChunk<>(0, null);
+            ConcurrentPool.LinkedChunk<IntEntity> chunk = new ConcurrentPool.LinkedChunk<>(0, previous);
             IntEntity entity = new IntEntity(1, null);
-            page.set(10, entity);
-            Assertions.assertEquals(entity, page.get(10));
-            Assertions.assertEquals(previous, page.getPrevious());
+            chunk.set(10, entity);
+            Assertions.assertEquals(entity, chunk.get(10));
+            Assertions.assertEquals(previous, chunk.getPrevious());
         }
     }
 }

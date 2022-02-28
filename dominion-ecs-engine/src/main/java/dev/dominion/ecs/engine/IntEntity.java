@@ -12,7 +12,7 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
-    private static final int componentArrayFromCacheBit = 1 << 31;
+    private static final int componentArrayFromPoolBit = 1 << 31;
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
@@ -44,7 +44,7 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public int setId(int id) {
-        return this.id = id | (this.id & componentArrayFromCacheBit);
+        return this.id = id | (this.id & componentArrayFromPoolBit);
     }
 
     @Override
@@ -157,11 +157,11 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     public boolean isComponentArrayFromCache() {
-        return (id & componentArrayFromCacheBit) == componentArrayFromCacheBit;
+        return (id & componentArrayFromPoolBit) == componentArrayFromPoolBit;
     }
 
     void flagComponentArrayFromCache() {
-        id |= componentArrayFromCacheBit;
+        id |= componentArrayFromPoolBit;
     }
 
     public record Data(Composition composition, Object[] components) {
