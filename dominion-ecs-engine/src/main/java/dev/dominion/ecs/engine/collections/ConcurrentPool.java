@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
 public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
-    public static final int NUM_OF_PAGES_BIT_SIZE = 14;
-    public static final int PAGE_CAPACITY_BIT_SIZE = 16;
+    public static final int NUM_OF_PAGES_BIT_SIZE = 16;
+    public static final int PAGE_CAPACITY_BIT_SIZE = 14;
     public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
     public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
     public static final int PAGE_INDEX_BIT_MASK_SHIFTED = PAGE_INDEX_BIT_MASK << PAGE_CAPACITY_BIT_SIZE;
@@ -65,6 +65,14 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         int getId();
 
         int setId(int id);
+
+        int getPrevId();
+
+        int setPrevId(int prevId);
+
+        int getNextId();
+
+        int setNextId(int nextId);
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {

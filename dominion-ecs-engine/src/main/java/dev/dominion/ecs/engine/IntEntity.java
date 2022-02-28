@@ -12,6 +12,7 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
+    private static final int componentArrayFromCacheBit = 1 << 31;
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
@@ -25,9 +26,9 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     private int id;
-    private int linkedId;
+    private int prevId;
+    private int nextId;
     private volatile Data data;
-    private boolean isComponentArrayFromCache;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
@@ -36,20 +37,34 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
         data = new Data(composition, components);
     }
 
+    @Override
     public int getId() {
         return id;
     }
 
+    @Override
     public int setId(int id) {
-        return this.id = id;
+        return this.id = id | (this.id & componentArrayFromCacheBit);
     }
 
-    public int getLinkedId() {
-        return linkedId;
+    @Override
+    public int getPrevId() {
+        return prevId;
     }
 
-    public int setLinkedId(int linkedId) {
-        return this.linkedId = linkedId;
+    @Override
+    public int setPrevId(int prevId) {
+        return this.prevId = prevId;
+    }
+
+    @Override
+    public int getNextId() {
+        return nextId;
+    }
+
+    @Override
+    public int setNextId(int nextId) {
+        return this.nextId = nextId;
     }
 
     public Composition getComposition() {
@@ -142,11 +157,11 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     public boolean isComponentArrayFromCache() {
-        return isComponentArrayFromCache;
+        return (id & componentArrayFromCacheBit) == componentArrayFromCacheBit;
     }
 
     void flagComponentArrayFromCache() {
-        isComponentArrayFromCache = true;
+        id |= componentArrayFromCacheBit;
     }
 
     public record Data(Composition composition, Object[] components) {

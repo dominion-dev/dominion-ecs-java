@@ -103,7 +103,7 @@ class ConcurrentPoolTest {
             try (ConcurrentPool.Tenant<Id> tenant = new ConcurrentPool<Id>().newTenant()) {
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
-                    tenant.register(nextId, new Id(i));
+                    tenant.register(nextId, new Id(i, -1, -1));
                 }
                 Iterator<Id> iterator = tenant.iterator();
                 int i = 0;
@@ -114,7 +114,7 @@ class ConcurrentPoolTest {
             }
         }
 
-        public record Id(int id) implements ConcurrentPool.Identifiable {
+        public record Id(int id, int prevId, int nextId) implements ConcurrentPool.Identifiable {
             @Override
             public int getId() {
                 return id;
@@ -123,6 +123,26 @@ class ConcurrentPoolTest {
             @Override
             public int setId(int id) {
                 return id;
+            }
+
+            @Override
+            public int getPrevId() {
+                return prevId;
+            }
+
+            @Override
+            public int setPrevId(int prevId) {
+                return prevId;
+            }
+
+            @Override
+            public int getNextId() {
+                return nextId;
+            }
+
+            @Override
+            public int setNextId(int nextId) {
+                return nextId;
             }
         }
     }

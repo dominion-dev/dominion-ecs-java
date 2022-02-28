@@ -16,6 +16,8 @@ public interface Results<T> {
 
     Results<T> filter(Class<?>... componentTypes);
 
+    <S extends Enum<S>> Results<T> withState(S state);
+
     record Comp1<T>(T comp, Entity entity) {
     }
 

@@ -128,7 +128,9 @@ class IntEntityTest {
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Composition compositionV3 = entity.getComposition();
+            Assertions.assertFalse(entity.isComponentArrayFromCache());
             entity.remove(c2);
+            Assertions.assertTrue(entity.isComponentArrayFromCache());
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
             Composition compositionV2 = entity.getComposition();
             entity.remove(c1);
@@ -137,6 +139,7 @@ class IntEntityTest {
             entity.remove(c3);
             Assertions.assertNull(entity.getComponents());
             entity.add(c3);
+            Assertions.assertTrue(entity.isComponentArrayFromCache());
             Assertions.assertEquals(c3, entity.getComponents()[0]);
             Assertions.assertEquals(compositionV1, entity.getComposition());
             entity.add(c2);

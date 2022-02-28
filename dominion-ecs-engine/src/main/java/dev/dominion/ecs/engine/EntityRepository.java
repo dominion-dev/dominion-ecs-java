@@ -107,6 +107,11 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
+        public <S extends Enum<S>> Results<T> withState(S state) {
+            return null; //ToDo
+        }
+
+        @Override
         public Stream<T> stream() {
             return null;
         }
