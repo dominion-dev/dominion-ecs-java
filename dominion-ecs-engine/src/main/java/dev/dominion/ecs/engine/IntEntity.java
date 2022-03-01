@@ -11,36 +11,60 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 
 import java.util.concurrent.locks.StampedLock;
 
-public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
-    private static final UncheckedReferenceUpdater<LongEntity, StampedLock> lockUpdater;
+public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
+    private static final int componentArrayFromPoolBit = 1 << 31;
+    private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
-        UncheckedReferenceUpdater<LongEntity, StampedLock> updater = null;
+        UncheckedReferenceUpdater<IntEntity, StampedLock> updater = null;
         try {
-            updater = new UncheckedReferenceUpdater<>(LongEntity.class, "lock");
+            updater = new UncheckedReferenceUpdater<>(IntEntity.class, "lock");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
         lockUpdater = updater;
     }
 
-    private long id;
+    private int id;
+    private int prevId;
+    private int nextId;
     private volatile Data data;
-    private boolean isComponentArrayFromCache;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
-    public LongEntity(long id, Composition composition, Object... components) {
+    public IntEntity(int id, Composition composition, Object... components) {
         this.id = id;
         data = new Data(composition, components);
     }
 
-    public long getId() {
+    @Override
+    public int getId() {
         return id;
     }
 
-    public long setId(long id) {
-        return this.id = id;
+    @Override
+    public int setId(int id) {
+        return this.id = id | (this.id & componentArrayFromPoolBit);
+    }
+
+    @Override
+    public int getPrevId() {
+        return prevId;
+    }
+
+    @Override
+    public int setPrevId(int prevId) {
+        return this.prevId = prevId;
+    }
+
+    @Override
+    public int getNextId() {
+        return nextId;
+    }
+
+    @Override
+    public int setNextId(int nextId) {
+        return this.nextId = nextId;
     }
 
     public Composition getComposition() {
@@ -55,7 +79,7 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
         return data;
     }
 
-    LongEntity setData(Data data) {
+    IntEntity setData(Data data) {
         this.data = data;
         return this;
     }
@@ -132,12 +156,24 @@ public final class LongEntity implements Entity, ConcurrentPool.Identifiable {
     public void setEnabled(boolean enabled) {
     }
 
+    boolean delete() {
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
+        long stamp = lock.writeLock();
+        try {
+            return data.composition.deleteEntity(this);
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
     public boolean isComponentArrayFromCache() {
-        return isComponentArrayFromCache;
+        return (id & componentArrayFromPoolBit) == componentArrayFromPoolBit;
     }
 
     void flagComponentArrayFromCache() {
-        isComponentArrayFromCache = true;
+        id |= componentArrayFromPoolBit;
     }
 
     public record Data(Composition composition, Object[] components) {

@@ -30,9 +30,8 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public boolean destroyEntity(Entity entity) {
-        LongEntity longEntity = (LongEntity) entity;
-        return longEntity.getComposition().destroyEntity(longEntity);
+    public boolean deleteEntity(Entity entity) {
+        return ((IntEntity) entity).delete();
     }
 
     @Override
@@ -104,6 +103,11 @@ public final class EntityRepository implements Dominion {
                             return null;
                         }
                     };
+        }
+
+        @Override
+        public <S extends Enum<S>> Results<T> withState(S state) {
+            return null; //ToDo
         }
 
         @Override

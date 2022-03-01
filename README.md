@@ -6,18 +6,18 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## Features
 
-- :rocket: **_FAST_** : Dominion is not only an insanely fast ECS for the Java platform, it can also be in the same league as
-  ECS for C/C++ (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
+- :rocket: **_FAST_** : Dominion is not only an insanely fast ECS for the Java platform, it can also be in the same
+  league as ECS for C/C++ (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
 - 🤏 **_TINY_** : just a high-performance Core Java library with a minimal footprint and no dependencies. So you can
   easily integrate Dominion into your game engine or framework or use it directly for your game or application.
-- :coffee: **_SIMPLE_** : Dominion aims to be simple by design and exposes a clean, minimal, and self-explanatory API. This
-  readme alone will provide a complete usage documentation
-- :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
-  the availability of the new version.
+- :coffee: **_SIMPLE_** : Dominion aims to be simple by design and exposes a clean, minimal, and self-explanatory API.
+  This readme alone will provide a complete usage documentation
+- :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
+  announce the availability of the new version.
 
-Dominion is still in early stages :baby_bottle:. The API is not yet complete and not fully implemented, but every part already
-built comes with unit tests and benchmarks. There are currently no releases yet and first release is scheduled for the
-first quarter of 2022.
+Dominion is still in early stages :baby_bottle:. The API is not yet complete and not fully implemented, but every part
+already built comes with unit tests and benchmarks. There are currently no releases yet and first release is scheduled
+for the first quarter of 2022.
 
 ## About Performance
 
@@ -34,7 +34,7 @@ many ways. Dominion mitigates Java's performance pitfalls by taking a few action
   Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
   as much as possible and leveraging the best tools - Dominion also implements concurrency using the
   powerful [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html)
-  introduced in Java since version 8.
+  introduced in Java 8.
 - **_using Java 17 LTS_**: only by upgrading to the last JDK 17 you will get a performance boost for free. As already
   tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9%
   faster than Java 11. Whenever possible and to further reduce memory footprint, the engine
@@ -59,4 +59,5 @@ the [Dominion benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benc
 performance.
 
 ## Support Dominion
+
 If you want to support Dominion project, consider giving it a **Star** ⭐️

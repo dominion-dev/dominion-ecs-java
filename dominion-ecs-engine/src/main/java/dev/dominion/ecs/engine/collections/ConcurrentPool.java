@@ -9,43 +9,40 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
-/**
- * The ID bit schema:
- * <----------------------------- 64 ----------------------------->
- * <------------- 32 -------------><------------- 32 ------------->
- * <4 ><---- 14 ----><----- 16 -----><---- 14 ----><----- 16 ----->
- */
 public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
-    public static final int NUM_OF_PAGES_BIT_SIZE = 14;
-    public static final int PAGE_CAPACITY_BIT_SIZE = 16;
-    public static final int NUM_OF_PAGES = 1 << NUM_OF_PAGES_BIT_SIZE;
-    public static final int PAGE_INDEX_BIT_MASK = NUM_OF_PAGES - 1;
-    public static final long PAGE_INDEX_BIT_MASK_SHIFTED = (long) PAGE_INDEX_BIT_MASK << PAGE_CAPACITY_BIT_SIZE;
-    public static final int PAGE_CAPACITY = 1 << PAGE_CAPACITY_BIT_SIZE;
-    public static final int OBJECT_INDEX_BIT_MASK = PAGE_CAPACITY - 1;
+    public static final int MAX_NUM_OF_CHUNKS_BIT_LENGTH = 16;
+    public static final int CHUNK_CAPACITY_BIT_LENGTH = 14;
+    public static final int MAX_NUM_OF_CHUNKS = 1 << MAX_NUM_OF_CHUNKS_BIT_LENGTH;
+    public static final int CHUNK_INDEX_BIT_MASK = MAX_NUM_OF_CHUNKS - 1;
+    public static final int CHUNK_INDEX_BIT_MASK_SHIFTED = CHUNK_INDEX_BIT_MASK << CHUNK_CAPACITY_BIT_LENGTH;
+    public static final int CHUNK_CAPACITY = 1 << CHUNK_CAPACITY_BIT_LENGTH;
+    public static final int OBJECT_INDEX_BIT_MASK = CHUNK_CAPACITY - 1;
 
     @SuppressWarnings("unchecked")
-    private final LinkedPage<T>[] pages = new LinkedPage[NUM_OF_PAGES];
-    private final AtomicInteger pageIndex = new AtomicInteger(-1);
+    private final LinkedChunk<T>[] chunks = new LinkedChunk[MAX_NUM_OF_CHUNKS];
+    private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
 
-    private LinkedPage<T> newPage(Tenant<T> owner) {
-        int id = pageIndex.incrementAndGet();
-        LinkedPage<T> currentPage = owner.currentPage;
-        LinkedPage<T> newPage = new LinkedPage<>(id, currentPage);
-        if (currentPage != null) {
-            currentPage.setNext(newPage);
+    private LinkedChunk<T> newChunk(Tenant<T> owner) {
+        int id = chunkIndex.incrementAndGet();
+        if (id > MAX_NUM_OF_CHUNKS - 1) {
+            throw new OutOfMemoryError(ConcurrentPool.class.getName() + ": cannot create a new memory chunk");
         }
-        return pages[id] = newPage;
+        LinkedChunk<T> currentChunk = owner.currentChunk;
+        LinkedChunk<T> newChunk = new LinkedChunk<>(id, currentChunk);
+        if (currentChunk != null) {
+            currentChunk.setNext(newChunk);
+        }
+        return chunks[id] = newChunk;
     }
 
-    private LinkedPage<T> getPage(long id) {
-        int pageId = (int) ((id >> PAGE_CAPACITY_BIT_SIZE) & PAGE_INDEX_BIT_MASK);
-        return pages[pageId];
+    private LinkedChunk<T> getChunk(int id) {
+        int chunkId = (id >> CHUNK_CAPACITY_BIT_LENGTH) & CHUNK_INDEX_BIT_MASK;
+        return chunks[chunkId];
     }
 
-    public T getEntry(long id) {
-        return getPage(id).get(id);
+    public T getEntry(int id) {
+        return getChunk(id).get(id);
     }
 
     public Tenant<T> newTenant() {
@@ -55,9 +52,9 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public int size() {
-        return Arrays.stream(pages)
+        return Arrays.stream(chunks)
                 .filter(Objects::nonNull)
-                .mapToInt(LinkedPage::size)
+                .mapToInt(LinkedChunk::size)
 //                .peek(System.out::println)
                 .sum();
     }
@@ -68,29 +65,37 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public interface Identifiable {
-        long getId();
+        int getId();
 
-        long setId(long id);
+        int setId(int id);
+
+        int getPrevId();
+
+        int setPrevId(int prevId);
+
+        int getNextId();
+
+        int setNextId(int nextId);
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ConcurrentPool<T> pool;
         private final StampedLock lock = new StampedLock();
-        private final ConcurrentLongStack stack;
-        private final LinkedPage<T> firstPage;
-        private LinkedPage<T> currentPage;
-        private long newId;
+        private final ConcurrentIntStack stack;
+        private final LinkedChunk<T> firstChunk;
+        private LinkedChunk<T> currentChunk;
+        private int newId;
 
         private Tenant(ConcurrentPool<T> pool) {
             this.pool = pool;
-            firstPage = currentPage = pool.newPage(this);
-            stack = new ConcurrentLongStack(1 << 16);
+            firstChunk = currentChunk = pool.newChunk(this);
+            stack = new ConcurrentIntStack(1 << 16);
             nextId();
         }
 
-        public long nextId() {
-            long returnValue = stack.pop();
-            if (returnValue != Long.MIN_VALUE) {
+        public int nextId() {
+            int returnValue = stack.pop();
+            if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
             long stamp = lock.tryOptimisticRead();
@@ -102,13 +107,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                     }
                     // possibly racy reads
                     returnValue = newId;
-                    int pageIndex;
-                    if ((pageIndex = currentPage.index.get()) < PAGE_CAPACITY - 1) {
+                    int chunkIndex;
+                    if ((chunkIndex = currentChunk.index.get()) < CHUNK_CAPACITY - 1) {
                         boolean incremented = false;
-                        while (!incremented && (pageIndex = currentPage.index.get()) < PAGE_CAPACITY - 1) {
-                            if (currentPage.index.compareAndSet(pageIndex, pageIndex + 1)) {
+                        while (!incremented && (chunkIndex = currentChunk.index.get()) < CHUNK_CAPACITY - 1) {
+                            if (currentChunk.index.compareAndSet(chunkIndex, chunkIndex + 1)) {
                                 incremented = true;
-                                pageIndex++;
+                                chunkIndex++;
                             }
                         }
                         if (!incremented) {
@@ -122,10 +127,10 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                             continue;
                         }
                         // exclusive access
-                        pageIndex = (currentPage = pool.newPage(this)).incrementIndex();
+                        chunkIndex = (currentChunk = pool.newChunk(this)).incrementIndex();
                     }
-                    newId = (pageIndex & OBJECT_INDEX_BIT_MASK) |
-                            (currentPage.id & PAGE_INDEX_BIT_MASK) << PAGE_CAPACITY_BIT_SIZE;
+                    newId = (chunkIndex & OBJECT_INDEX_BIT_MASK) |
+                            (currentChunk.id & CHUNK_INDEX_BIT_MASK) << CHUNK_CAPACITY_BIT_LENGTH;
                     return returnValue;
                 }
             } finally {
@@ -135,19 +140,19 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             }
         }
 
-        public long freeId(long id) {
-            LinkedPage<T> page = pool.getPage(id);
-            if (page == null) {
+        public int freeId(int id) {
+            LinkedChunk<T> chunk = pool.getChunk(id);
+            if (chunk == null) {
                 return -1;
             }
-            if (page.isEmpty()) {
+            if (chunk.isEmpty()) {
                 stack.push(id);
                 return id;
             }
-            boolean notCurrentPage = page != currentPage;
-            int reusableId = page.remove(id, notCurrentPage);
-            if (notCurrentPage) {
-                stack.push((id & PAGE_INDEX_BIT_MASK_SHIFTED) | reusableId);
+            boolean notCurrentChunk = chunk != currentChunk;
+            int reusableId = chunk.remove(id, notCurrentChunk);
+            if (notCurrentChunk) {
+                stack.push((id & CHUNK_INDEX_BIT_MASK_SHIFTED) | reusableId);
             } else {
                 newId = reusableId;
             }
@@ -155,15 +160,15 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         }
 
         public Iterator<T> iterator() {
-            return new PoolIterator<>(firstPage);
+            return new PoolIterator<>(firstChunk);
         }
 
-        public T register(long id, T entry) {
-            return pool.getPage(id).set(id, entry);
+        public T register(int id, T entry) {
+            return pool.getChunk(id).set(id, entry);
         }
 
-        public int currentPageSize() {
-            return currentPage.size();
+        public int currentChunkSize() {
+            return currentChunk.size();
         }
 
         public ConcurrentPool<T> getPool() {
@@ -178,35 +183,35 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
     public static class PoolIterator<T extends Identifiable> implements Iterator<T> {
         int next = 0;
-        private LinkedPage<T> currentPage;
+        private LinkedChunk<T> currentChunk;
 
-        public PoolIterator(LinkedPage<T> currentPage) {
-            this.currentPage = currentPage;
+        public PoolIterator(LinkedChunk<T> currentChunk) {
+            this.currentChunk = currentChunk;
         }
 
         @SuppressWarnings("ConstantConditions")
         @Override
         public boolean hasNext() {
-            return currentPage.size() > next
-                    || ((next = 0) == 0 && (currentPage = currentPage.next) != null);
+            return currentChunk.size() > next
+                    || ((next = 0) == 0 && (currentChunk = currentChunk.next) != null);
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public T next() {
-            return (T) currentPage.data[next++];
+            return (T) currentChunk.data[next++];
         }
     }
 
-    public static final class LinkedPage<T extends Identifiable> {
-        private final Identifiable[] data = new Identifiable[PAGE_CAPACITY];
-        private final LinkedPage<T> previous;
+    public static final class LinkedChunk<T extends Identifiable> {
+        private final Identifiable[] data = new Identifiable[CHUNK_CAPACITY];
+        private final LinkedChunk<T> previous;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
-        private LinkedPage<T> next;
+        private LinkedChunk<T> next;
         private int sizeOffset;
 
-        public LinkedPage(int id, LinkedPage<T> previous) {
+        public LinkedChunk(int id, LinkedChunk<T> previous) {
             this.previous = previous;
             this.id = id;
         }
@@ -215,12 +220,12 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return index.incrementAndGet();
         }
 
-        public int remove(long id, boolean doNotUpdateIndex) {
-            int indexToBeReused = (int) id & OBJECT_INDEX_BIT_MASK;
+        public int remove(int id, boolean doNotUpdateIndex) {
+            int indexToBeReused = id & OBJECT_INDEX_BIT_MASK;
             for (; ; ) {
                 int lastIndex = doNotUpdateIndex ? index.get() : index.decrementAndGet();
-                if (lastIndex >= PAGE_CAPACITY) {
-                    index.compareAndSet(PAGE_CAPACITY, PAGE_CAPACITY - 1);
+                if (lastIndex >= CHUNK_CAPACITY) {
+                    index.compareAndSet(CHUNK_CAPACITY, CHUNK_CAPACITY - 1);
                     continue;
                 }
                 if (lastIndex < 0) {
@@ -236,24 +241,24 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         }
 
         @SuppressWarnings("unchecked")
-        public T get(long id) {
-            return (T) data[(int) id & OBJECT_INDEX_BIT_MASK];
+        public T get(int id) {
+            return (T) data[id & OBJECT_INDEX_BIT_MASK];
         }
 
         @SuppressWarnings("unchecked")
-        public T set(long id, T value) {
-            return (T) (data[(int) id & OBJECT_INDEX_BIT_MASK] = value);
+        public T set(int id, T value) {
+            return (T) (data[id & OBJECT_INDEX_BIT_MASK] = value);
         }
 
         public boolean hasCapacity() {
-            return index.get() < PAGE_CAPACITY - 1;
+            return index.get() < CHUNK_CAPACITY - 1;
         }
 
-        public LinkedPage<T> getPrevious() {
+        public LinkedChunk<T> getPrevious() {
             return previous;
         }
 
-        private void setNext(LinkedPage<T> next) {
+        private void setNext(LinkedChunk<T> next) {
             this.next = next;
             sizeOffset = 1;
         }
