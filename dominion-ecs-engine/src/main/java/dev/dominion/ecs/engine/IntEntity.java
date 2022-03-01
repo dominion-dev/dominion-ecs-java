@@ -156,6 +156,18 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     public void setEnabled(boolean enabled) {
     }
 
+    boolean delete() {
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
+        long stamp = lock.writeLock();
+        try {
+            return data.composition.deleteEntity(this);
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
     public boolean isComponentArrayFromCache() {
         return (id & componentArrayFromPoolBit) == componentArrayFromPoolBit;
     }

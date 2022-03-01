@@ -30,9 +30,8 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public boolean destroyEntity(Entity entity) {
-        IntEntity intEntity = (IntEntity) entity;
-        return intEntity.getComposition().destroyEntity(intEntity);
+    public boolean deleteEntity(Entity entity) {
+        return ((IntEntity) entity).delete();
     }
 
     @Override

@@ -43,11 +43,11 @@ class EntityRepositoryTest {
     }
 
     @Test
-    void destroyEntity() {
+    void deleteEntity() {
         try (EntityRepository entityRepository = new EntityRepository()) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             ConcurrentPool<IntEntity> pool = entity.getComposition().getTenant().getPool();
-            entityRepository.destroyEntity(entity);
+            entityRepository.deleteEntity(entity);
             Assertions.assertNull(entity.getData());
             Assertions.assertNull(pool.getEntry(entity.getId()));
         }
@@ -61,7 +61,7 @@ class EntityRepositoryTest {
             ConcurrentPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
             int id1 = entity1.getId();
             int id2 = entity2.getId();
-            entityRepository.destroyEntity(entity1);
+            entityRepository.deleteEntity(entity1);
             Assertions.assertNull(pool.getEntry(id2));
             Assertions.assertEquals(entity2, pool.getEntry(id1));
             Assertions.assertEquals(id1, entity2.getId());

@@ -27,8 +27,8 @@ public class DominionTest {
     }
 
     @Test
-    void destroyEntity() {
-        Assertions.assertFalse(Dominion.init("MockDominion").destroyEntity(null));
+    void deleteEntity() {
+        Assertions.assertFalse(Dominion.init("MockDominion").deleteEntity(null));
     }
 
     public static class MockDominion implements Dominion {
@@ -44,7 +44,7 @@ public class DominionTest {
         }
 
         @Override
-        public boolean destroyEntity(Entity entity) {
+        public boolean deleteEntity(Entity entity) {
             return false;
         }
 

@@ -76,7 +76,7 @@ public final class Composition {
                 isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
-    public boolean destroyEntity(IntEntity entity) {
+    public boolean deleteEntity(IntEntity entity) {
         detachEntity(entity);
         Object[] components = entity.getComponents();
         if (components != null && entity.isComponentArrayFromCache()) {
