@@ -12,7 +12,8 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
-    private static final int componentArrayFromPoolBit = 1 << 31;
+    private static final int DETACHED_ID_BIT = 1 << 31;
+    private static final int COMPONENT_ARRAY_FROM_POOL_BIT = 1 << 30;
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
@@ -26,8 +27,8 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     private int id;
-    private int prevId;
-    private int nextId;
+    private int prevId = -1;
+    private int nextId = -1;
     private volatile Data data;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
@@ -44,7 +45,7 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public int setId(int id) {
-        return this.id = id | (this.id & componentArrayFromPoolBit);
+        return this.id = id | (this.id & COMPONENT_ARRAY_FROM_POOL_BIT);
     }
 
     @Override
@@ -86,11 +87,12 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public Entity add(Object... components) {
-        if (lock == null) {
-            lockUpdater.compareAndSet(this, null, new StampedLock());
-        }
+        createLock();
         long stamp = lock.writeLock();
         try {
+            if (isDetachedId()) {
+                return null;
+            }
             return data.composition.getRepository().addComponents(this, components);
         } finally {
             lock.unlockWrite(stamp);
@@ -99,12 +101,10 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public Object remove(Object component) {
-        if (lock == null) {
-            lockUpdater.compareAndSet(this, null, new StampedLock());
-        }
+        createLock();
         long stamp = lock.writeLock();
         try {
-            if (!contains(component)) {
+            if (isDetachedId() || !contains(component)) {
                 return null;
             }
             return data.composition.getRepository().removeComponentType(this, component.getClass());
@@ -115,12 +115,10 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public Object removeType(Class<?> componentType) {
-        if (lock == null) {
-            lockUpdater.compareAndSet(this, null, new StampedLock());
-        }
+        createLock();
         long stamp = lock.writeLock();
         try {
-            if (!has(componentType)) {
+            if (isDetachedId() || !has(componentType)) {
                 return null;
             }
             return data.composition.getRepository().removeComponentType(this, componentType);
@@ -131,6 +129,7 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public boolean has(Class<?> componentType) {
+        var data = this.data;
         return data.components != null && (
                 data.composition.isMultiComponent() ?
                         data.composition.fetchComponentIndex(componentType) > -1 :
@@ -140,6 +139,7 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     @Override
     public boolean contains(Object component) {
         int idx;
+        var data = this.data;
         return data.components != null && (
                 data.composition.isMultiComponent() ?
                         (idx = data.composition.fetchComponentIndex(component.getClass())) > -1
@@ -153,27 +153,58 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     @Override
+    public boolean isEnabled() {
+        return !isDetachedId();
+    }
+
+    @Override
     public void setEnabled(boolean enabled) {
+        createLock();
+        long stamp = lock.writeLock();
+        try {
+            if (enabled && isDetachedId()) {
+                data.composition.reattachEntity(this);
+            } else if (!enabled && isEnabled()) {
+                data.composition.detachEntity(this);
+            }
+        } finally {
+            lock.unlockWrite(stamp);
+        }
     }
 
     boolean delete() {
-        if (lock == null) {
-            lockUpdater.compareAndSet(this, null, new StampedLock());
-        }
+        createLock();
         long stamp = lock.writeLock();
         try {
+            if (isDetachedId()) {
+                return false;
+            }
             return data.composition.deleteEntity(this);
         } finally {
             lock.unlockWrite(stamp);
         }
     }
 
-    public boolean isComponentArrayFromCache() {
-        return (id & componentArrayFromPoolBit) == componentArrayFromPoolBit;
+    private void createLock() {
+        if (lock == null) {
+            lockUpdater.compareAndSet(this, null, new StampedLock());
+        }
     }
 
-    void flagComponentArrayFromCache() {
-        id |= componentArrayFromPoolBit;
+    public boolean isComponentArrayFromCache() {
+        return (id & COMPONENT_ARRAY_FROM_POOL_BIT) == COMPONENT_ARRAY_FROM_POOL_BIT;
+    }
+
+    void flagComponentArrayFromPool() {
+        id |= COMPONENT_ARRAY_FROM_POOL_BIT;
+    }
+
+    boolean isDetachedId() {
+        return (id & DETACHED_ID_BIT) == DETACHED_ID_BIT;
+    }
+
+    void flagDetachedId() {
+        id |= DETACHED_ID_BIT;
     }
 
     public record Data(Composition composition, Object[] components) {
