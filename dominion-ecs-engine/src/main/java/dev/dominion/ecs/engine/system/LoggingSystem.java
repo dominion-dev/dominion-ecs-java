@@ -60,10 +60,10 @@ public final class LoggingSystem {
         System.out.println("\n|) () |\\/| | |\\| | () |\\|\n");
         System.out.printf("%25s%n", "ECS v" + version);
         System.out.println();
-        System.out.println("|" + String.format("%-70s", " Default Logging Level: '" + level + "'") + "|");
-        System.out.println("|" + String.format("%-70s", "  You can change it by setting the system-property '" + DOMINION_LOGGING_LEVEL + "' or") + "|");
+        System.out.println("|" + String.format("%-70s", " Logging Level: '" + level + "'") + "|");
+        System.out.println("|" + String.format("%-70s", "  To modify level, set the system-property '" + DOMINION_LOGGING_LEVEL + "'.") + "|");
         if (isDefaultLogger()) {
-            System.out.println("|" + String.format("%-70s", "  You can configure another logging system that supports 'System.Logger'") + "|\n");
+            System.out.println("|" + String.format("%-70s", "  Other logging systems that support 'System.Logger' can be set.") + "|\n");
         }
     }
 
