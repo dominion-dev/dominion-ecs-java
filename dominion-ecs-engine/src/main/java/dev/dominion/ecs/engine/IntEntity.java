@@ -207,6 +207,19 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
         id |= DETACHED_ID_BIT;
     }
 
+    @Override
+    public String toString() {
+        return "IntEntity{" +
+                "id=" + idToString(id) +
+                ", prevId=" + idToString(prevId) +
+                ", nextId=" + idToString(nextId) +
+                '}';
+    }
+
+    private static String idToString(int id) {
+        return "|"+ id + "|";
+    }
+
     public record Data(Composition composition, Object[] components) {
     }
 }

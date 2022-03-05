@@ -30,7 +30,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <dominion.default.logging.level>ALL</dominion.default.logging.level>
+                        <dominion.logging.level>ALL</dominion.logging.level>
+<!--                        <dominion.logging.log-caller>true</dominion.logging.log-caller>-->
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
