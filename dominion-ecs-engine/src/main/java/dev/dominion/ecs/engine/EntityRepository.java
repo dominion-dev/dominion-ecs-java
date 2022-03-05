@@ -8,13 +8,14 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.engine.system.LoggingConfig;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
-
+    private static final System.Logger LOGGER = LoggingConfig.getLogger();
     private final CompositionRepository compositions = new CompositionRepository();
 
     @Override
