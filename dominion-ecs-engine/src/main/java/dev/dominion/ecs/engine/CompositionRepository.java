@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
 
-    private final ConcurrentPool<IntEntity> pool = new ConcurrentPool<>();
+    private final ConcurrentPool<IntEntity> pool = new ConcurrentPool<>(IntEntity.SCHEMA);
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
     private final ClassIndex classIndex = new ClassIndex();
     private final NodeCache nodeCache = new NodeCache();
