@@ -1,4 +1,4 @@
-# <img src="dominion-logo-square.png" align="right" width="100">Dominion
+# <img src="dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
@@ -8,8 +8,9 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 - :rocket: **_FAST_** : Dominion is not only an insanely fast ECS for the Java platform, it can also be in the same
   league as ECS for C/C++ (see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark))
-- 🤏 **_TINY_** : just a high-performance Core Java library with a minimal footprint and no dependencies. So you can
-  easily integrate Dominion into your game engine or framework or use it directly for your game or application.
+- 🤏 **_TINY_** : just a high-performance and high-concurrency Core Java library with a minimal footprint and no
+  dependencies. So you can easily integrate Dominion into your game engine or framework or use it directly for your game
+  or application.
 - :coffee: **_SIMPLE_** : Dominion aims to be simple by design and exposes a clean, minimal, and self-explanatory API.
   This readme alone will provide a complete usage documentation
 - :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and

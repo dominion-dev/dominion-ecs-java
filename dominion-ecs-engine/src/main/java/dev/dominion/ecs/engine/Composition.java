@@ -94,8 +94,13 @@ public final class Composition {
         });
     }
 
+    public void reattachEntity(IntEntity entity) {
+        tenant.register(entity.setId(tenant.nextId()), entity);
+    }
+
     public IntEntity detachEntity(IntEntity entity) {
         tenant.freeId(entity.getId());
+        entity.flagDetachedId();
         return entity;
     }
 

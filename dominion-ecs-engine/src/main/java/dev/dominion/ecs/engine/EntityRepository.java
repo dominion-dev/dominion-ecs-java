@@ -8,20 +8,25 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
-
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final CompositionRepository compositions = new CompositionRepository();
 
     @Override
     public Entity createEntity(Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
         Composition composition = compositions.getOrCreate(componentArray);
-        return composition.createEntity(componentArray);
+        IntEntity entity = composition.createEntity(componentArray);
+        if (LoggingSystem.isLoggable(System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, entity + " created");
+        }
+        return entity;
     }
 
     @Override

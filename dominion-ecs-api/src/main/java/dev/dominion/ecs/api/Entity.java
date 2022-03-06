@@ -19,5 +19,7 @@ public interface Entity {
 
     <S extends Enum<S>> void setState(S state);
 
+    boolean isEnabled();
+
     void setEnabled(boolean enabled);
 }

@@ -154,6 +154,39 @@ class IntEntityTest {
     }
 
     @Test
+    void setEnabledAndDelete() {
+        try (EntityRepository entityRepository = new EntityRepository()) {
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            var c3 = new C3(0);
+            IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
+            Assertions.assertTrue(entity.isEnabled());
+            Assertions.assertEquals(c3, entity.remove(c3));
+            Assertions.assertTrue(entity.isComponentArrayFromCache());
+            Assertions.assertTrue(entity.isEnabled());
+            Assertions.assertNull(entity.remove(c3));
+            Assertions.assertTrue(entityRepository.findComponents(C1.class).iterator().hasNext());
+            entity.setEnabled(false);
+            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertTrue(entity.isComponentArrayFromCache());
+            Assertions.assertFalse(entity.isEnabled());
+            Assertions.assertNull(entity.remove(c2));
+            entity.setEnabled(true);
+            Assertions.assertTrue(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertTrue(entity.isComponentArrayFromCache());
+            Assertions.assertEquals(c2, entity.remove(c2));
+            entity.setEnabled(false);
+            Assertions.assertNull(entity.add(c2));
+            Assertions.assertFalse(entityRepository.deleteEntity(entity));
+            entity.setEnabled(true);
+            Assertions.assertTrue(entityRepository.deleteEntity(entity));
+//            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertFalse(entity.isEnabled());
+            Assertions.assertFalse(entityRepository.deleteEntity(entity));
+        }
+    }
+
+    @Test
     void has() {
         try (EntityRepository entityRepository = new EntityRepository()) {
             var c1 = new C1(0);

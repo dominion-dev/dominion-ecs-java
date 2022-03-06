@@ -111,7 +111,7 @@ public final class CompositionRepository implements AutoCloseable {
         if (entity.isComponentArrayFromCache()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromCache();
+        entity.flagComponentArrayFromPool();
         return composition.attachEntity(entity, newComponentArray);
     }
 
@@ -147,7 +147,7 @@ public final class CompositionRepository implements AutoCloseable {
         if (entity.isComponentArrayFromCache()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromCache();
+        entity.flagComponentArrayFromPool();
         composition.attachEntity(entity, newComponentArray);
         return removed;
     }
