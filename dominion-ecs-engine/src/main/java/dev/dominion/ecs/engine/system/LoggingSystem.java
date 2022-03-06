@@ -8,7 +8,9 @@ package dev.dominion.ecs.engine.system;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
@@ -20,7 +22,7 @@ public final class LoggingSystem {
     public static final String POM_PROPERTIES = "from-pom.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
-    public static final String DOMINION = "dominion.";
+    public static final String DOMINION = "dominion";
 
     private static final java.util.logging.Level[] spi2JulLevelMapping = {
             java.util.logging.Level.ALL,     // mapped from ALL
@@ -45,7 +47,7 @@ public final class LoggingSystem {
     }
 
     public static System.Logger getLogger() {
-        return System.getLogger(DOMINION + STACK_WALKER.getCallerClass().getSimpleName());
+        return System.getLogger(DOMINION + "." + STACK_WALKER.getCallerClass().getSimpleName());
     }
 
     private static boolean isDefaultLogger() {
@@ -93,12 +95,12 @@ public final class LoggingSystem {
         boolean logCaller = callerStr != null && callerStr.equals("true");
         System.setProperty("java.util.logging.SimpleFormatter.format"
                 , (logCaller ? "[%2$s] " : "") + "%4$4.4s %3$s - %5$s %6$s %n");
-        Logger root = Logger.getLogger("");
+        Logger dominionRootLogger = Logger.getLogger(DOMINION);
         java.util.logging.Level julLevel = spi2JulLevelMapping[level.ordinal()];
-        root.setLevel(julLevel);
-        for (Handler handler : root.getHandlers()) {
-            handler.setLevel(julLevel);
-        }
+        dominionRootLogger.setLevel(julLevel);
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setLevel(julLevel);
+        dominionRootLogger.addHandler(consoleHandler);
         return level;
     }
 
