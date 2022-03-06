@@ -54,16 +54,27 @@ public final class LoggingSystem {
 
     private static void showBanner(String version, System.Logger.Level level) {
         String showBanner = System.getProperty(DOMINION_SHOW_BANNER);
-        System.out.println("showBanner = " + showBanner);
-        System.out.println("showBanner = " + System.getenv(DOMINION_SHOW_BANNER));
         if (showBanner != null && showBanner.equals("false")) return;
         System.out.println("\n|) () |\\/| | |\\| | () |\\|\n");
         System.out.printf("%25s%n", "ECS v" + version);
         System.out.println();
-        System.out.println("|" + String.format("%-70s", " Logging Level: '" + level + "'") + "|");
-        System.out.println("|" + String.format("%-70s", "  To modify level, set the system-property '" + DOMINION_LOGGING_LEVEL + "'.") + "|");
+        printPanel(75
+                , "Dominion Logging System"
+                , "  Logging Level: '" + level + "'"
+                , "  Change the level by setting the system-property '" + DOMINION_LOGGING_LEVEL + "'."
+        );
         if (isDefaultLogger()) {
-            System.out.println("|" + String.format("%-70s", "  Other logging systems that support 'System.Logger' can be set.") + "|\n");
+            printPanel(75
+                    , "  Dominion is compatible with all logging systems that support the"
+                    , "  'System.Logger' Platform Logging API and Service (JEP 264)."
+            );
+        }
+        System.out.println();
+    }
+
+    private static void printPanel(int width, String... rows) {
+        for (String row : rows) {
+            System.out.println("| " + String.format("%-" + width + "s", row) + " |");
         }
     }
 
