@@ -2,7 +2,7 @@
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
-Dominion is ~~the~~ an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
+Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
 
 ## Features
 
@@ -11,8 +11,8 @@ Dominion is ~~the~~ an [Entity Component System](https://en.wikipedia.org/wiki/E
 - 🤏 **_TINY_** : just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
-- :coffee: **_SIMPLE_** : Dominion aims to be simple by design and promotes a clean, minimal, and self-explanatory API.
-  This readme alone will provide a complete usage documentation
+- :coffee: **_SIMPLE_** : Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
+  readme alone will provide a complete usage documentation.
 - :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
   announce the availability of the new version.
 
