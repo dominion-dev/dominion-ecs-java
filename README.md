@@ -22,8 +22,9 @@ for the first quarter of 2022.
 
 ## About Performance
 
-Designing a high-performance Java library is quite a challenge as the execution speed of Java code could be affected in
-many ways. Dominion mitigates Java's performance pitfalls by taking a few actions:
+Designing a high-performance and high-concurrency Java library is ~~a piece of cake~~ quite a challenge as the execution
+speed of Java code could be affected in many ways. Dominion mitigates Java's performance pitfalls by taking a few
+actions:
 
 - **_not just using the standard library_**: the Java standard library implements data structures and algorithms
   designed without making any assumption about the data as they are general purpose. Dominion implements some custom
@@ -37,9 +38,9 @@ many ways. Dominion mitigates Java's performance pitfalls by taking a few action
   as much as possible and leveraging the best tools - Dominion also implements concurrency using the
   powerful [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html)
   introduced in Java 8.
-- **_using Java 17_**: only by upgrading to the JDK 17 LTS you will get a performance boost for free. As already
-  tested by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9%
-  faster than Java 11. Whenever possible and to further reduce memory footprint, the engine
+- **_using Java 17_**: only by upgrading to the JDK 17 LTS you will get a performance boost for free. As already tested
+  by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9% faster
+  than Java 11. Whenever possible and to further reduce memory footprint, the engine
   uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) (introduced by Java 14 as a
   preview) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning
   and all benchmarks are run with this LTS version of Java.
