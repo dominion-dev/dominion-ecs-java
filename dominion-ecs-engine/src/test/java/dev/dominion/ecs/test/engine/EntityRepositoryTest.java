@@ -10,7 +10,7 @@ class EntityRepositoryTest {
 
     @Test
     void createEntity() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             Assertions.assertNotNull(entity.getComposition());
             Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
@@ -19,7 +19,7 @@ class EntityRepositoryTest {
 
     @Test
     void createEntityWith1Component() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             C1 c1 = new C1(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1);
             Assertions.assertNotNull(entity.getComposition());
@@ -30,7 +30,7 @@ class EntityRepositoryTest {
 
     @Test
     void createEntityWith2Component() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(c1, c2);
@@ -44,7 +44,7 @@ class EntityRepositoryTest {
 
     @Test
     void deleteEntity() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             ConcurrentPool<IntEntity> pool = entity.getComposition().getTenant().getPool();
             entityRepository.deleteEntity(entity);
@@ -55,7 +55,7 @@ class EntityRepositoryTest {
 
     @Test
     void avoidEmptyPositionOnDestroyEntity() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity();
             IntEntity entity2 = (IntEntity) entityRepository.createEntity();
             ConcurrentPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
@@ -76,7 +76,7 @@ class EntityRepositoryTest {
         var c4 = new C4(0);
         var c5 = new C5(0);
         var c6 = new C6(0);
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             entityRepository.createEntity(c1);
             entityRepository.createEntity(c1, c2);
             entityRepository.createEntity(c1, c2, c3);
@@ -110,7 +110,7 @@ class EntityRepositoryTest {
 
     @Test
     void findComponents1FromMoreCompositions() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(new C1(0));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(new C1(1), new C2(2));
 
@@ -144,7 +144,7 @@ class EntityRepositoryTest {
 
     @Test
     void findComponents2FromMoreCompositions() {
-        try (EntityRepository entityRepository = new EntityRepository()) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(new C1(1), new C2(2));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(new C1(3), new C2(4), new C3(5));
 

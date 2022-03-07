@@ -16,7 +16,17 @@ import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private final String name;
     private final CompositionRepository compositions = new CompositionRepository();
+
+    public EntityRepository(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
 
     @Override
     public Entity createEntity(Object... components) {
@@ -80,6 +90,13 @@ public final class EntityRepository implements Dominion {
         compositions.close();
     }
 
+    public static class Factory implements Dominion.Factory {
+
+        @Override
+        public Dominion createDominion(String name) {
+            return new EntityRepository(name);
+        }
+    }
 
     public static abstract class AbstractResults<T> implements Results<T> {
         private final Collection<CompositionRepository.Node> nodes;

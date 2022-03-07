@@ -8,7 +8,7 @@ module dev.dominion.ecs.engine {
             to dev.dominion.ecs.test.engine, dev.dominion.ecs.benchmark;
     exports dev.dominion.ecs.engine.system
             to dev.dominion.ecs.test.engine, dev.dominion.ecs.benchmark;
-    provides Dominion with EntityRepository;
+    provides Dominion.Factory with EntityRepository.Factory;
 
     requires dev.dominion.ecs.api;
     requires jdk.unsupported;
