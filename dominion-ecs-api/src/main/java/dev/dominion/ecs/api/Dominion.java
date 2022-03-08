@@ -10,19 +10,21 @@ import java.util.ServiceLoader;
 
 public interface Dominion extends AutoCloseable {
 
-    static Dominion init() {
-        return init("dev.dominion.ecs.engine");
+    static Dominion.Factory factory() {
+        return factory("dev.dominion.ecs.engine");
     }
 
-    static Dominion init(String implementation) {
+    static Dominion.Factory factory(String implementation) {
         return ServiceLoader
-                .load(Dominion.class)
+                .load(Dominion.Factory.class)
                 .stream()
                 .filter(p -> p.get().getClass().getName().contains(implementation))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Unable to load " + implementation))
                 .get();
     }
+
+    String getName();
 
     Entity createEntity(Object... components);
 
@@ -41,4 +43,8 @@ public interface Dominion extends AutoCloseable {
     <T1, T2, T3, T4, T5> Results<Results.Comp5<T1, T2, T3, T4, T5>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5);
 
     <T1, T2, T3, T4, T5, T6> Results<Results.Comp6<T1, T2, T3, T4, T5, T6>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6);
+
+    interface Factory {
+        Dominion create(String name);
+    }
 }

@@ -11,27 +11,40 @@ import java.util.NoSuchElementException;
 public class DominionTest {
 
     @Test
-    void init() {
-        Assertions.assertThrows(NoSuchElementException.class, Dominion::init);
-        Assertions.assertEquals(MockDominion.class, Dominion.init("MockDominion").getClass());
+    void factoryCreate() {
+        Assertions.assertThrows(NoSuchElementException.class, () -> Dominion.factory().create(""));
+        Assertions.assertEquals(MockDominion.class, Dominion.factory("MockDominionFactory").create("").getClass());
+        Assertions.assertEquals("TEST", Dominion.factory("MockDominionFactory").create("TEST").getName());
     }
 
     @Test
     void createEntity() {
-        Assertions.assertNull(Dominion.init("MockDominion").createEntity());
+        Assertions.assertNull(Dominion.factory("MockDominionFactory").create("").createEntity());
     }
 
     @Test
     void createEntityAs() {
-        Assertions.assertNull(Dominion.init("MockDominion").createEntityAs(null));
+        Assertions.assertNull(Dominion.factory("MockDominionFactory").create("").createEntityAs(null));
     }
 
     @Test
     void deleteEntity() {
-        Assertions.assertFalse(Dominion.init("MockDominion").deleteEntity(null));
+        Assertions.assertFalse(Dominion.factory("MockDominionFactory").create("").deleteEntity(null));
     }
 
-    public static class MockDominion implements Dominion {
+    public static class MockDominionFactory implements Dominion.Factory {
+        @Override
+        public Dominion create(String name) {
+            return new MockDominion(name);
+        }
+    }
+
+    public record MockDominion(String name) implements Dominion {
+
+        @Override
+        public String getName() {
+            return name;
+        }
 
         @Override
         public Entity createEntity(Object... components) {
