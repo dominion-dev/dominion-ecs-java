@@ -93,7 +93,7 @@ public final class EntityRepository implements Dominion {
     public static class Factory implements Dominion.Factory {
 
         @Override
-        public Dominion createDominion(String name) {
+        public Dominion create(String name) {
             return new EntityRepository(name);
         }
     }

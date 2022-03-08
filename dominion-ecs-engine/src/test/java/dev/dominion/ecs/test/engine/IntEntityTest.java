@@ -19,7 +19,7 @@ class IntEntityTest {
 
     @Test
     void add() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity();
@@ -39,7 +39,7 @@ class IntEntityTest {
         Entity[] entities = new Entity[capacity];
         CountDownLatch[] latches = new CountDownLatch[capacity * 2];
 
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
@@ -106,7 +106,7 @@ class IntEntityTest {
 
     @Test
     void remove() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
@@ -122,7 +122,7 @@ class IntEntityTest {
 
     @Test
     void addAndRemove() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
@@ -155,7 +155,7 @@ class IntEntityTest {
 
     @Test
     void setEnabledAndDelete() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
@@ -188,7 +188,7 @@ class IntEntityTest {
 
     @Test
     void has() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity();
@@ -205,7 +205,7 @@ class IntEntityTest {
 
     @Test
     void contains() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().createDominion("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity();
