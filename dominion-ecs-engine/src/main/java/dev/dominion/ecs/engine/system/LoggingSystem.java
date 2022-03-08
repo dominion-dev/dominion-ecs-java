@@ -14,13 +14,10 @@ import java.util.logging.Logger;
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
 public final class LoggingSystem {
-    public static final String DOMINION_LOGGING_LEVEL = "dominion.logging.level";
-    public static final String DOMINION_LOGGING_LOG_CALLER = "dominion.logging.log-caller";
-    public static final String DOMINION_SHOW_BANNER = "dominion.show-banner";
+    public static final String DOMINION = "dominion";
     public static final String POM_PROPERTIES = "from-pom.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
-    public static final String DOMINION = "dominion";
 
     private static final java.util.logging.Level[] spi2JulLevelMapping = {
             java.util.logging.Level.ALL,     // mapped from ALL
@@ -32,7 +29,7 @@ public final class LoggingSystem {
             java.util.logging.Level.OFF      // mapped from OFF
     };
     private static final StackWalker STACK_WALKER = StackWalker.getInstance(RETAIN_CLASS_REFERENCE);
-    private static System.Logger.Level level = System.Logger.Level.INFO;
+    private static System.Logger.Level level;
 
     static {
         try {
@@ -53,15 +50,14 @@ public final class LoggingSystem {
     }
 
     private static void showBanner(String version, System.Logger.Level level) {
-        String showBanner = System.getProperty(DOMINION_SHOW_BANNER);
-        if (showBanner != null && showBanner.equals("false")) return;
+        if (!ConfigSystem.showBanner()) return;
         System.out.println("\n|) () |\\/| | |\\| | () |\\|\n");
         System.out.printf("%25s%n", "ECS v" + version);
         System.out.println();
         printPanel(75
                 , "Dominion Logging System"
                 , "  Logging Level: '" + level + "'"
-                , "  Change the level by setting the system-property '" + DOMINION_LOGGING_LEVEL + "'."
+                , "  Change the level by setting the system-property '" + ConfigSystem.DOMINION_LOGGING_LEVEL + "'."
         );
         if (isDefaultLogger()) {
             printPanel(75
@@ -87,12 +83,9 @@ public final class LoggingSystem {
     }
 
     private static System.Logger.Level setupDefaultLoggingSystem() {
-        String levelStr = System.getProperty(DOMINION_LOGGING_LEVEL);
-        level = levelStr != null ? System.Logger.Level.valueOf(levelStr) : level;
-        String callerStr = System.getProperty(DOMINION_LOGGING_LOG_CALLER);
-        boolean logCaller = callerStr != null && callerStr.equals("true");
+        System.Logger.Level level = ConfigSystem.fetchLoggingLevel();
         System.setProperty("java.util.logging.SimpleFormatter.format"
-                , (logCaller ? "[%2$s] " : "") + "%4$4.4s %3$s - %5$s %6$s %n");
+                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$s - %5$s %6$s %n");
         Logger dominionRootLogger = Logger.getLogger(DOMINION);
         java.util.logging.Level julLevel = spi2JulLevelMapping[level.ordinal()];
         dominionRootLogger.setLevel(julLevel);

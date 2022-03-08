@@ -12,7 +12,6 @@ import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
-    public static final Schema SCHEMA = new Schema(14);
     private static final int DETACHED_ID_BIT = 1 << 31;
     private static final int COMPONENT_ARRAY_FROM_POOL_BIT = 1 << 30;
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;

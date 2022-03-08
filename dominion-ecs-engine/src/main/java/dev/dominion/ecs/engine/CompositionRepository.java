@@ -10,6 +10,7 @@ import dev.dominion.ecs.engine.collections.ConcurrentPool;
 import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.HashCode;
 
 import java.util.*;
@@ -19,15 +20,27 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
 
-    private final ConcurrentPool<IntEntity> pool = new ConcurrentPool<>(IntEntity.SCHEMA);
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
-    private final ClassIndex classIndex = new ClassIndex();
     private final NodeCache nodeCache = new NodeCache();
+    private final ClassIndex classIndex;
+    private final ConcurrentPool<IntEntity> pool;
     private final Node root;
+    private final ConcurrentPool.ChunkSchema chunkSchema;
 
     public CompositionRepository() {
+        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT);
+    }
+
+    public CompositionRepository(int classIndexBit, int chunkBit) {
+        classIndex = new ClassIndex(classIndexBit, true);
+        chunkSchema = new ConcurrentPool.ChunkSchema(chunkBit);
+        pool = new ConcurrentPool<>(chunkSchema);
         root = new Node();
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
+    }
+
+    public ConcurrentPool.ChunkSchema getChunkSchema() {
+        return chunkSchema;
     }
 
     public Composition getOrCreate(Object[] components) {

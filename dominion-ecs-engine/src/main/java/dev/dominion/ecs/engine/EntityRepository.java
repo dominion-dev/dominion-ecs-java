@@ -8,6 +8,7 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Collection;
@@ -17,10 +18,11 @@ import java.util.stream.Stream;
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final String name;
-    private final CompositionRepository compositions = new CompositionRepository();
+    private final CompositionRepository compositions;
 
-    public EntityRepository(String name) {
+    public EntityRepository(String name, int classIndexBit, int chunkBit) {
         this.name = name;
+        compositions = new CompositionRepository(classIndexBit, chunkBit);
     }
 
     @Override
@@ -94,7 +96,10 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public Dominion create(String name) {
-            return new EntityRepository(name);
+            return new EntityRepository(name
+                    , ConfigSystem.fetchClassIndexBit(name)
+                    , ConfigSystem.fetchChunkBit(name)
+            );
         }
     }
 

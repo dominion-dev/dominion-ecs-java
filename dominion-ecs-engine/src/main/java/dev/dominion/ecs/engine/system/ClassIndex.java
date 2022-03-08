@@ -14,9 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ClassIndex implements AutoCloseable {
     public final static int INT_BYTES_SHIFT = 2;
-    public static final int DEFAULT_HASH_BITS = 20; // 1MB -> about 1K classes
-    public static final int MIN_HASH_BITS = 14;
-    public static final int MAX_HASH_BITS = 24;
+    public static final int DEFAULT_HASH_BIT = 20; // 1MB -> about 1K classes
+    public static final int MIN_HASH_BIT = 14;
+    public static final int MAX_HASH_BIT = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final Map<Object, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
     private final int hashBits;
@@ -33,15 +33,15 @@ public final class ClassIndex implements AutoCloseable {
     };
 
     public ClassIndex() {
-        this(DEFAULT_HASH_BITS, true);
+        this(DEFAULT_HASH_BIT, true);
     }
 
-    public ClassIndex(int hashBits, boolean fallbackMapEnabled) {
-        if (hashBits < MIN_HASH_BITS || hashBits > MAX_HASH_BITS)
-            throw new IllegalArgumentException("Hash cannot be less than " + MIN_HASH_BITS + " or greater than " + MAX_HASH_BITS + " bits");
-        this.hashBits = hashBits;
+    public ClassIndex(int hashBit, boolean fallbackMapEnabled) {
+        if (hashBit < MIN_HASH_BIT || hashBit > MAX_HASH_BIT)
+            throw new IllegalArgumentException("Hash cannot be less than " + MIN_HASH_BIT + " or greater than " + MAX_HASH_BIT + " bits");
+        this.hashBits = hashBit;
         this.fallbackMapEnabled = fallbackMapEnabled;
-        int capacity = (1 << hashBits) << INT_BYTES_SHIFT;
+        int capacity = (1 << hashBit) << INT_BYTES_SHIFT;
         memoryAddress = unsafe.allocateMemory(capacity);
         unsafe.setMemory(memoryAddress, capacity, (byte) 0);
     }
