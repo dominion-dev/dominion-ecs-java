@@ -97,8 +97,8 @@ public final class EntityRepository implements Dominion {
         @Override
         public Dominion create(String name) {
             return new EntityRepository(name
-                    , ConfigSystem.fetchClassIndexBit(name)
-                    , ConfigSystem.fetchChunkBit(name)
+                    , ConfigSystem.fetchClassIndexBit(name).orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT)
+                    , ConfigSystem.fetchChunkBit(name).orElse(ConfigSystem.DEFAULT_CHUNK_BIT)
             );
         }
     }
