@@ -30,8 +30,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <dominion.logging.level>INFO</dominion.logging.level>
-<!--                        <dominion.logging.log-caller>true</dominion.logging.log-caller>-->
+                        <dominion.logging-level>DEBUG</dominion.logging-level>
+<!--                        <dominion.logging-caller>true</dominion.logging-caller>-->
+                        <dominion.test.logging-level>DEBUG</dominion.test.logging-level>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

@@ -8,19 +8,26 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    public final int loggingLevelIndex;
     private final String name;
-    private final CompositionRepository compositions = new CompositionRepository();
+    private final CompositionRepository compositions;
 
-    public EntityRepository(String name) {
+    public EntityRepository(String name, int loggingLevelIndex, int classIndexBit, int chunkBit) {
         this.name = name;
+        this.loggingLevelIndex = loggingLevelIndex;
+        compositions = new CompositionRepository(classIndexBit, chunkBit, loggingLevelIndex);
     }
 
     @Override
@@ -33,8 +40,11 @@ public final class EntityRepository implements Dominion {
         Object[] componentArray = components.length == 0 ? null : components;
         Composition composition = compositions.getOrCreate(componentArray);
         IntEntity entity = composition.createEntity(componentArray);
-        if (LoggingSystem.isLoggable(System.Logger.Level.DEBUG)) {
-            LOGGER.log(System.Logger.Level.DEBUG, entity + " created");
+        if (LoggingSystem.isLoggable(loggingLevelIndex, System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG
+                    , LoggingSystem.format(name, entity + " created")
+            );
         }
         return entity;
     }
@@ -92,9 +102,54 @@ public final class EntityRepository implements Dominion {
 
     public static class Factory implements Dominion.Factory {
 
+        public static final int NAME_MAX_LENGTH = 48;
+        private static final AtomicInteger counter = new AtomicInteger(1);
+
+        private static String normalizeName(String name) {
+            name = name == null || name.isEmpty() ? "dominion-" + counter.getAndIncrement() : name;
+            name = name.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-zA-Z0-9-_.]", "");
+
+            return name.substring(0, Math.min(NAME_MAX_LENGTH, name.length()));
+        }
+
+        @Override
+        public Dominion create() {
+            return create(null);
+        }
+
         @Override
         public Dominion create(String name) {
-            return new EntityRepository(name);
+            name = normalizeName(name);
+            Optional<System.Logger.Level> fetchLoggingLevel = ConfigSystem.fetchLoggingLevel(name);
+            System.Logger.Level level = fetchLoggingLevel.orElse(LoggingSystem.DEFAULT_LOGGING_LEVEL);
+            Optional<Integer> fetchClassIndexBit = ConfigSystem.fetchClassIndexBit(name);
+            int classIndexBit = fetchClassIndexBit.orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT);
+            Optional<Integer> fetchChunkBit = ConfigSystem.fetchChunkBit(name);
+            int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
+
+            int width = 120;
+            if (ConfigSystem.showBanner()) {
+                LoggingSystem.printPanel(
+                        "Dominion '" + name + "'"
+                        , "  Logging-Level: '" + level
+                                + (fetchLoggingLevel.isEmpty() ? "' (set sys-property '"
+                                + ConfigSystem.getPropertyName(name, ConfigSystem.LOGGING_LEVEL) + "')" : "'")
+                        , "  ClassIndex-Bit: " + classIndexBit
+                                + (fetchClassIndexBit.isEmpty() ? " (set sys-property '"
+                                + ConfigSystem.getPropertyName(name, ConfigSystem.CLASS_INDEX_BIT) + "')" : "")
+                        , "  Chunk-Bit: " + chunkBit
+                                + (fetchChunkBit.isEmpty() ? " (set sys-property '"
+                                + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_BIT) + "')" : "")
+                );
+            }
+
+            int loggingLevelIndex = LoggingSystem.registerLoggingLevel(level);
+
+            return new EntityRepository(name
+                    , loggingLevelIndex
+                    , classIndexBit
+                    , chunkBit
+            );
         }
     }
 
