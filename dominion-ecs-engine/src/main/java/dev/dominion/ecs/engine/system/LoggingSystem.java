@@ -9,13 +9,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
 public final class LoggingSystem {
-    public static final String DOMINION = "dominion";
     public static final String POM_PROPERTIES = "from-pom.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
@@ -31,15 +31,17 @@ public final class LoggingSystem {
             java.util.logging.Level.OFF      // mapped from OFF
     };
     private static final StackWalker STACK_WALKER = StackWalker.getInstance(RETAIN_CLASS_REFERENCE);
-    private static System.Logger.Level level;
+    private static final AtomicInteger levelIdx = new AtomicInteger(0);
+    private static final System.Logger.Level[] levels = new System.Logger.Level[1 << 10];
+    private static System.Logger.Level rootLevel;
 
     static {
         try {
             String version = fetchPomVersion();
             var level = setupDefaultLoggingLibrary();
-            LoggingSystem.level = level.orElse(DEFAULT_LOGGING_LEVEL);
+            rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
             if (ConfigSystem.showBanner()) {
-                showBanner(version, LoggingSystem.level, level.isEmpty());
+                showBanner(version, rootLevel, level.isEmpty());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,17 +49,33 @@ public final class LoggingSystem {
     }
 
     public static System.Logger getLogger() {
-        return System.getLogger(DOMINION + "." + STACK_WALKER.getCallerClass().getSimpleName());
+        return System.getLogger(ConfigSystem.DOMINION_ + STACK_WALKER.getCallerClass().getSimpleName());
     }
 
-    public static boolean isLoggable(System.Logger.Level levelToCheck) {
-        return !(levelToCheck.ordinal() < level.ordinal() || level == System.Logger.Level.OFF);
+    public static int registerLoggingLevel(System.Logger.Level level) {
+        int idx = levelIdx.getAndIncrement();
+        levels[idx] = level;
+        return idx;
     }
 
-    public static void printPanel(int width, String... rows) {
+    public static boolean isLoggable(int idx, System.Logger.Level levelToCheck) {
+        return !(levelToCheck.ordinal() < rootLevel.ordinal()
+                || levelToCheck.ordinal() < levels[idx].ordinal()
+                || levels[idx] == System.Logger.Level.OFF);
+    }
+
+    public static String format(String name, String message) {
+        return "[" + name + "] - " + message;
+    }
+
+    public static void printPanel(String... rows) {
+        System.out.println("---");
         for (String row : rows) {
-            System.out.println("| " + String.format("%-" + width + "s", row) + " |");
+            if (row != null) {
+                System.out.println(". " + row);
+            }
         }
+        System.out.println("---\n");
     }
 
     private static boolean isDefaultLogger() {
@@ -68,23 +86,15 @@ public final class LoggingSystem {
         System.out.println("\n|) () |\\/| | |\\| | () |\\|\n");
         System.out.printf("%25s%n", "ECS v" + version);
         System.out.println();
-        int width = 80;
-        printPanel(width
-                , "Dominion Logging System"
-                , "  Logging Level: '" + level + "'"
+        printPanel(
+                "Root Logging System"
+                , "  Logging-Level: '" + level + "'"
+                , isDefaultLoggingLevel ? "  Change the root level with the sys-property '"
+                        + ConfigSystem.getPropertyName(ConfigSystem.LOGGING_LEVEL) + "'." : null
+                , isDefaultLogger() ?
+                        "  Dominion is compatible with all logging systems that support the " +
+                                "'System.Logger' Platform Logging API and Service (JEP 264)." : null
         );
-        if (isDefaultLoggingLevel) {
-            printPanel(width
-                    , "  Change the level with the system-property '" + ConfigSystem.DOMINION_LOGGING_LEVEL + "'."
-            );
-        }
-        if (isDefaultLogger()) {
-            printPanel(width
-                    , "  Dominion is compatible with all logging systems that support the"
-                    , "  'System.Logger' Platform Logging API and Service (JEP 264)."
-            );
-        }
-        System.out.println();
     }
 
     private static String fetchPomVersion() throws IOException {
@@ -96,10 +106,10 @@ public final class LoggingSystem {
     }
 
     private static Optional<System.Logger.Level> setupDefaultLoggingLibrary() {
-        var level = ConfigSystem.fetchLoggingLevel();
+        var level = ConfigSystem.fetchLoggingLevel("");
         System.setProperty("java.util.logging.SimpleFormatter.format"
-                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$s - %5$s %6$s %n");
-        Logger dominionRootLogger = Logger.getLogger(DOMINION);
+                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$s %5$s %6$s %n");
+        Logger dominionRootLogger = Logger.getLogger(ConfigSystem.DOMINION_);
         java.util.logging.Level julLevel =
                 spi2JulLevelMapping[level.orElse(DEFAULT_LOGGING_LEVEL).ordinal()];
         dominionRootLogger.setLevel(julLevel);

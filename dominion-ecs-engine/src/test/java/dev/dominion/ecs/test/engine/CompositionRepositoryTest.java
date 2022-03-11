@@ -110,7 +110,7 @@ class CompositionRepositoryTest {
         var c2 = new C2(0);
         var c3 = new C3(0);
         var c4 = new C4(0);
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             CompositionRepository repository = entity.getComposition().getRepository();
             IntEntity entityPostAdd = (IntEntity) repository.addComponents(entity, c1);

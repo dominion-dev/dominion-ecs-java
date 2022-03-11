@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
 
+    public final int loggingLevelIndex;
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
@@ -28,12 +29,13 @@ public final class CompositionRepository implements AutoCloseable {
     private final ConcurrentPool.ChunkSchema chunkSchema;
 
     public CompositionRepository() {
-        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT);
+        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT, 0);
     }
 
-    public CompositionRepository(int classIndexBit, int chunkBit) {
+    public CompositionRepository(int classIndexBit, int chunkBit, int loggingLevelIndex) {
         classIndex = new ClassIndex(classIndexBit, true);
         chunkSchema = new ConcurrentPool.ChunkSchema(chunkBit);
+        this.loggingLevelIndex = loggingLevelIndex;
         pool = new ConcurrentPool<>(chunkSchema);
         root = new Node();
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
