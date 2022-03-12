@@ -26,7 +26,7 @@ public final class CompositionRepository implements AutoCloseable {
     private final ClassIndex classIndex;
     private final ConcurrentPool<IntEntity> pool;
     private final Node root;
-    private final ConcurrentPool.ChunkSchema chunkSchema;
+    private final ConcurrentPool.IdSchema idSchema;
 
     public CompositionRepository() {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT, 0);
@@ -34,15 +34,15 @@ public final class CompositionRepository implements AutoCloseable {
 
     public CompositionRepository(int classIndexBit, int chunkBit, int loggingLevelIndex) {
         classIndex = new ClassIndex(classIndexBit, true);
-        chunkSchema = new ConcurrentPool.ChunkSchema(chunkBit);
+        idSchema = new ConcurrentPool.IdSchema(chunkBit);
         this.loggingLevelIndex = loggingLevelIndex;
-        pool = new ConcurrentPool<>(chunkSchema);
+        pool = new ConcurrentPool<>(idSchema);
         root = new Node();
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
     }
 
-    public ConcurrentPool.ChunkSchema getChunkSchema() {
-        return chunkSchema;
+    public ConcurrentPool.IdSchema getIdSchema() {
+        return idSchema;
     }
 
     public Composition getOrCreate(Object[] components) {
@@ -123,10 +123,10 @@ public final class CompositionRepository implements AutoCloseable {
         }
         Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
-        if (entity.isComponentArrayFromCache()) {
+        if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromPool();
+        entity.flagPooledArray();
         return composition.attachEntity(entity, newComponentArray);
     }
 
@@ -159,10 +159,10 @@ public final class CompositionRepository implements AutoCloseable {
         }
         Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
-        if (entity.isComponentArrayFromCache()) {
+        if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromPool();
+        entity.flagPooledArray();
         composition.attachEntity(entity, newComponentArray);
         return removed;
     }

@@ -13,19 +13,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 class ConcurrentPoolTest {
-    private static final ConcurrentPool.ChunkSchema CHUNK_SCHEMA =
-            new ConcurrentPool.ChunkSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+    private static final ConcurrentPool.IdSchema ID_SCHEMA =
+            new ConcurrentPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     @Test
     public void newTenant() {
-        try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(CHUNK_SCHEMA).newTenant()) {
+        try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(ID_SCHEMA).newTenant()) {
             Assertions.assertNotNull(tenant);
         }
     }
 
     @Test
     public void register() {
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
+        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(ID_SCHEMA);
         try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
             IntEntity entry = new IntEntity(1, null);
             Assertions.assertEquals(entry, tenant.register(1, entry));
@@ -38,50 +38,50 @@ class ConcurrentPoolTest {
 
         @Test
         public void nextId() {
-            try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(CHUNK_SCHEMA).newTenant()) {
-                Assertions.assertEquals(0, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
-                Assertions.assertEquals(1, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
-                Assertions.assertEquals(0, (tenant.nextId() >> CHUNK_SCHEMA.chunkBit())
-                        & CHUNK_SCHEMA.chunkIndexBitMask());
-                for (int i = 0; i < CHUNK_SCHEMA.chunkCapacity(); i++) {
+            try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(ID_SCHEMA).newTenant()) {
+                Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
+                Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
+                Assertions.assertEquals(0, (tenant.nextId() >> ID_SCHEMA.chunkBit())
+                        & ID_SCHEMA.chunkIdBitMask());
+                for (int i = 0; i < ID_SCHEMA.chunkCapacity(); i++) {
                     tenant.nextId();
                 }
-                Assertions.assertEquals(1, (tenant.nextId() >> CHUNK_SCHEMA.chunkBit())
-                        & CHUNK_SCHEMA.chunkIndexBitMask());
-                Assertions.assertEquals(4, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(1, (tenant.nextId() >> ID_SCHEMA.chunkBit())
+                        & ID_SCHEMA.chunkIdBitMask());
+                Assertions.assertEquals(4, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
             }
         }
 
         @Test
         public void freeId() {
-            try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(CHUNK_SCHEMA).newTenant()) {
+            try (ConcurrentPool.Tenant<IntEntity> tenant = new ConcurrentPool<IntEntity>(ID_SCHEMA).newTenant()) {
                 Assertions.assertEquals(0, tenant.currentChunkSize());
-                Assertions.assertEquals(0, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(1, tenant.currentChunkSize());
-                Assertions.assertEquals(1, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(2, tenant.currentChunkSize()); // ready nextId == 2
                 tenant.freeId(0); // 1 -> 0 : ready nextId == 1
                 Assertions.assertEquals(1, tenant.currentChunkSize());
-                Assertions.assertEquals(1, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(2, tenant.currentChunkSize());
-                Assertions.assertEquals(2, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(2, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 // move to the next chunk
-                for (int i = 0; i < CHUNK_SCHEMA.chunkCapacity(); i++) {
+                for (int i = 0; i < ID_SCHEMA.chunkCapacity(); i++) {
                     tenant.nextId();
                 }
                 Assertions.assertEquals(3, tenant.currentChunkSize());
-                Assertions.assertEquals(3, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(3, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 tenant.freeId(1);
                 Assertions.assertEquals(4, tenant.currentChunkSize());
-                Assertions.assertEquals(CHUNK_SCHEMA.chunkCapacity() - 1, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
-                Assertions.assertEquals(4, tenant.nextId() & CHUNK_SCHEMA.identifiableIndexBitMask());
+                Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
+                Assertions.assertEquals(4, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(5, tenant.currentChunkSize());
             }
         }
 
         @Test
         public void concurrentIds() throws InterruptedException {
-            ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
+            ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(ID_SCHEMA);
             try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
                 final int capacity = 1 << 20;
                 final ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -103,7 +103,7 @@ class ConcurrentPoolTest {
 
         @Test
         public void iterator() {
-            try (ConcurrentPool.Tenant<Id> tenant = new ConcurrentPool<Id>(CHUNK_SCHEMA).newTenant()) {
+            try (ConcurrentPool.Tenant<Id> tenant = new ConcurrentPool<Id>(ID_SCHEMA).newTenant()) {
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
                     tenant.register(nextId, new Id(i, -1, -1));
@@ -156,7 +156,7 @@ class ConcurrentPoolTest {
         @Test
         public void size() {
             ConcurrentPool.LinkedChunk<IntEntity> chunk =
-                    new ConcurrentPool.LinkedChunk<>(0, CHUNK_SCHEMA.chunkCapacity(), CHUNK_SCHEMA.identifiableIndexBitMask(), null);
+                    new ConcurrentPool.LinkedChunk<>(0, ID_SCHEMA, null);
             Assertions.assertEquals(0, chunk.incrementIndex());
             Assertions.assertEquals(1, chunk.incrementIndex());
         }
@@ -164,9 +164,9 @@ class ConcurrentPoolTest {
         @Test
         public void capacity() {
             ConcurrentPool.LinkedChunk<IntEntity> chunk =
-                    new ConcurrentPool.LinkedChunk<>(0, CHUNK_SCHEMA.chunkCapacity(), CHUNK_SCHEMA.identifiableIndexBitMask(), null);
+                    new ConcurrentPool.LinkedChunk<>(0, ID_SCHEMA, null);
             Assertions.assertTrue(chunk.hasCapacity());
-            for (int i = 0; i < CHUNK_SCHEMA.chunkCapacity() - 1; i++) {
+            for (int i = 0; i < ID_SCHEMA.chunkCapacity() - 1; i++) {
                 chunk.incrementIndex();
             }
             Assertions.assertTrue(chunk.hasCapacity());
@@ -177,9 +177,9 @@ class ConcurrentPoolTest {
         @Test
         public void data() {
             ConcurrentPool.LinkedChunk<IntEntity> previous =
-                    new ConcurrentPool.LinkedChunk<>(0, CHUNK_SCHEMA.chunkCapacity(), CHUNK_SCHEMA.identifiableIndexBitMask(), null);
+                    new ConcurrentPool.LinkedChunk<>(0, ID_SCHEMA, null);
             ConcurrentPool.LinkedChunk<IntEntity> chunk =
-                    new ConcurrentPool.LinkedChunk<>(0, CHUNK_SCHEMA.chunkCapacity(), CHUNK_SCHEMA.identifiableIndexBitMask(), previous);
+                    new ConcurrentPool.LinkedChunk<>(0, ID_SCHEMA, previous);
             IntEntity entity = new IntEntity(1, null);
             chunk.set(10, entity);
             Assertions.assertEquals(entity, chunk.get(10));

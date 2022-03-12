@@ -79,7 +79,7 @@ public final class Composition {
     public boolean deleteEntity(IntEntity entity) {
         detachEntity(entity);
         Object[] components = entity.getComponents();
-        if (components != null && entity.isComponentArrayFromCache()) {
+        if (components != null && entity.isPooledArray()) {
             arrayPool.push(components);
         }
         entity.setData(null);

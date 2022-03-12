@@ -13,22 +13,21 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     private final LinkedChunk<T>[] chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
-    private final ChunkSchema chunkSchema;
+    private final IdSchema idSchema;
 
     @SuppressWarnings("unchecked")
-    public ConcurrentPool(ChunkSchema chunkSchema) {
-        this.chunkSchema = chunkSchema;
-        chunks = new LinkedChunk[chunkSchema.maxNumOfChunks];
+    public ConcurrentPool(IdSchema idSchema) {
+        this.idSchema = idSchema;
+        chunks = new LinkedChunk[idSchema.maxNumOfChunks];
     }
 
     private LinkedChunk<T> newChunk(Tenant<T> owner) {
         int id = chunkIndex.incrementAndGet();
-        if (id > chunkSchema.maxNumOfChunks - 1) {
+        if (id > idSchema.maxNumOfChunks - 1) {
             throw new OutOfMemoryError(ConcurrentPool.class.getName() + ": cannot create a new memory chunk");
         }
         LinkedChunk<T> currentChunk = owner.currentChunk;
-        LinkedChunk<T> newChunk =
-                new LinkedChunk<>(id, chunkSchema.chunkCapacity, chunkSchema.identifiableIndexBitMask, currentChunk);
+        LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, currentChunk);
         if (currentChunk != null) {
             currentChunk.setNext(newChunk);
         }
@@ -36,8 +35,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     private LinkedChunk<T> getChunk(int id) {
-        int chunkId = (id >> chunkSchema.chunkBit) & chunkSchema.chunkIndexBitMask;
-        return chunks[chunkId];
+        return chunks[idSchema.fetchChunkId(id)];
     }
 
     public T getEntry(int id) {
@@ -45,7 +43,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public Tenant<T> newTenant() {
-        Tenant<T> newTenant = new Tenant<>(this);
+        Tenant<T> newTenant = new Tenant<>(this, idSchema);
         tenants.add(newTenant);
         return newTenant;
     }
@@ -78,13 +76,18 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         int setNextId(int nextId);
     }
 
-    public record ChunkSchema(int chunkBit
-            , int maxNumOfChunks, int chunkIndexBitMask, int chunkIndexBitMaskShifted
-            , int chunkCapacity, int identifiableIndexBitMask
+    // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|
+    public record IdSchema(int chunkBit
+            , int maxNumOfChunks, int chunkIdBitMask, int chunkIdBitMaskShifted
+            , int chunkCapacity, int objectIdBitMask
     ) {
         private static final int BIT_LENGTH = 30;
+        private static final int DETACHED_BIT_IDX = 31;
+        public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
+        private static final int FLAG_BIT_IDX = 30;
+        public static final int FLAG_BIT = 1 << FLAG_BIT_IDX;
 
-        public ChunkSchema(int chunkBit) {
+        public IdSchema(int chunkBit) {
             this(chunkBit
                     , 1 << (BIT_LENGTH - chunkBit)
                     , (1 << (BIT_LENGTH - chunkBit)) - 1
@@ -93,18 +96,45 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                     , (1 << chunkBit) - 1
             );
         }
+
+        public String idToString(int id) {
+            return "|" + ((id & DETACHED_BIT) >>> DETACHED_BIT_IDX)
+                    + ":" + ((id & FLAG_BIT) >>> FLAG_BIT_IDX)
+                    + ":" + (fetchChunkId(id))
+                    + ":" + (fetchObjectId(id))
+                    + "|";
+        }
+
+        public int createId(int chunkId, int objectId) {
+            return (chunkId & chunkIdBitMask) << chunkBit
+                    | (objectId & objectIdBitMask);
+        }
+
+        public int mergeId(int id, int objectId) {
+            return (id & chunkIdBitMaskShifted) | objectId;
+        }
+
+        public int fetchChunkId(int id) {
+            return (id >> chunkBit) & chunkIdBitMask;
+        }
+
+        public int fetchObjectId(int id) {
+            return id & objectIdBitMask;
+        }
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ConcurrentPool<T> pool;
+        private final IdSchema idSchema;
         private final StampedLock lock = new StampedLock();
         private final ConcurrentIntStack stack;
         private final LinkedChunk<T> firstChunk;
         private LinkedChunk<T> currentChunk;
         private int newId;
 
-        private Tenant(ConcurrentPool<T> pool) {
+        private Tenant(ConcurrentPool<T> pool, IdSchema idSchema) {
             this.pool = pool;
+            this.idSchema = idSchema;
             firstChunk = currentChunk = pool.newChunk(this);
             stack = new ConcurrentIntStack(1 << 16);
             nextId();
@@ -116,7 +146,6 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                 return returnValue;
             }
             long stamp = lock.tryOptimisticRead();
-            ChunkSchema chunkSchema = pool.chunkSchema;
             try {
                 for (; ; ) {
                     if (stamp == 0L) {
@@ -125,13 +154,13 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                     }
                     // possibly racy reads
                     returnValue = newId;
-                    int chunkIndex;
-                    if ((chunkIndex = currentChunk.index.get()) < chunkSchema.chunkCapacity - 1) {
+                    int objectId;
+                    if ((objectId = currentChunk.index.get()) < idSchema.chunkCapacity - 1) {
                         boolean incremented = false;
-                        while (!incremented && (chunkIndex = currentChunk.index.get()) < chunkSchema.chunkCapacity - 1) {
-                            if (currentChunk.index.compareAndSet(chunkIndex, chunkIndex + 1)) {
+                        while (!incremented && (objectId = currentChunk.index.get()) < idSchema.chunkCapacity - 1) {
+                            if (currentChunk.index.compareAndSet(objectId, objectId + 1)) {
                                 incremented = true;
-                                chunkIndex++;
+                                objectId++;
                             }
                         }
                         if (!incremented) {
@@ -145,10 +174,11 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                             continue;
                         }
                         // exclusive access
-                        chunkIndex = (currentChunk = pool.newChunk(this)).incrementIndex();
+                        objectId = (currentChunk = pool.newChunk(this)).incrementIndex();
                     }
-                    newId = (chunkIndex & chunkSchema.identifiableIndexBitMask) |
-                            (currentChunk.id & chunkSchema.chunkIndexBitMask) << chunkSchema.chunkBit;
+//                    newId = (objectId & idSchema.objectIdBitMask) |
+//                            (currentChunk.id & idSchema.chunkIdBitMask) << idSchema.chunkBit;
+                    newId = idSchema.createId(currentChunk.id, objectId);
                     return returnValue;
                 }
             } finally {
@@ -170,7 +200,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             boolean notCurrentChunk = chunk != currentChunk;
             int reusableId = chunk.remove(id, notCurrentChunk);
             if (notCurrentChunk) {
-                stack.push((id & pool.chunkSchema.chunkIndexBitMaskShifted) | reusableId);
+                stack.push(idSchema.mergeId(id, reusableId));
             } else {
                 newId = reusableId;
             }
@@ -222,8 +252,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public static final class LinkedChunk<T extends Identifiable> {
-        private final int capacity;
-        private final int indexBitMask;
+        private final IdSchema idSchema;
         private final Identifiable[] data;
         private final LinkedChunk<T> previous;
         private final int id;
@@ -231,10 +260,9 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         private LinkedChunk<T> next;
         private int sizeOffset;
 
-        public LinkedChunk(int id, int capacity, int indexBitMask, LinkedChunk<T> previous) {
-            this.capacity = capacity;
-            this.indexBitMask = indexBitMask;
-            data = new Identifiable[capacity];
+        public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous) {
+            this.idSchema = idSchema;
+            data = new Identifiable[idSchema.chunkCapacity];
             this.previous = previous;
             this.id = id;
         }
@@ -244,7 +272,8 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         }
 
         public int remove(int id, boolean doNotUpdateIndex) {
-            int indexToBeReused = id & indexBitMask;
+            int capacity = idSchema.chunkCapacity;
+            int objectIdToBeReused = idSchema.fetchObjectId(id);
             for (; ; ) {
                 int lastIndex = doNotUpdateIndex ? index.get() : index.decrementAndGet();
                 if (lastIndex >= capacity) {
@@ -254,10 +283,10 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
                 if (lastIndex < 0) {
                     return 0;
                 }
-                data[indexToBeReused] = data[lastIndex];
+                data[objectIdToBeReused] = data[lastIndex];
                 data[lastIndex] = null;
-                if (data[indexToBeReused] != null) {
-                    data[indexToBeReused].setId(indexToBeReused);
+                if (data[objectIdToBeReused] != null) {
+                    data[objectIdToBeReused].setId(objectIdToBeReused);
                 }
                 return lastIndex;
             }
@@ -265,16 +294,16 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
         @SuppressWarnings("unchecked")
         public T get(int id) {
-            return (T) data[id & indexBitMask];
+            return (T) data[idSchema.fetchObjectId(id)];
         }
 
         @SuppressWarnings("unchecked")
         public T set(int id, T value) {
-            return (T) (data[id & indexBitMask] = value);
+            return (T) (data[idSchema.fetchObjectId(id)] = value);
         }
 
         public boolean hasCapacity() {
-            return index.get() < capacity - 1;
+            return index.get() < idSchema.chunkCapacity - 1;
         }
 
         public LinkedChunk<T> getPrevious() {

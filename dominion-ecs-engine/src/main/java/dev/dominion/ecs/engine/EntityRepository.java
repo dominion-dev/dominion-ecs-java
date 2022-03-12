@@ -43,7 +43,7 @@ public final class EntityRepository implements Dominion {
         if (LoggingSystem.isLoggable(loggingLevelIndex, System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG
-                    , LoggingSystem.format(name, entity + " created")
+                    , LoggingSystem.format(name, "Create " + entity)
             );
         }
         return entity;
@@ -127,7 +127,6 @@ public final class EntityRepository implements Dominion {
             Optional<Integer> fetchChunkBit = ConfigSystem.fetchChunkBit(name);
             int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
 
-            int width = 120;
             if (ConfigSystem.showBanner()) {
                 LoggingSystem.printPanel(
                         "Dominion '" + name + "'"

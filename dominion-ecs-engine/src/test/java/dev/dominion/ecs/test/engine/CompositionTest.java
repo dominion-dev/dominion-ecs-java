@@ -13,12 +13,12 @@ import java.util.Iterator;
 
 class CompositionTest {
 
-    private static final ConcurrentPool.ChunkSchema CHUNK_SCHEMA =
-            new ConcurrentPool.ChunkSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+    private static final ConcurrentPool.IdSchema ID_SCHEMA =
+            new ConcurrentPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     @Test
     void createEntity() {
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
+        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(ID_SCHEMA);
         try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, null);
             IntEntity entity = composition.createEntity();
@@ -71,7 +71,7 @@ class CompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
+        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(ID_SCHEMA);
         try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, classIndex, C1.class);
             for (int i = 0; i < 1_000_000; i++) {
@@ -91,7 +91,7 @@ class CompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
+        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(ID_SCHEMA);
         try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, classIndex, C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
