@@ -9,14 +9,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
-public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> implements AutoCloseable {
+public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
     private final LinkedChunk<T>[] chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
 
     @SuppressWarnings("unchecked")
-    public ConcurrentPool(IdSchema idSchema) {
+    public ChunkedPool(IdSchema idSchema) {
         this.idSchema = idSchema;
         chunks = new LinkedChunk[idSchema.maxNumOfChunks];
     }
@@ -24,7 +24,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     private LinkedChunk<T> newChunk(Tenant<T> owner) {
         int id = chunkIndex.incrementAndGet();
         if (id > idSchema.maxNumOfChunks - 1) {
-            throw new OutOfMemoryError(ConcurrentPool.class.getName() + ": cannot create a new memory chunk");
+            throw new OutOfMemoryError(ChunkedPool.class.getName() + ": cannot create a new memory chunk");
         }
         LinkedChunk<T> currentChunk = owner.currentChunk;
         LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, currentChunk);
@@ -82,6 +82,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             , int chunkCapacity, int objectIdBitMask
     ) {
         private static final int BIT_LENGTH = 30;
+        private static final int MAX_NUM_OF_CHUNKS_BIT_LENGTH = 16;
         private static final int DETACHED_BIT_IDX = 31;
         public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
         private static final int FLAG_BIT_IDX = 30;
@@ -89,7 +90,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
 
         public IdSchema(int chunkBit) {
             this(chunkBit
-                    , 1 << (BIT_LENGTH - chunkBit)
+                    , 1 << Math.min((BIT_LENGTH - chunkBit), MAX_NUM_OF_CHUNKS_BIT_LENGTH)
                     , (1 << (BIT_LENGTH - chunkBit)) - 1
                     , ((1 << (BIT_LENGTH - chunkBit)) - 1) << chunkBit
                     , 1 << chunkBit
@@ -124,7 +125,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
     }
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
-        private final ConcurrentPool<T> pool;
+        private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
         private final StampedLock lock = new StampedLock();
         private final ConcurrentIntStack stack;
@@ -132,7 +133,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
         private LinkedChunk<T> currentChunk;
         private int newId;
 
-        private Tenant(ConcurrentPool<T> pool, IdSchema idSchema) {
+        private Tenant(ChunkedPool<T> pool, IdSchema idSchema) {
             this.pool = pool;
             this.idSchema = idSchema;
             firstChunk = currentChunk = pool.newChunk(this);
@@ -219,7 +220,7 @@ public final class ConcurrentPool<T extends ConcurrentPool.Identifiable> impleme
             return currentChunk.size();
         }
 
-        public ConcurrentPool<T> getPool() {
+        public ChunkedPool<T> getPool() {
             return pool;
         }
 

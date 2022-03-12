@@ -6,7 +6,7 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
@@ -24,9 +24,9 @@ public final class CompositionRepository implements AutoCloseable {
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
-    private final ConcurrentPool<IntEntity> pool;
+    private final ChunkedPool<IntEntity> pool;
+    private final ChunkedPool.IdSchema idSchema;
     private final Node root;
-    private final ConcurrentPool.IdSchema idSchema;
 
     public CompositionRepository() {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT, 0);
@@ -34,14 +34,14 @@ public final class CompositionRepository implements AutoCloseable {
 
     public CompositionRepository(int classIndexBit, int chunkBit, int loggingLevelIndex) {
         classIndex = new ClassIndex(classIndexBit, true);
-        idSchema = new ConcurrentPool.IdSchema(chunkBit);
+        idSchema = new ChunkedPool.IdSchema(chunkBit);
         this.loggingLevelIndex = loggingLevelIndex;
-        pool = new ConcurrentPool<>(idSchema);
+        pool = new ChunkedPool<>(idSchema);
         root = new Node();
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
     }
 
-    public ConcurrentPool.IdSchema getIdSchema() {
+    public ChunkedPool.IdSchema getIdSchema() {
         return idSchema;
     }
 

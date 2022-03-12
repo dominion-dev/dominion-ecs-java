@@ -2,7 +2,7 @@ package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ class EntityRepositoryTest {
     void deleteEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
-            ConcurrentPool<IntEntity> pool = entity.getComposition().getTenant().getPool();
+            ChunkedPool<IntEntity> pool = entity.getComposition().getTenant().getPool();
             entityRepository.deleteEntity(entity);
             Assertions.assertNull(entity.getData());
             Assertions.assertNull(pool.getEntry(entity.getId()));
@@ -58,7 +58,7 @@ class EntityRepositoryTest {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity();
             IntEntity entity2 = (IntEntity) entityRepository.createEntity();
-            ConcurrentPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
+            ChunkedPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
             int id1 = entity1.getId();
             int id2 = entity2.getId();
             entityRepository.deleteEntity(entity1);

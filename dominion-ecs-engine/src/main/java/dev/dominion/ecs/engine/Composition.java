@@ -6,7 +6,7 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Results;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 
@@ -16,12 +16,12 @@ public final class Composition {
     public final static int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
-    private final ConcurrentPool.Tenant<IntEntity> tenant;
+    private final ChunkedPool.Tenant<IntEntity> tenant;
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
 
-    public Composition(CompositionRepository repository, ConcurrentPool.Tenant<IntEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
+    public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
         this.arrayPool = arrayPool;
@@ -112,7 +112,7 @@ public final class Composition {
         return repository;
     }
 
-    public ConcurrentPool.Tenant<IntEntity> getTenant() {
+    public ChunkedPool.Tenant<IntEntity> getTenant() {
         return tenant;
     }
 
