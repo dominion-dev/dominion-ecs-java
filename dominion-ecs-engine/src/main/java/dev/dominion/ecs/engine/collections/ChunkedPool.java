@@ -120,7 +120,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
 
         public int fetchChunkId(int id) {
-            return (id >> chunkBit) & chunkIdBitMask;
+            return (id >>> chunkBit) & chunkIdBitMask;
         }
 
         public int fetchObjectId(int id) {

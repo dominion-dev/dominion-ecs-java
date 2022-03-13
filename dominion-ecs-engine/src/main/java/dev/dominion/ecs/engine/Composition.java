@@ -37,6 +37,21 @@ public final class Composition {
         }
     }
 
+    @Override
+    public String toString() {
+        int iMax = componentTypes.length - 1;
+        if (iMax == -1)
+            return "[]";
+        StringBuilder b = new StringBuilder();
+        b.append('[');
+        for (int i = 0; ; i++) {
+            b.append(componentTypes[i].getSimpleName());
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(", ");
+        }
+    }
+
     public int length() {
         return componentTypes.length;
     }
