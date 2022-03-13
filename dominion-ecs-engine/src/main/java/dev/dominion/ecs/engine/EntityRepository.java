@@ -24,10 +24,10 @@ public final class EntityRepository implements Dominion {
     private final String name;
     private final CompositionRepository compositions;
 
-    public EntityRepository(String name, int loggingLevelIndex, int classIndexBit, int chunkBit) {
+    public EntityRepository(String name, int loggingLevelIndex, int classIndexBit, int chunkBit, int chunkCountBit) {
         this.name = name;
         this.loggingLevelIndex = loggingLevelIndex;
-        compositions = new CompositionRepository(classIndexBit, chunkBit, loggingLevelIndex);
+        compositions = new CompositionRepository(loggingLevelIndex, classIndexBit, chunkBit, chunkCountBit);
     }
 
     @Override
@@ -43,7 +43,7 @@ public final class EntityRepository implements Dominion {
         if (LoggingSystem.isLoggable(loggingLevelIndex, System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG
-                    , LoggingSystem.format(name, entity + " created")
+                    , LoggingSystem.format(name, "Create " + entity)
             );
         }
         return entity;
@@ -122,12 +122,13 @@ public final class EntityRepository implements Dominion {
             name = normalizeName(name);
             Optional<System.Logger.Level> fetchLoggingLevel = ConfigSystem.fetchLoggingLevel(name);
             System.Logger.Level level = fetchLoggingLevel.orElse(LoggingSystem.DEFAULT_LOGGING_LEVEL);
-            Optional<Integer> fetchClassIndexBit = ConfigSystem.fetchClassIndexBit(name);
+            Optional<Integer> fetchClassIndexBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CLASS_INDEX_BIT);
             int classIndexBit = fetchClassIndexBit.orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT);
-            Optional<Integer> fetchChunkBit = ConfigSystem.fetchChunkBit(name);
+            Optional<Integer> fetchChunkBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_BIT);
             int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
+            Optional<Integer> fetchChunkCountBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_COUNT_BIT);
+            int chunkCountBit = fetchChunkCountBit.orElse(ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
 
-            int width = 120;
             if (ConfigSystem.showBanner()) {
                 LoggingSystem.printPanel(
                         "Dominion '" + name + "'"
@@ -140,6 +141,9 @@ public final class EntityRepository implements Dominion {
                         , "  Chunk-Bit: " + chunkBit
                                 + (fetchChunkBit.isEmpty() ? " (set sys-property '"
                                 + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_BIT) + "')" : "")
+                        , "  ChunkCount-Bit: " + chunkCountBit
+                                + (fetchChunkCountBit.isEmpty() ? " (set sys-property '"
+                                + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_COUNT_BIT) + "')" : "")
                 );
             }
 
@@ -149,6 +153,7 @@ public final class EntityRepository implements Dominion {
                     , loggingLevelIndex
                     , classIndexBit
                     , chunkBit
+                    , chunkCountBit
             );
         }
     }

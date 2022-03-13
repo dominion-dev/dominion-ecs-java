@@ -6,14 +6,12 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 
 import java.util.concurrent.locks.StampedLock;
 
-public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
-    private static final int DETACHED_ID_BIT = 1 << 31;
-    private static final int COMPONENT_ARRAY_FROM_POOL_BIT = 1 << 30;
+public final class IntEntity implements Entity, ChunkedPool.Identifiable {
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
@@ -27,8 +25,8 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
     }
 
     private int id;
-    private int prevId = -1;
-    private int nextId = -1;
+    private int prevId = ChunkedPool.IdSchema.DETACHED_BIT;
+    private int nextId = ChunkedPool.IdSchema.DETACHED_BIT;
     private volatile Data data;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
@@ -38,10 +36,6 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
         data = new Data(composition, components);
     }
 
-    private static String idToString(int id) {
-        return "|" + id + "|";
-    }
-
     @Override
     public int getId() {
         return id;
@@ -49,7 +43,7 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
 
     @Override
     public int setId(int id) {
-        return this.id = id | (this.id & COMPONENT_ARRAY_FROM_POOL_BIT);
+        return this.id = id | (this.id & ChunkedPool.IdSchema.FLAG_BIT);
     }
 
     @Override
@@ -195,28 +189,29 @@ public final class IntEntity implements Entity, ConcurrentPool.Identifiable {
         }
     }
 
-    public boolean isComponentArrayFromCache() {
-        return (id & COMPONENT_ARRAY_FROM_POOL_BIT) == COMPONENT_ARRAY_FROM_POOL_BIT;
+    public boolean isPooledArray() {
+        return (id & ChunkedPool.IdSchema.FLAG_BIT) == ChunkedPool.IdSchema.FLAG_BIT;
     }
 
-    void flagComponentArrayFromPool() {
-        id |= COMPONENT_ARRAY_FROM_POOL_BIT;
+    void flagPooledArray() {
+        id |= ChunkedPool.IdSchema.FLAG_BIT;
     }
 
     boolean isDetachedId() {
-        return (id & DETACHED_ID_BIT) == DETACHED_ID_BIT;
+        return (id & ChunkedPool.IdSchema.DETACHED_BIT) == ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     void flagDetachedId() {
-        id |= DETACHED_ID_BIT;
+        id |= ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     @Override
     public String toString() {
+        ChunkedPool.IdSchema idSchema = data.composition.getRepository().getIdSchema();
         return "IntEntity{" +
-                "id=" + idToString(id) +
-                ", prevId=" + idToString(prevId) +
-                ", nextId=" + idToString(nextId) +
+                "id=" + idSchema.idToString(id) +
+                ", prevId=" + idSchema.idToString(prevId) +
+                ", nextId=" + idSchema.idToString(nextId) +
                 '}';
     }
 

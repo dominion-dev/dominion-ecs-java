@@ -3,7 +3,7 @@ package dev.dominion.ecs.test.engine;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.IntEntity;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import org.junit.jupiter.api.Assertions;
@@ -13,18 +13,18 @@ import java.util.Iterator;
 
 class CompositionTest {
 
-    private static final ConcurrentPool.ChunkSchema CHUNK_SCHEMA =
-            new ConcurrentPool.ChunkSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+    private static final ChunkedPool.IdSchema ID_SCHEMA =
+            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
 
     @Test
     void createEntity() {
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
-        try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, null);
             IntEntity entity = composition.createEntity();
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
-            IntEntity entry = concurrentPool.getEntry(entity.getId());
+            IntEntity entry = chunkedPool.getEntry(entity.getId());
             Assertions.assertNotNull(entry);
             Assertions.assertEquals(entity, entry);
         }
@@ -71,8 +71,8 @@ class CompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
-        try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, classIndex, C1.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i));
@@ -91,8 +91,8 @@ class CompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        ConcurrentPool<IntEntity> concurrentPool = new ConcurrentPool<>(CHUNK_SCHEMA);
-        try (ConcurrentPool.Tenant<IntEntity> tenant = concurrentPool.newTenant()) {
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
             Composition composition = new Composition(null, tenant, null, classIndex, C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i), new C2(i + 1));

@@ -6,7 +6,8 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.engine.collections.ConcurrentPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
@@ -24,25 +25,30 @@ public final class CompositionRepository implements AutoCloseable {
     private final ObjectArrayPool arrayPool = new ObjectArrayPool();
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
-    private final ConcurrentPool<IntEntity> pool;
+    private final ChunkedPool<IntEntity> pool;
+    private final IdSchema idSchema;
     private final Node root;
-    private final ConcurrentPool.ChunkSchema chunkSchema;
 
     public CompositionRepository() {
-        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT, ConfigSystem.DEFAULT_CHUNK_BIT, 0);
+        this(0, ConfigSystem.DEFAULT_CLASS_INDEX_BIT
+                , ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
     }
 
-    public CompositionRepository(int classIndexBit, int chunkBit, int loggingLevelIndex) {
+    public CompositionRepository(int loggingLevelIndex, int classIndexBit, int chunkBit, int chunkCountBit) {
         classIndex = new ClassIndex(classIndexBit, true);
-        chunkSchema = new ConcurrentPool.ChunkSchema(chunkBit);
+        chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
+        int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
+        chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
+                Math.min(chunkCountBit, Math.min(reservedBit, IdSchema.MAX_CHUNK_COUNT_BIT)));
+        idSchema = new IdSchema(chunkBit, chunkCountBit);
         this.loggingLevelIndex = loggingLevelIndex;
-        pool = new ConcurrentPool<>(chunkSchema);
+        pool = new ChunkedPool<>(idSchema);
         root = new Node();
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
     }
 
-    public ConcurrentPool.ChunkSchema getChunkSchema() {
-        return chunkSchema;
+    public IdSchema getIdSchema() {
+        return idSchema;
     }
 
     public Composition getOrCreate(Object[] components) {
@@ -123,10 +129,10 @@ public final class CompositionRepository implements AutoCloseable {
         }
         Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
-        if (entity.isComponentArrayFromCache()) {
+        if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromPool();
+        entity.flagPooledArray();
         return composition.attachEntity(entity, newComponentArray);
     }
 
@@ -159,10 +165,10 @@ public final class CompositionRepository implements AutoCloseable {
         }
         Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
-        if (entity.isComponentArrayFromCache()) {
+        if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
-        entity.flagComponentArrayFromPool();
+        entity.flagPooledArray();
         composition.attachEntity(entity, newComponentArray);
         return removed;
     }

@@ -13,8 +13,10 @@ public final class ConfigSystem {
     public static final String LOGGING_LEVEL = "logging-level";
     public static final String LOGGING_CALLER = "logging-caller";
     public static final String CLASS_INDEX_BIT = "class-index-bit";
+    public static final String CHUNK_COUNT_BIT = "chunk-count-bit";
     public static final String CHUNK_BIT = "chunk-bit";
     public static final int DEFAULT_CLASS_INDEX_BIT = 20;
+    public static final int DEFAULT_CHUNK_COUNT_BIT = 16;
     public static final int DEFAULT_CHUNK_BIT = 14;
 
     public static boolean showBanner() {
@@ -32,13 +34,8 @@ public final class ConfigSystem {
         return callerStr != null && callerStr.equals("true");
     }
 
-    public static Optional<Integer> fetchClassIndexBit(String dominionName) {
-        String valueStr = System.getProperty(getPropertyName(dominionName, CLASS_INDEX_BIT));
-        return Optional.ofNullable(valueStr != null ? Integer.parseInt(valueStr) : null);
-    }
-
-    public static Optional<Integer> fetchChunkBit(String dominionName) {
-        String valueStr = System.getProperty(getPropertyName(dominionName, CHUNK_BIT));
+    public static Optional<Integer> fetchIntValue(String dominionName, String configName) {
+        String valueStr = System.getProperty(getPropertyName(dominionName, configName));
         return Optional.ofNullable(valueStr != null ? Integer.parseInt(valueStr) : null);
     }
 
