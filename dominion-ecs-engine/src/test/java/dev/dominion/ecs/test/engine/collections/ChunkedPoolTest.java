@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 class ChunkedPoolTest {
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
 
     @Test
     public void newTenant() {

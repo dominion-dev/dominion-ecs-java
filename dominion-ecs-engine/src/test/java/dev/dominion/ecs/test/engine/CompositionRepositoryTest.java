@@ -4,6 +4,7 @@ import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
+import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.HashCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -13,6 +14,38 @@ import java.util.Collection;
 import java.util.List;
 
 class CompositionRepositoryTest {
+
+    @Test
+    void init() {
+        try (CompositionRepository compositionRepository =
+                     new CompositionRepository(0, 1, 1, 1)) {
+            IdSchema idSchema = compositionRepository.getIdSchema();
+            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(10, idSchema.chunkBit());
+            Assertions.assertEquals(6, idSchema.chunkCountBit());
+        }
+        try (CompositionRepository compositionRepository =
+                     new CompositionRepository(0, 100, 100, 1)) {
+            IdSchema idSchema = compositionRepository.getIdSchema();
+            Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(24, idSchema.chunkBit());
+            Assertions.assertEquals(6, idSchema.chunkCountBit());
+        }
+        try (CompositionRepository compositionRepository =
+                     new CompositionRepository(0, 1, 22, 10)) {
+            IdSchema idSchema = compositionRepository.getIdSchema();
+            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(22, idSchema.chunkBit());
+            Assertions.assertEquals(8, idSchema.chunkCountBit());
+        }
+        try (CompositionRepository compositionRepository =
+                     new CompositionRepository(0, 1, 1, 100)) {
+            IdSchema idSchema = compositionRepository.getIdSchema();
+            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(10, idSchema.chunkBit());
+            Assertions.assertEquals(20, idSchema.chunkCountBit());
+        }
+    }
 
     @Test
     void getOrCreate() {

@@ -18,12 +18,12 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     @SuppressWarnings("unchecked")
     public ChunkedPool(IdSchema idSchema) {
         this.idSchema = idSchema;
-        chunks = new LinkedChunk[idSchema.maxNumOfChunks];
+        chunks = new LinkedChunk[idSchema.chunkCount];
     }
 
     private LinkedChunk<T> newChunk(Tenant<T> owner) {
         int id = chunkIndex.incrementAndGet();
-        if (id > idSchema.maxNumOfChunks - 1) {
+        if (id > idSchema.chunkCount - 1) {
             throw new OutOfMemoryError(ChunkedPool.class.getName() + ": cannot create a new memory chunk");
         }
         LinkedChunk<T> currentChunk = owner.currentChunk;
@@ -77,23 +77,27 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|
-    public record IdSchema(int chunkBit
-            , int maxNumOfChunks, int chunkIdBitMask, int chunkIdBitMaskShifted
+    public record IdSchema(int chunkBit, int chunkCountBit
+            , int chunkCount, int chunkIdBitMask, int chunkIdBitMaskShifted
             , int chunkCapacity, int objectIdBitMask
     ) {
-        private static final int BIT_LENGTH = 30;
-        private static final int MAX_NUM_OF_CHUNKS_BIT_LENGTH = 16;
-        private static final int DETACHED_BIT_IDX = 31;
+        public static final int BIT_LENGTH = 30;
+        public static final int MIN_CHUNK_BIT = 10;
+        public static final int MIN_CHUNK_COUNT_BIT = 6;
+        public static final int MAX_CHUNK_BIT = BIT_LENGTH - MIN_CHUNK_COUNT_BIT;
+        public static final int MAX_CHUNK_COUNT_BIT = BIT_LENGTH - MIN_CHUNK_BIT;
+        public static final int DETACHED_BIT_IDX = 31;
         public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
-        private static final int FLAG_BIT_IDX = 30;
+        public static final int FLAG_BIT_IDX = 30;
         public static final int FLAG_BIT = 1 << FLAG_BIT_IDX;
 
-        public IdSchema(int chunkBit) {
+        public IdSchema(int chunkBit, int chunkCountBit) {
             this(chunkBit
-                    , 1 << Math.min((BIT_LENGTH - chunkBit), MAX_NUM_OF_CHUNKS_BIT_LENGTH)
+                    , chunkCountBit
+                    , 1 << chunkCountBit
                     , (1 << (BIT_LENGTH - chunkBit)) - 1
                     , ((1 << (BIT_LENGTH - chunkBit)) - 1) << chunkBit
-                    , 1 << chunkBit
+                    , 1 << Math.min(chunkBit, MAX_CHUNK_BIT)
                     , (1 << chunkBit) - 1
             );
         }
@@ -177,8 +181,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         // exclusive access
                         objectId = (currentChunk = pool.newChunk(this)).incrementIndex();
                     }
-//                    newId = (objectId & idSchema.objectIdBitMask) |
-//                            (currentChunk.id & idSchema.chunkIdBitMask) << idSchema.chunkBit;
                     newId = idSchema.createId(currentChunk.id, objectId);
                     return returnValue;
                 }

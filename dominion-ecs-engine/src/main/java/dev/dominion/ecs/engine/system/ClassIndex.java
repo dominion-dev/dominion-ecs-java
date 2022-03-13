@@ -19,7 +19,7 @@ public final class ClassIndex implements AutoCloseable {
     public static final int MAX_HASH_BIT = 24;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final Map<Object, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
-    private final int hashBits;
+    private final int hashBit;
     private final long memoryAddress;
     private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
     private final boolean fallbackMapEnabled;
@@ -37,9 +37,7 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public ClassIndex(int hashBit, boolean fallbackMapEnabled) {
-        if (hashBit < MIN_HASH_BIT || hashBit > MAX_HASH_BIT)
-            throw new IllegalArgumentException("Hash cannot be less than " + MIN_HASH_BIT + " or greater than " + MAX_HASH_BIT + " bits");
-        this.hashBits = hashBit;
+        this.hashBit = Math.min(Math.max(hashBit, MIN_HASH_BIT), MAX_HASH_BIT);
         this.fallbackMapEnabled = fallbackMapEnabled;
         int capacity = (1 << hashBit) << INT_BYTES_SHIFT;
         memoryAddress = unsafe.allocateMemory(capacity);
@@ -50,6 +48,10 @@ public final class ClassIndex implements AutoCloseable {
         return address + (identityHashCode << INT_BYTES_SHIFT);
     }
 
+    public int getHashBit() {
+        return hashBit;
+    }
+
     public int addClass(Class<?> newClass) {
         return addObject(newClass);
     }
@@ -58,7 +60,7 @@ public final class ClassIndex implements AutoCloseable {
         if (useFallbackMap.get()) {
             return fallbackMap.get((Class<?>) newClass);
         }
-        int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBits);
+        int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBit);
         long i = getIdentityAddress(identityHashCode, memoryAddress);
         int currentIndex = unsafe.getInt(i);
         if (currentIndex == 0) {
@@ -86,7 +88,7 @@ public final class ClassIndex implements AutoCloseable {
         if (useFallbackMap.get()) {
             return fallbackMap.get((Class<?>) klass);
         }
-        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBits);
+        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
         return unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
     }
 
@@ -94,7 +96,7 @@ public final class ClassIndex implements AutoCloseable {
         if (useFallbackMap.get()) {
             return fallbackMap.get((Class<?>) klass);
         }
-        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBits);
+        int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
         return unsafe.getIntVolatile(null, getIdentityAddress(identityHashCode, memoryAddress));
     }
 
