@@ -1,6 +1,7 @@
 package dev.dominion.ecs.test.engine.collections;
 
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +13,7 @@ class ObjectArrayPoolTest {
 
     @Test
     void pull() {
-        ObjectArrayPool objectArrayPool = new ObjectArrayPool();
+        ObjectArrayPool objectArrayPool = new ObjectArrayPool(LoggingSystem.Context.TEST);
         Assertions.assertThrows(AssertionError.class, () -> objectArrayPool.pop(0));
         Object[] arrayObjects = objectArrayPool.pop(1);
         Assertions.assertEquals(1, arrayObjects.length);
@@ -22,7 +23,7 @@ class ObjectArrayPoolTest {
 
     @Test
     void push() {
-        ObjectArrayPool pool = new ObjectArrayPool();
+        ObjectArrayPool pool = new ObjectArrayPool(LoggingSystem.Context.TEST);
         Object[] arrayObjects = pool.pop(1);
         arrayObjects[0] = 1;
         pool.push(arrayObjects);
@@ -43,7 +44,7 @@ class ObjectArrayPoolTest {
     void concurrentPush() throws InterruptedException {
         final int capacity = 1 << 20;
         final ExecutorService executorService = Executors.newFixedThreadPool(4);
-        ObjectArrayPool objectArrayPool = new ObjectArrayPool();
+        ObjectArrayPool objectArrayPool = new ObjectArrayPool(LoggingSystem.Context.TEST);
         for (int i = 0; i < capacity; i++) {
             executorService.execute(() -> objectArrayPool.push(new Object[1]));
         }

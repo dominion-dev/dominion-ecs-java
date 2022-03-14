@@ -5,6 +5,8 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.system.LoggingSystem;
+
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
@@ -13,13 +15,26 @@ import java.util.concurrent.locks.StampedLock;
 
 public final class ObjectArrayPool {
     public static final int INITIAL_CAPACITY = 1 << 10;
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final SparseIntMap<Stack> arraysByLengthMap = new ConcurrentIntMap<>();
+    private final LoggingSystem.Context loggingContext;
+
+    public ObjectArrayPool(LoggingSystem.Context loggingContext) {
+        this.loggingContext = loggingContext;
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + getClass().getSimpleName()
+                    )
+            );
+        }
+    }
 
     public Object[] push(Object[] objectArray) {
         int arrayLength = objectArray.length;
         var stack = arraysByLengthMap.get(arrayLength);
         if (stack == null) {
-            stack = arraysByLengthMap.computeIfAbsent(arrayLength, k -> new Stack());
+            stack = arraysByLengthMap.computeIfAbsent(arrayLength, k -> new Stack(arrayLength, loggingContext));
         }
         return stack.push(objectArray);
     }
@@ -36,12 +51,28 @@ public final class ObjectArrayPool {
         return stack == null ? -1 : stack.size.get() + 1;
     }
 
+
     public static final class Stack {
         public static final int SOFT_MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;
+        private static final System.Logger LOGGER = LoggingSystem.getLogger();
+        private final int arrayLength;
         private final AtomicInteger size = new AtomicInteger(-1);
         private final StampedLock lock = new StampedLock();
+        private final LoggingSystem.Context loggingContext;
         private int capacity = INITIAL_CAPACITY;
         private Reference<?>[] data = new Reference[capacity];
+
+        public Stack(int arrayLength, LoggingSystem.Context loggingContext) {
+            this.arrayLength = arrayLength;
+            this.loggingContext = loggingContext;
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Creating " + this
+                        )
+                );
+            }
+        }
 
         public Object[] push(Object[] objectArray) {
             long stamp = lock.tryOptimisticRead();
@@ -93,6 +124,13 @@ public final class ObjectArrayPool {
                 throw new OutOfMemoryError(
                         "Required array length " + capacity + " is too large");
             }
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Ensuring capacity " + this
+                        )
+                );
+            }
             data = Arrays.copyOf(data, capacity);
         }
 
@@ -103,6 +141,14 @@ public final class ObjectArrayPool {
                 objectArray = (Object[]) data[index].get();
             }
             return objectArray;
+        }
+
+        @Override
+        public String toString() {
+            return "Stack={"
+                    + "arrayLength=" + arrayLength
+                    + ", capacity=" + capacity
+                    + '}';
         }
     }
 }

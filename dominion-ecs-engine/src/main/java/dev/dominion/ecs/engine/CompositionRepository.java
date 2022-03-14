@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    private final ObjectArrayPool arrayPool = new ObjectArrayPool();
+    private final ObjectArrayPool arrayPool;
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
@@ -58,6 +58,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         pool = new ChunkedPool<>(idSchema, loggingContext);
         root = new Node();
+        arrayPool = new ObjectArrayPool(loggingContext);
         root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, loggingContext);
     }
 
