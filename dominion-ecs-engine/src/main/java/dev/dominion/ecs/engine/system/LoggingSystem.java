@@ -121,6 +121,6 @@ public final class LoggingSystem {
     }
 
     public record Context(String subject, int levelIndex) {
-        public static Context DEFAULT = new Context("dominion", 0);
+        public static Context TEST = new Context("test", 0);
     }
 }

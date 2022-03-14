@@ -34,7 +34,7 @@ public final class CompositionRepository implements AutoCloseable {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
                 , ConfigSystem.DEFAULT_CHUNK_BIT
                 , ConfigSystem.DEFAULT_CHUNK_COUNT_BIT
-                , LoggingSystem.Context.DEFAULT
+                , LoggingSystem.Context.TEST
         );
     }
 

@@ -20,7 +20,7 @@ class CompositionRepositoryTest {
     void init() {
         try (CompositionRepository compositionRepository =
                      new CompositionRepository(1, 1, 1
-                             , new LoggingSystem.Context("test", 0))) {
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
@@ -28,7 +28,7 @@ class CompositionRepositoryTest {
         }
         try (CompositionRepository compositionRepository =
                      new CompositionRepository(100, 100, 1
-                             , new LoggingSystem.Context("test", 0))) {
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(24, idSchema.chunkBit());
@@ -36,7 +36,7 @@ class CompositionRepositoryTest {
         }
         try (CompositionRepository compositionRepository =
                      new CompositionRepository(1, 22, 10
-                             , new LoggingSystem.Context("test", 0))) {
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(22, idSchema.chunkBit());
@@ -44,7 +44,7 @@ class CompositionRepositoryTest {
         }
         try (CompositionRepository compositionRepository =
                      new CompositionRepository(1, 1, 100
-                             , new LoggingSystem.Context("test", 0))) {
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
