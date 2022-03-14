@@ -5,19 +5,30 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.system.LoggingSystem;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
 public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final LinkedChunk<T>[] chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
 
     @SuppressWarnings("unchecked")
-    public ChunkedPool(IdSchema idSchema) {
+    public ChunkedPool(IdSchema idSchema, LoggingSystem.Context loggingContext) {
         this.idSchema = idSchema;
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG
+                    , LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + getClass().getSimpleName()
+                    )
+            );
+        }
         chunks = new LinkedChunk[idSchema.chunkCount];
     }
 

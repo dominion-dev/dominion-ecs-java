@@ -6,6 +6,7 @@ import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.HashCode;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,28 +19,32 @@ class CompositionRepositoryTest {
     @Test
     void init() {
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 1, 1)) {
+                     new CompositionRepository(1, 1, 1
+                             , new LoggingSystem.Context("test", 0))) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
             Assertions.assertEquals(6, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 100, 100, 1)) {
+                     new CompositionRepository(100, 100, 1
+                             , new LoggingSystem.Context("test", 0))) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(24, idSchema.chunkBit());
             Assertions.assertEquals(6, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 22, 10)) {
+                     new CompositionRepository(1, 22, 10
+                             , new LoggingSystem.Context("test", 0))) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(22, idSchema.chunkBit());
             Assertions.assertEquals(8, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 1, 100)) {
+                     new CompositionRepository(1, 1, 100
+                             , new LoggingSystem.Context("test", 0))) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
@@ -199,7 +204,7 @@ class CompositionRepositoryTest {
         void toStringTest() {
             try (CompositionRepository compositionRepository = new CompositionRepository()) {
                 CompositionRepository.Node node = compositionRepository.new Node(C1.class, C2.class);
-                Assertions.assertEquals("C1,C2", node.toString());
+                Assertions.assertEquals("Node={types=[C1,C2]}", node.toString());
             }
         }
     }

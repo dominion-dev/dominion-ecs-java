@@ -40,6 +40,7 @@ public final class LoggingSystem {
             String version = fetchPomVersion();
             var level = setupDefaultLoggingLibrary();
             rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
+            registerLoggingLevel(rootLevel);
             if (ConfigSystem.showBanner()) {
                 showBanner(version, rootLevel, level.isEmpty());
             }
@@ -64,8 +65,8 @@ public final class LoggingSystem {
                 || levels[idx] == System.Logger.Level.OFF);
     }
 
-    public static String format(String name, String message) {
-        return "[" + name + "] - " + message;
+    public static String format(String subject, String message) {
+        return "[" + subject + "] - " + message;
     }
 
     public static void printPanel(String... rows) {
@@ -117,5 +118,9 @@ public final class LoggingSystem {
         consoleHandler.setLevel(julLevel);
         dominionRootLogger.addHandler(consoleHandler);
         return level;
+    }
+
+    public record Context(String subject, int levelIndex) {
+        public static Context DEFAULT = new Context("dominion", 0);
     }
 }
