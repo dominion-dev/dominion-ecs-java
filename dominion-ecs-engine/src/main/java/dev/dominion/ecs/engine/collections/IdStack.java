@@ -5,21 +5,32 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.system.LoggingSystem;
 import dev.dominion.ecs.engine.system.UnsafeFactory;
 import sun.misc.Unsafe;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public final class ConcurrentIntStack implements AutoCloseable {
+public final class IdStack implements AutoCloseable {
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
     private final long address;
     private final int capacity;
+    private final LoggingSystem.Context loggingContext;
 
-    public ConcurrentIntStack(int capacity) {
+    public IdStack(int capacity, LoggingSystem.Context loggingContext) {
         this.capacity = capacity;
+        this.loggingContext = loggingContext;
         address = unsafe.allocateMemory(capacity);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + this
+                    )
+            );
+        }
     }
 
     public int pop() {
@@ -31,10 +42,17 @@ public final class ConcurrentIntStack implements AutoCloseable {
         return index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
     }
 
-    public boolean push(int value) {
+    public boolean push(int id) {
         long offset = index.addAndGet(INT_BYTES);
         if (offset < capacity) {
-            unsafe.putInt(address + offset, value);
+            unsafe.putInt(address + offset, id);
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Pushing id=" + id
+                        )
+                );
+            }
             return true;
         }
         index.addAndGet(-INT_BYTES);
@@ -48,5 +66,12 @@ public final class ConcurrentIntStack implements AutoCloseable {
     @Override
     public void close() {
         unsafe.freeMemory(address);
+    }
+
+    @Override
+    public String toString() {
+        return "IdStack={"
+                + "capacity=" + capacity + "|off-heap"
+                + '}';
     }
 }

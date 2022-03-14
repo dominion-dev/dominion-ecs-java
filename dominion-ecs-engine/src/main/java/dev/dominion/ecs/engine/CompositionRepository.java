@@ -30,11 +30,11 @@ public final class CompositionRepository implements AutoCloseable {
     private final Node root;
     private final LoggingSystem.Context loggingContext;
 
-    public CompositionRepository() {
+    public CompositionRepository(LoggingSystem.Context loggingContext) {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
                 , ConfigSystem.DEFAULT_CHUNK_BIT
                 , ConfigSystem.DEFAULT_CHUNK_COUNT_BIT
-                , LoggingSystem.Context.TEST
+                , loggingContext
         );
     }
 
@@ -42,7 +42,7 @@ public final class CompositionRepository implements AutoCloseable {
             int classIndexBit, int chunkBit, int chunkCountBit
             , LoggingSystem.Context loggingContext
     ) {
-        classIndex = new ClassIndex(classIndexBit, true);
+        classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
         int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
         chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
@@ -51,8 +51,7 @@ public final class CompositionRepository implements AutoCloseable {
         this.loggingContext = loggingContext;
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG
-                    , LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Creating " + getClass().getSimpleName()
                     )
             );

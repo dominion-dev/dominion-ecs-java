@@ -17,6 +17,7 @@ public final class ClassIndex implements AutoCloseable {
     public static final int DEFAULT_HASH_BIT = 20; // 1MB -> about 1K classes
     public static final int MIN_HASH_BIT = 14;
     public static final int MAX_HASH_BIT = 24;
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final Map<Object, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
     private final int hashBit;
@@ -24,6 +25,7 @@ public final class ClassIndex implements AutoCloseable {
     private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
     private final boolean fallbackMapEnabled;
     private final AtomicInteger atomicIndex = new AtomicInteger(0);
+    private final int capacity;
     private int index = 1;
     private final ClassValue<Integer> fallbackMap = new ClassValue<>() {
         @Override
@@ -33,15 +35,22 @@ public final class ClassIndex implements AutoCloseable {
     };
 
     public ClassIndex() {
-        this(DEFAULT_HASH_BIT, true);
+        this(DEFAULT_HASH_BIT, true, LoggingSystem.Context.TEST);
     }
 
-    public ClassIndex(int hashBit, boolean fallbackMapEnabled) {
+    public ClassIndex(int hashBit, boolean fallbackMapEnabled, LoggingSystem.Context loggingContext) {
         this.hashBit = Math.min(Math.max(hashBit, MIN_HASH_BIT), MAX_HASH_BIT);
         this.fallbackMapEnabled = fallbackMapEnabled;
-        int capacity = (1 << hashBit) << INT_BYTES_SHIFT;
+        capacity = (1 << hashBit) << INT_BYTES_SHIFT;
         memoryAddress = unsafe.allocateMemory(capacity);
         unsafe.setMemory(memoryAddress, capacity, (byte) 0);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + this
+                    )
+            );
+        }
     }
 
     private static long getIdentityAddress(long identityHashCode, long address) {
@@ -169,5 +178,13 @@ public final class ClassIndex implements AutoCloseable {
     public void close() {
         controlMap.clear();
         unsafe.freeMemory(memoryAddress);
+    }
+
+    @Override
+    public String toString() {
+        return "ClassIndex={"
+                + "hashBit=" + hashBit
+                + ", capacity=" + capacity + "|off-heap"
+                + '}';
     }
 }

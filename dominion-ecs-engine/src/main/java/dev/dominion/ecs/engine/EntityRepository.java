@@ -42,8 +42,8 @@ public final class EntityRepository implements Dominion {
         IntEntity entity = composition.createEntity(componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG
-                    , LoggingSystem.format(loggingContext.subject(), "Creating " + entity)
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + entity)
             );
         }
         return entity;

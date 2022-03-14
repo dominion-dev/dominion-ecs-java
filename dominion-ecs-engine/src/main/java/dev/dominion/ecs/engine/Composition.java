@@ -42,8 +42,8 @@ public final class Composition {
         }
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG
-                    , LoggingSystem.format(loggingContext.subject(), "Creating " + this)
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + this)
             );
         }
     }

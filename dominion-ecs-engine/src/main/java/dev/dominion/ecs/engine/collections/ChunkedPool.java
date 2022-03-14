@@ -12,24 +12,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
 public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
+    public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final LinkedChunk<T>[] chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
+    private final LoggingSystem.Context loggingContext;
 
     @SuppressWarnings("unchecked")
     public ChunkedPool(IdSchema idSchema, LoggingSystem.Context loggingContext) {
         this.idSchema = idSchema;
+        this.loggingContext = loggingContext;
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG
-                    , LoggingSystem.format(loggingContext.subject()
-                            , "Creating " + getClass().getSimpleName()
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + this
                     )
             );
         }
         chunks = new LinkedChunk[idSchema.chunkCount];
+    }
+
+    @Override
+    public String toString() {
+        return "ChunkedPool={"
+                + "chunkCount=" + idSchema.chunkCount
+                + ", chunkCapacity=" + idSchema.chunkCapacity
+                + '}';
     }
 
     private LinkedChunk<T> newChunk(Tenant<T> owner) {
@@ -38,7 +48,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             throw new OutOfMemoryError(ChunkedPool.class.getName() + ": cannot create a new memory chunk");
         }
         LinkedChunk<T> currentChunk = owner.currentChunk;
-        LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, currentChunk);
+        LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, currentChunk, loggingContext);
         if (currentChunk != null) {
             currentChunk.setNext(newChunk);
         }
@@ -54,7 +64,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     public Tenant<T> newTenant() {
-        Tenant<T> newTenant = new Tenant<>(this, idSchema);
+        Tenant<T> newTenant = new Tenant<>(this, idSchema, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
@@ -143,16 +153,25 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
         private final StampedLock lock = new StampedLock();
-        private final ConcurrentIntStack stack;
+        private final IdStack stack;
         private final LinkedChunk<T> firstChunk;
+        private final LoggingSystem.Context loggingContext;
         private LinkedChunk<T> currentChunk;
         private int newId;
 
-        private Tenant(ChunkedPool<T> pool, IdSchema idSchema) {
+        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, LoggingSystem.Context loggingContext) {
             this.pool = pool;
             this.idSchema = idSchema;
+            this.loggingContext = loggingContext;
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Creating " + getClass().getSimpleName()
+                        )
+                );
+            }
+            stack = new IdStack(ID_STACK_CAPACITY, loggingContext);
             firstChunk = currentChunk = pool.newChunk(this);
-            stack = new ConcurrentIntStack(1 << 16);
             nextId();
         }
 
@@ -203,6 +222,13 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
 
         public int freeId(int id) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Freeing id=" + id
+                        )
+                );
+            }
             LinkedChunk<T> chunk = pool.getChunk(id);
             if (chunk == null) {
                 return -1;
@@ -266,6 +292,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     public static final class LinkedChunk<T extends Identifiable> {
+        private static final System.Logger LOGGER = LoggingSystem.getLogger();
         private final IdSchema idSchema;
         private final Identifiable[] data;
         private final LinkedChunk<T> previous;
@@ -274,11 +301,18 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private LinkedChunk<T> next;
         private int sizeOffset;
 
-        public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous) {
+        public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, LoggingSystem.Context loggingContext) {
             this.idSchema = idSchema;
             data = new Identifiable[idSchema.chunkCapacity];
             this.previous = previous;
             this.id = id;
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Creating " + this
+                        )
+                );
+            }
         }
 
         public int incrementIndex() {
@@ -335,6 +369,16 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
         public boolean isEmpty() {
             return size() == 0;
+        }
+
+        @Override
+        public String toString() {
+            return "LinkedChunk={"
+                    + "id=" + id
+                    + ", capacity=" + idSchema.chunkCapacity
+                    + ", previous=" + (previous == null ? null : previous.id)
+                    + ", next=" + (next == null ? null : next.id)
+                    + '}';
         }
     }
 }
