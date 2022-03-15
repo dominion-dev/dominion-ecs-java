@@ -200,7 +200,7 @@ class IntEntityTest {
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
             entity.setEnabled(true);
             Assertions.assertTrue(entityRepository.deleteEntity(entity));
-//            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
             Assertions.assertFalse(entity.isEnabled());
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
         }
