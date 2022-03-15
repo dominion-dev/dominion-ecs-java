@@ -22,7 +22,7 @@ public final class Composition {
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
-
+    private final LoggingSystem.Context loggingContext;
 
     public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
             , ObjectArrayPool arrayPool, ClassIndex classIndex, LoggingSystem.Context loggingContext
@@ -32,6 +32,7 @@ public final class Composition {
         this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
+        this.loggingContext = loggingContext;
         if (isMultiComponent()) {
             componentIndex = new int[COMPONENT_INDEX_CAPACITY];
             for (int i = 0; i < length(); i++) {
@@ -112,11 +113,18 @@ public final class Composition {
     }
 
     public IntEntity attachEntity(IntEntity entity, Object... components) {
-        return tenant.register(entity.setId(tenant.nextId()), switch (length()) {
+        entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
             case 0 -> entity.setData(new IntEntity.Data(this, null));
             case 1 -> entity.setData(new IntEntity.Data(this, components));
             default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components)));
         });
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Attaching " + entity)
+            );
+        }
+        return entity;
     }
 
     public void reattachEntity(IntEntity entity) {
@@ -126,6 +134,12 @@ public final class Composition {
     public IntEntity detachEntity(IntEntity entity) {
         tenant.freeId(entity.getId());
         entity.flagDetachedId();
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Detaching " + entity)
+            );
+        }
         return entity;
     }
 

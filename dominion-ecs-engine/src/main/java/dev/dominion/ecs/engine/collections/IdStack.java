@@ -15,13 +15,15 @@ public final class IdStack implements AutoCloseable {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
+    private final ChunkedPool.IdSchema idSchema;
     private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
     private final long address;
     private final int capacity;
     private final LoggingSystem.Context loggingContext;
 
-    public IdStack(int capacity, LoggingSystem.Context loggingContext) {
+    public IdStack(int capacity, ChunkedPool.IdSchema idSchema, LoggingSystem.Context loggingContext) {
         this.capacity = capacity;
+        this.idSchema = idSchema;
         this.loggingContext = loggingContext;
         address = unsafe.allocateMemory(capacity);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
@@ -39,7 +41,15 @@ public final class IdStack implements AutoCloseable {
             return Integer.MIN_VALUE;
         }
         int returnValue = unsafe.getInt(address + i);
-        return index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
+        returnValue = index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Popping id=" + idSchema.idToString(returnValue)
+                    )
+            );
+        }
+        return returnValue;
     }
 
     public boolean push(int id) {
@@ -49,7 +59,7 @@ public final class IdStack implements AutoCloseable {
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                                , "Pushing id=" + id
+                                , "Pushing id=" + idSchema.idToString(id)
                         )
                 );
             }

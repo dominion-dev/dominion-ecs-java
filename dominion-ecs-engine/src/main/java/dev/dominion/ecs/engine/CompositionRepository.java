@@ -123,6 +123,14 @@ public final class CompositionRepository implements AutoCloseable {
         if (components.length == 0) {
             return entity;
         }
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
+                                    .collect(Collectors.joining(","))) + "] to " + entity
+
+            );
+        }
         int componentsLength = components.length;
         Composition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();

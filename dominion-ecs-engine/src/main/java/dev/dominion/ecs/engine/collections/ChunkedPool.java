@@ -157,7 +157,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private LinkedChunk<T> currentChunk;
-        private int newId;
+        private int newId = Integer.MIN_VALUE;
 
         private Tenant(ChunkedPool<T> pool, IdSchema idSchema, LoggingSystem.Context loggingContext) {
             this.pool = pool;
@@ -170,12 +170,20 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         )
                 );
             }
-            stack = new IdStack(ID_STACK_CAPACITY, loggingContext);
+            stack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
             firstChunk = currentChunk = pool.newChunk(this);
             nextId();
         }
 
         public int nextId() {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Getting nextId from " + currentChunk
+                                        + " having newId " + idSchema.idToString(newId)
+                        )
+                );
+            }
             int returnValue = stack.pop();
             if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
@@ -222,13 +230,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
 
         public int freeId(int id) {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                                , "Freeing id=" + id
-                        )
-                );
-            }
             LinkedChunk<T> chunk = pool.getChunk(id);
             if (chunk == null) {
                 return -1;
@@ -239,8 +240,18 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             }
             boolean notCurrentChunk = chunk != currentChunk;
             int reusableId = chunk.remove(id, notCurrentChunk);
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Freeing id=" + idSchema.idToString(id)
+                                        + " > reusableId=" + idSchema.idToString(reusableId)
+                                        + " having current " + currentChunk
+
+                        )
+                );
+            }
             if (notCurrentChunk) {
-                stack.push(idSchema.mergeId(id, reusableId));
+                stack.push(reusableId);
             } else {
                 newId = reusableId;
             }
@@ -298,6 +309,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private final LinkedChunk<T> previous;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
+        //        private final LoggingSystem.Context loggingContext;
         private LinkedChunk<T> next;
         private int sizeOffset;
 
@@ -306,6 +318,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             data = new Identifiable[idSchema.chunkCapacity];
             this.previous = previous;
             this.id = id;
+//            this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -336,7 +349,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 if (data[objectIdToBeReused] != null) {
                     data[objectIdToBeReused].setId(objectIdToBeReused);
                 }
-                return lastIndex;
+                return idSchema.mergeId(id, lastIndex);
             }
         }
 

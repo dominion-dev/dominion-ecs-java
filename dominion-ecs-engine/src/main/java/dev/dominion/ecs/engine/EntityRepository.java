@@ -43,7 +43,7 @@ public final class EntityRepository implements Dominion {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Creating " + entity)
+                            , "Creating " + entity + " with " + composition)
             );
         }
         return entity;

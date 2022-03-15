@@ -123,6 +123,6 @@ public final class LoggingSystem {
 
     public record Context(String subject, int levelIndex) {
         public static Context TEST = new Context("test", 0);
-        public static Context STRESS_TEST = new Context("stress-test", -1);
+        public static Context VERBOSE_TEST = new Context("verbose-test", -1);
     }
 }
