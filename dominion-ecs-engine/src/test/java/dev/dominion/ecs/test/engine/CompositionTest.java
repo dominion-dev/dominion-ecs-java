@@ -6,6 +6,7 @@ import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -18,9 +19,10 @@ class CompositionTest {
 
     @Test
     void createEntity() {
-        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, null);
+            Composition composition =
+                    new Composition(null, tenant, null, null, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity();
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
@@ -42,7 +44,7 @@ class CompositionTest {
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
         Composition composition = new Composition(null, null, null, classIndex
-                , C1.class
+                , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
                 , C4.class
@@ -71,9 +73,11 @@ class CompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, classIndex, C1.class);
+            Composition composition = new Composition(null, tenant, null, classIndex
+                    , LoggingSystem.Context.TEST
+                    , C1.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i));
             }
@@ -91,9 +95,11 @@ class CompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA);
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, classIndex, C1.class, C2.class);
+            Composition composition = new Composition(null, tenant, null, classIndex
+                    , LoggingSystem.Context.VERBOSE_TEST
+                    , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(new C1(i), new C2(i + 1));
             }

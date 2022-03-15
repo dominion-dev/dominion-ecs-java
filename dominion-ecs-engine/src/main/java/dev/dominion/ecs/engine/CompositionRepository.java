@@ -13,6 +13,7 @@ import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.HashCode;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,31 +21,45 @@ import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
-
-    public final int loggingLevelIndex;
-    private final ObjectArrayPool arrayPool = new ObjectArrayPool();
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private final ObjectArrayPool arrayPool;
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
     private final IdSchema idSchema;
     private final Node root;
+    private final LoggingSystem.Context loggingContext;
 
-    public CompositionRepository() {
-        this(0, ConfigSystem.DEFAULT_CLASS_INDEX_BIT
-                , ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+    public CompositionRepository(LoggingSystem.Context loggingContext) {
+        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
+                , ConfigSystem.DEFAULT_CHUNK_BIT
+                , ConfigSystem.DEFAULT_CHUNK_COUNT_BIT
+                , loggingContext
+        );
     }
 
-    public CompositionRepository(int loggingLevelIndex, int classIndexBit, int chunkBit, int chunkCountBit) {
-        classIndex = new ClassIndex(classIndexBit, true);
+    public CompositionRepository(
+            int classIndexBit, int chunkBit, int chunkCountBit
+            , LoggingSystem.Context loggingContext
+    ) {
+        classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
         int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
         chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
                 Math.min(chunkCountBit, Math.min(reservedBit, IdSchema.MAX_CHUNK_COUNT_BIT)));
         idSchema = new IdSchema(chunkBit, chunkCountBit);
-        this.loggingLevelIndex = loggingLevelIndex;
-        pool = new ChunkedPool<>(idSchema);
+        this.loggingContext = loggingContext;
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + getClass().getSimpleName()
+                    )
+            );
+        }
+        pool = new ChunkedPool<>(idSchema, loggingContext);
         root = new Node();
-        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex);
+        arrayPool = new ObjectArrayPool(loggingContext);
+        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, loggingContext);
     }
 
     public IdSchema getIdSchema() {
@@ -107,6 +122,14 @@ public final class CompositionRepository implements AutoCloseable {
     public Entity addComponents(IntEntity entity, Object... components) {
         if (components.length == 0) {
             return entity;
+        }
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
+                                    .collect(Collectors.joining(","))) + "] to " + entity
+
+            );
         }
         int componentsLength = components.length;
         Composition prevComposition = entity.getComposition();
@@ -245,6 +268,7 @@ public final class CompositionRepository implements AutoCloseable {
             } else {
                 node.linkNode(key, node);
             }
+
             return node;
         }
 
@@ -269,6 +293,12 @@ public final class CompositionRepository implements AutoCloseable {
 
         public Node(Class<?>... componentTypes) {
             this.componentTypes = componentTypes;
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG
+                        , LoggingSystem.format(loggingContext.subject(), "Creating " + this)
+                );
+            }
         }
 
         public void linkNode(long key, Node node) {
@@ -292,7 +322,7 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), arrayPool, classIndex, componentTypes);
+                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), arrayPool, classIndex, loggingContext, componentTypes);
                     break;
                 }
                 return value;
@@ -317,12 +347,16 @@ public final class CompositionRepository implements AutoCloseable {
 
         @Override
         public String toString() {
-            return componentTypes == null ?
-                    "root" :
+            return "Node={"
+                    + "types=[" + (componentTypes == null ?
+                    "" :
                     Arrays.stream(componentTypes)
                             .map(Class::getSimpleName)
                             .sorted()
-                            .collect(Collectors.joining(","));
+                            .collect(Collectors.joining(",")))
+                    + "]"
+//                    + ", links=" + linkedNodes
+                    + "}";
         }
     }
 }

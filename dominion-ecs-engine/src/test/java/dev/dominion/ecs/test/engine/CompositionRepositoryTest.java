@@ -2,10 +2,9 @@ package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
-import dev.dominion.ecs.engine.EntityRepository;
-import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.HashCode;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,28 +17,32 @@ class CompositionRepositoryTest {
     @Test
     void init() {
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 1, 1)) {
+                     new CompositionRepository(1, 1, 1
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
             Assertions.assertEquals(6, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 100, 100, 1)) {
+                     new CompositionRepository(100, 100, 1
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(24, idSchema.chunkBit());
             Assertions.assertEquals(6, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 22, 10)) {
+                     new CompositionRepository(1, 22, 10
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(22, idSchema.chunkBit());
             Assertions.assertEquals(8, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(0, 1, 1, 100)) {
+                     new CompositionRepository(1, 1, 100
+                             , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
@@ -49,7 +52,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreate() {
-        try (CompositionRepository compositionRepository = new CompositionRepository()) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition composition = compositionRepository.getOrCreate(new Object[0]);
             Assertions.assertArrayEquals(new Class<?>[0], composition.getComponentTypes());
             CompositionRepository.Node root = compositionRepository.getRoot();
@@ -59,7 +62,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreateWith1Component() {
-        try (CompositionRepository compositionRepository = new CompositionRepository()) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             Assertions.assertTrue(compositionRepository.getNodeCache()
@@ -71,7 +74,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreateWith2Component() {
-        try (CompositionRepository compositionRepository = new CompositionRepository()) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
             long longHashCode = HashCode.longHashCode(new int[]{
@@ -91,7 +94,7 @@ class CompositionRepositoryTest {
 
     @Test
     void find() {
-        try (CompositionRepository compositionRepository = new CompositionRepository()) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Composition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Composition compositionC2C3 = compositionRepository.getOrCreate(new Object[]{new C2(0), new C3(0)});
@@ -137,41 +140,6 @@ class CompositionRepositoryTest {
         }
     }
 
-    @Test
-    void addComponents() {
-        var c1 = new C1(0);
-        var c2 = new C2(0);
-        var c3 = new C3(0);
-        var c4 = new C4(0);
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            IntEntity entity = (IntEntity) entityRepository.createEntity();
-            CompositionRepository repository = entity.getComposition().getRepository();
-            IntEntity entityPostAdd = (IntEntity) repository.addComponents(entity, c1);
-            Assertions.assertEquals(entityPostAdd, entity);
-            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
-
-            entity = (IntEntity) entityRepository.createEntity(c1);
-            entityPostAdd = (IntEntity) repository.addComponents(entity);
-            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
-
-            entityPostAdd = (IntEntity) repository.addComponents(entity, c2);
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());
-
-            entity = (IntEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (IntEntity) repository.addComponents(entity, c3);
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
-
-            entity = (IntEntity) entityRepository.createEntity(c1);
-            entityPostAdd = (IntEntity) repository.addComponents(entity, c2, c3);
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
-
-            entity = (IntEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (IntEntity) repository.addComponents(entity, c3, c4);
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4}, entityPostAdd.getComponents());
-        }
-    }
-
-
     record C1(int id) {
     }
 
@@ -188,7 +156,7 @@ class CompositionRepositoryTest {
     public class NodeTest {
         @Test
         void getOrCreateCompositions() {
-            try (CompositionRepository compositionRepository = new CompositionRepository()) {
+            try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
                 CompositionRepository.Node node = compositionRepository.new Node(C1.class, C2.class);
                 Composition composition = node.getOrCreateComposition();
                 Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
@@ -197,9 +165,9 @@ class CompositionRepositoryTest {
 
         @Test
         void toStringTest() {
-            try (CompositionRepository compositionRepository = new CompositionRepository()) {
+            try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
                 CompositionRepository.Node node = compositionRepository.new Node(C1.class, C2.class);
-                Assertions.assertEquals("C1,C2", node.toString());
+                Assertions.assertEquals("Node={types=[C1,C2]}", node.toString());
             }
         }
     }

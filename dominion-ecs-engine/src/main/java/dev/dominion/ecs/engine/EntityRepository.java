@@ -20,14 +20,14 @@ import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    public final int loggingLevelIndex;
     private final String name;
+    private final LoggingSystem.Context loggingContext;
     private final CompositionRepository compositions;
 
-    public EntityRepository(String name, int loggingLevelIndex, int classIndexBit, int chunkBit, int chunkCountBit) {
+    public EntityRepository(String name, int classIndexBit, int chunkBit, int chunkCountBit, LoggingSystem.Context loggingContext) {
         this.name = name;
-        this.loggingLevelIndex = loggingLevelIndex;
-        compositions = new CompositionRepository(loggingLevelIndex, classIndexBit, chunkBit, chunkCountBit);
+        this.loggingContext = loggingContext;
+        compositions = new CompositionRepository(classIndexBit, chunkBit, chunkCountBit, loggingContext);
     }
 
     @Override
@@ -40,10 +40,10 @@ public final class EntityRepository implements Dominion {
         Object[] componentArray = components.length == 0 ? null : components;
         Composition composition = compositions.getOrCreate(componentArray);
         IntEntity entity = composition.createEntity(componentArray);
-        if (LoggingSystem.isLoggable(loggingLevelIndex, System.Logger.Level.DEBUG)) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG
-                    , LoggingSystem.format(name, "Create " + entity)
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + entity + " with " + composition)
             );
         }
         return entity;
@@ -150,10 +150,10 @@ public final class EntityRepository implements Dominion {
             int loggingLevelIndex = LoggingSystem.registerLoggingLevel(level);
 
             return new EntityRepository(name
-                    , loggingLevelIndex
                     , classIndexBit
                     , chunkBit
                     , chunkCountBit
+                    , new LoggingSystem.Context(name, loggingLevelIndex)
             );
         }
     }

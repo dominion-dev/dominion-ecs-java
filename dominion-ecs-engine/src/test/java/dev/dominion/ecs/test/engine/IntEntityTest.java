@@ -19,15 +19,35 @@ class IntEntityTest {
 
     @Test
     void add() {
+        var c1 = new C1(0);
+        var c2 = new C2(0);
+        var c3 = new C3(0);
+        var c4 = new C4(0);
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            var c1 = new C1(0);
-            var c2 = new C2(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity();
-            Assertions.assertNull(entity.getComponents());
-            entity.add(c1);
-            Assertions.assertEquals(c1, entity.getComponents()[0]);
-            entity.add(c2);
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity.getComponents());
+            IntEntity entityPostAdd = (IntEntity) entity.add(c1);
+            Assertions.assertEquals(entityPostAdd, entity);
+            assert entityPostAdd != null;
+            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
+
+            entityPostAdd = (IntEntity) entity.add(c2);
+            assert entityPostAdd != null;
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());
+
+            entity = (IntEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (IntEntity) entity.add(c3);
+            assert entityPostAdd != null;
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+
+            entity = (IntEntity) entityRepository.createEntity(c1);
+            entityPostAdd = (IntEntity) entity.add(c2, c3);
+            assert entityPostAdd != null;
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+
+            entity = (IntEntity) entityRepository.createEntity(c1, c2);
+            entityPostAdd = (IntEntity) entity.add(c3, c4);
+            assert entityPostAdd != null;
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4}, entityPostAdd.getComponents());
         }
     }
 
@@ -39,7 +59,7 @@ class IntEntityTest {
         Entity[] entities = new Entity[capacity];
         CountDownLatch[] latches = new CountDownLatch[capacity * 2];
 
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("concurrent-test")) {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
@@ -180,7 +200,7 @@ class IntEntityTest {
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
             entity.setEnabled(true);
             Assertions.assertTrue(entityRepository.deleteEntity(entity));
-//            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
             Assertions.assertFalse(entity.isEnabled());
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
         }

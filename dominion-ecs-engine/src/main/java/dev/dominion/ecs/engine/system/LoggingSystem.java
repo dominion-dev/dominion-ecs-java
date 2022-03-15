@@ -40,6 +40,7 @@ public final class LoggingSystem {
             String version = fetchPomVersion();
             var level = setupDefaultLoggingLibrary();
             rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
+            registerLoggingLevel(rootLevel);
             if (ConfigSystem.showBanner()) {
                 showBanner(version, rootLevel, level.isEmpty());
             }
@@ -60,12 +61,13 @@ public final class LoggingSystem {
 
     public static boolean isLoggable(int idx, System.Logger.Level levelToCheck) {
         return !(levelToCheck.ordinal() < rootLevel.ordinal()
+                || idx < 0
                 || levelToCheck.ordinal() < levels[idx].ordinal()
                 || levels[idx] == System.Logger.Level.OFF);
     }
 
-    public static String format(String name, String message) {
-        return "[" + name + "] - " + message;
+    public static String format(String subject, String message) {
+        return "[" + subject + "] - " + message;
     }
 
     public static void printPanel(String... rows) {
@@ -108,7 +110,7 @@ public final class LoggingSystem {
     private static Optional<System.Logger.Level> setupDefaultLoggingLibrary() {
         var level = ConfigSystem.fetchLoggingLevel("");
         System.setProperty("java.util.logging.SimpleFormatter.format"
-                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$s %5$s %6$s %n");
+                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$32.32s %5$s %6$s %n");
         Logger dominionRootLogger = Logger.getLogger(ConfigSystem.DOMINION_);
         java.util.logging.Level julLevel =
                 spi2JulLevelMapping[level.orElse(DEFAULT_LOGGING_LEVEL).ordinal()];
@@ -117,5 +119,10 @@ public final class LoggingSystem {
         consoleHandler.setLevel(julLevel);
         dominionRootLogger.addHandler(consoleHandler);
         return level;
+    }
+
+    public record Context(String subject, int levelIndex) {
+        public static Context TEST = new Context("test", 0);
+        public static Context VERBOSE_TEST = new Context("verbose-test", -1);
     }
 }

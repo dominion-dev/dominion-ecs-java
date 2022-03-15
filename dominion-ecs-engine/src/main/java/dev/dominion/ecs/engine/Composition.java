@@ -9,24 +9,30 @@ import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Iterator;
 
 public final class Composition {
-    public final static int COMPONENT_INDEX_CAPACITY = 1 << 10;
+    public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ChunkedPool.Tenant<IntEntity> tenant;
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
+    private final LoggingSystem.Context loggingContext;
 
-    public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant, ObjectArrayPool arrayPool, ClassIndex classIndex, Class<?>... componentTypes) {
+    public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
+            , ObjectArrayPool arrayPool, ClassIndex classIndex, LoggingSystem.Context loggingContext
+            , Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
         this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.componentTypes = componentTypes;
+        this.loggingContext = loggingContext;
         if (isMultiComponent()) {
             componentIndex = new int[COMPONENT_INDEX_CAPACITY];
             for (int i = 0; i < length(); i++) {
@@ -34,6 +40,26 @@ public final class Composition {
             }
         } else {
             componentIndex = null;
+        }
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Creating " + this)
+            );
+        }
+    }
+
+    @Override
+    public String toString() {
+        int iMax = componentTypes.length - 1;
+        if (iMax == -1)
+            return "Composition=[]";
+        StringBuilder b = new StringBuilder("Composition=[");
+        for (int i = 0; ; i++) {
+            b.append(componentTypes[i].getSimpleName());
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(", ");
         }
     }
 
@@ -87,11 +113,18 @@ public final class Composition {
     }
 
     public IntEntity attachEntity(IntEntity entity, Object... components) {
-        return tenant.register(entity.setId(tenant.nextId()), switch (length()) {
+        entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
             case 0 -> entity.setData(new IntEntity.Data(this, null));
             case 1 -> entity.setData(new IntEntity.Data(this, components));
             default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components)));
         });
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Attaching " + entity)
+            );
+        }
+        return entity;
     }
 
     public void reattachEntity(IntEntity entity) {
@@ -101,6 +134,12 @@ public final class Composition {
     public IntEntity detachEntity(IntEntity entity) {
         tenant.freeId(entity.getId());
         entity.flagDetachedId();
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Detaching " + entity)
+            );
+        }
         return entity;
     }
 
