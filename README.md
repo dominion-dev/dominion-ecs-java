@@ -44,7 +44,7 @@ actions:
   uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) (introduced by Java 14 as a
   preview) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning
   and all benchmarks are run with this LTS version of Java.
-- **_adding a blazing-fast logging layer_**: by creating a thin logging layer over the new
+- **_adding a blazing-fast logging layer_**: by creating a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
   implements a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
