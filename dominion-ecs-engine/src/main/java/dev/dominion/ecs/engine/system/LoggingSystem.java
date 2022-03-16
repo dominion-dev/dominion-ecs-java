@@ -33,13 +33,14 @@ public final class LoggingSystem {
     private static final StackWalker STACK_WALKER = StackWalker.getInstance(RETAIN_CLASS_REFERENCE);
     private static final AtomicInteger levelIdx = new AtomicInteger(0);
     private static final System.Logger.Level[] levels = new System.Logger.Level[1 << 10];
-    private static System.Logger.Level rootLevel;
+    private static int rootLevelOrdinal;
 
     static {
         try {
             String version = fetchPomVersion();
             var level = setupDefaultLoggingLibrary();
-            rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
+            System.Logger.Level rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
+            rootLevelOrdinal = rootLevel.ordinal();
             registerLoggingLevel(rootLevel);
             if (ConfigSystem.showBanner()) {
                 showBanner(version, rootLevel, level.isEmpty());
@@ -60,7 +61,7 @@ public final class LoggingSystem {
     }
 
     public static boolean isLoggable(int idx, System.Logger.Level levelToCheck) {
-        return !(levelToCheck.ordinal() < rootLevel.ordinal()
+        return !(levelToCheck.ordinal() < rootLevelOrdinal
                 || idx < 0
                 || levelToCheck.ordinal() < levels[idx].ordinal()
                 || levels[idx] == System.Logger.Level.OFF);
