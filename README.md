@@ -43,7 +43,7 @@ actions:
   map more frequent objects.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
-  achives a half nanosecond logging level check with next to no performance impact and does not require a specific
+  achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
 ## Getting Started
