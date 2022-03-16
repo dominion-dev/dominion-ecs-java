@@ -127,7 +127,7 @@ public final class CompositionRepository implements AutoCloseable {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
-                                    .collect(Collectors.joining(","))) + "] to " + entity
+                                    .collect(Collectors.joining(",")) + "] to " + entity)
 
             );
         }
@@ -163,6 +163,12 @@ public final class CompositionRepository implements AutoCloseable {
     public Object removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
             return null;
+        }
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Removing [" + componentType.getSimpleName() + "] from " + entity)
+            );
         }
         Composition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();
