@@ -35,18 +35,15 @@ actions:
   pooling system to reuse objects living in a heap and creates off-heap data structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
   Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
-  as much as possible and leveraging the best tools - Dominion also implements concurrency using the
-  powerful [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html)
-  introduced in Java 8.
-- **_using Java 17_**: only by upgrading to the JDK 17 LTS you will get a performance boost for free. As already tested
-  by [some users](https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html), Java 17 is about 8-9% faster
-  than Java 11. Whenever possible and to further reduce memory footprint, the engine
-  uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) (introduced by Java 14 as a
-  preview) instead of standard classes to map more frequent objects. Dominion started using Java 17 from the beginning
-  and all benchmarks are run with this LTS version of Java.
-- **_adding a blazing-fast logging layer_**: by creating a thin logging layer over the
+  as much as possible and leveraging the best available lock implementation as the
+  fast [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html).
+- **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
+  faster than Java 11. Whenever possible and to further reduce memory footprint, the Dominion
+  uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) instead of standard classes to
+  map more frequent objects.
+- **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
-  implements a half nanosecond logging level check with next to no performance impact and does not require a specific
+  achives a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
 ## Getting Started
