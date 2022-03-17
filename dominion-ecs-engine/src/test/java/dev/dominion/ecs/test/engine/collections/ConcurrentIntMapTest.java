@@ -88,7 +88,7 @@ class ConcurrentIntMapTest {
         SparseIntMap<Integer> map1 = new ConcurrentIntMap<>();
         map1.put(1, 0);
         map1.put(2, 0);
-        Assertions.assertEquals(31 + 2, map1.sortedKeysHashCode());
+        Assertions.assertEquals(8191 + 2, map1.sortedKeysHashCode());
         map1.put(3, 0);
         map1.put(4, 0);
         map1.put(5, 0);
