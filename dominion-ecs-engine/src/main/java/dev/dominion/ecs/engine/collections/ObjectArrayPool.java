@@ -36,7 +36,7 @@ public final class ObjectArrayPool {
         if (stack == null) {
             stack = arraysByLengthMap.computeIfAbsent(arrayLength, k -> new Stack(arrayLength, loggingContext));
         }
-        return stack.push(objectArray);
+        return stack.push2(objectArray);
     }
 
     public Object[] pop(int arrayLength) {
@@ -59,8 +59,7 @@ public final class ObjectArrayPool {
         private final AtomicInteger size = new AtomicInteger(-1);
         private final StampedLock lock = new StampedLock();
         private final LoggingSystem.Context loggingContext;
-        private int capacity = INITIAL_CAPACITY;
-        private Reference<?>[] data = new Reference[capacity];
+        private Reference<?>[] data = new Reference[INITIAL_CAPACITY];
 
         public Stack(int arrayLength, LoggingSystem.Context loggingContext) {
             this.arrayLength = arrayLength;
@@ -74,52 +73,78 @@ public final class ObjectArrayPool {
             }
         }
 
-        public Object[] push(Object[] objectArray) {
-            long stamp = lock.tryOptimisticRead();
-            try {
-                for (; ; ) {
-                    if (stamp == 0L) {
-                        stamp = lock.writeLock();
-                        continue;
+        public Object[] push2(Object[] objectArray) {
+            for (; ; ) {
+                int index = size.get();
+                if (index < data.length - 1) {
+                    if (size.compareAndSet(index, index + 1)) {
+                        data[++index] = new SoftReference<>(objectArray);
+                        Arrays.fill(objectArray, null);
+                        return objectArray;
                     }
-                    // possibly racy reads
-                    int index;
-                    if ((index = size.get()) < capacity - 1) {
-                        boolean incremented = false;
-                        while (!incremented && (index = size.get()) < capacity - 1) {
-                            if (size.compareAndSet(index, index + 1)) {
-                                incremented = true;
-                                index++;
-                            }
+                } else {
+                    int currentCapacity = data.length;
+                    long stamp = lock.writeLock();
+                    try {
+                        if (data.length == currentCapacity) {
+                            ensureCapacity();
                         }
-                        if (!incremented) {
-                            stamp = lock.tryOptimisticRead();
-                            continue;
-                        }
-                    } else {
-                        stamp = lock.tryConvertToWriteLock(stamp);
-                        if (stamp == 0L) {
-                            stamp = lock.writeLock();
-                            continue;
-                        }
-                        // exclusive access
-                        // ensure capacity
-                        ensureCapacity();
-                        index = size.incrementAndGet();
+                    } finally {
+                        lock.unlockWrite(stamp);
                     }
-                    data[index] = new SoftReference<>(objectArray);
-                    Arrays.fill(objectArray, null);
-                    return objectArray;
-                }
-            } finally {
-                if (StampedLock.isWriteLockStamp(stamp)) {
-                    lock.unlockWrite(stamp);
                 }
             }
         }
 
+
+///*
+//        public Object[] push(Object[] objectArray) {
+//            long stamp = lock.tryOptimisticRead();
+//            try {
+//                for (; ; ) {
+//                    if (stamp == 0L) {
+//                        stamp = lock.writeLock();
+//                        continue;
+//                    }
+//                    // possibly racy reads
+//                    int index;
+//                    if ((index = size.get()) < capacity - 1) {
+//                        boolean incremented = false;
+//                        while (!incremented && (index = size.get()) < capacity - 1) {
+//                            if (size.compareAndSet(index, index + 1)) {
+//                                incremented = true;
+//                                index++;
+//                            }
+//                        }
+//                        if (!incremented) {
+//                            stamp = lock.tryOptimisticRead();
+//                            continue;
+//                        }
+//                    } else {
+//                        stamp = lock.tryConvertToWriteLock(stamp);
+//                        if (stamp == 0L) {
+//                            stamp = lock.writeLock();
+//                            continue;
+//                        }
+//                        // exclusive access
+//                        // ensure capacity
+//                        ensureCapacity();
+//                        index = size.incrementAndGet();
+//                    }
+//                    data[index] = new SoftReference<>(objectArray);
+//                    Arrays.fill(objectArray, null);
+//                    return objectArray;
+//                }
+//            } finally {
+//                if (StampedLock.isWriteLockStamp(stamp)) {
+//                    lock.unlockWrite(stamp);
+//                }
+//            }
+//        }
+//*/
+
         private void ensureCapacity() {
-            capacity += capacity >> 1;
+            int capacity = data.length + (data.length >> 1);
             if (capacity < 0 || capacity > SOFT_MAX_ARRAY_LENGTH) {
                 throw new OutOfMemoryError(
                         "Required array length " + capacity + " is too large");
@@ -147,7 +172,7 @@ public final class ObjectArrayPool {
         public String toString() {
             return "Stack={"
                     + "arrayLength=" + arrayLength
-                    + ", capacity=" + capacity
+                    + ", capacity=" + data.length
                     + '}';
         }
     }
