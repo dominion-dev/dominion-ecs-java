@@ -11,7 +11,7 @@ public final class HashCode {
     public static long longHashCode(int[] input) {
         long hashCode = 0;
         for (int i = 0; i < input.length; i++) {
-            hashCode = 31 * hashCode + input[i];
+            hashCode = ((hashCode << 13) - hashCode) + input[i];
         }
         return hashCode;
     }
