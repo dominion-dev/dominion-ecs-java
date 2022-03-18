@@ -175,6 +175,48 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             nextId();
         }
 
+//        public int nextId() {
+//            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//                LOGGER.log(
+//                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                                , "Getting nextId from " + currentChunk
+//                                        + " having newId " + idSchema.idToString(newId)
+//                        )
+//                );
+//            }
+//            int returnValue = stack.pop();
+//            if (returnValue != Integer.MIN_VALUE) {
+//                return returnValue;
+//            }
+//            for (; ; ) {
+//                returnValue = newId;
+//                int objectId;
+//                if (currentChunk.get().index.get() < idSchema.chunkCapacity - 1) {
+//                    while ((objectId = currentChunk.get().index.get()) < idSchema.chunkCapacity - 1) {
+//                        var chunk = currentChunk.get();
+//                        if (chunk.index.compareAndSet(objectId, objectId + 1)) {
+//                            newId = idSchema.createId(chunk.id, ++objectId);
+//                            return returnValue;
+//                        }
+//                    }
+//                } else {
+//                    LinkedChunk<T> oldChunk = currentChunk.get();
+//                    long stamp = lock.writeLock();
+//                    try {
+//                        LinkedChunk<T> chunk;
+//                        if (currentChunk.compareAndSet(oldChunk, (chunk = pool.newChunk(this)))) {
+//                            objectId = chunk.incrementIndex();
+//                            newId = idSchema.createId(chunk.id, objectId);
+//                            return returnValue;
+//                        }
+//                    } finally {
+//                        lock.unlockWrite(stamp);
+//                    }
+//                }
+//            }
+//        }
+//
+
         public int nextId() {
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
