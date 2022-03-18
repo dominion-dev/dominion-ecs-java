@@ -36,7 +36,7 @@ public final class ObjectArrayPool {
         if (stack == null) {
             stack = arraysByLengthMap.computeIfAbsent(arrayLength, k -> new Stack(arrayLength, loggingContext));
         }
-        return stack.push2(objectArray);
+        return stack.push(objectArray);
     }
 
     public Object[] pop(int arrayLength) {
@@ -50,7 +50,6 @@ public final class ObjectArrayPool {
         var stack = arraysByLengthMap.get(arrayLength);
         return stack == null ? -1 : stack.size.get() + 1;
     }
-
 
     public static final class Stack {
         public static final int SOFT_MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;
@@ -73,7 +72,7 @@ public final class ObjectArrayPool {
             }
         }
 
-        public Object[] push2(Object[] objectArray) {
+        public Object[] push(Object[] objectArray) {
             for (; ; ) {
                 int index = size.get();
                 if (index < data.length - 1) {
@@ -95,53 +94,6 @@ public final class ObjectArrayPool {
                 }
             }
         }
-
-
-///*
-//        public Object[] push(Object[] objectArray) {
-//            long stamp = lock.tryOptimisticRead();
-//            try {
-//                for (; ; ) {
-//                    if (stamp == 0L) {
-//                        stamp = lock.writeLock();
-//                        continue;
-//                    }
-//                    // possibly racy reads
-//                    int index;
-//                    if ((index = size.get()) < capacity - 1) {
-//                        boolean incremented = false;
-//                        while (!incremented && (index = size.get()) < capacity - 1) {
-//                            if (size.compareAndSet(index, index + 1)) {
-//                                incremented = true;
-//                                index++;
-//                            }
-//                        }
-//                        if (!incremented) {
-//                            stamp = lock.tryOptimisticRead();
-//                            continue;
-//                        }
-//                    } else {
-//                        stamp = lock.tryConvertToWriteLock(stamp);
-//                        if (stamp == 0L) {
-//                            stamp = lock.writeLock();
-//                            continue;
-//                        }
-//                        // exclusive access
-//                        // ensure capacity
-//                        ensureCapacity();
-//                        index = size.incrementAndGet();
-//                    }
-//                    data[index] = new SoftReference<>(objectArray);
-//                    Arrays.fill(objectArray, null);
-//                    return objectArray;
-//                }
-//            } finally {
-//                if (StampedLock.isWriteLockStamp(stamp)) {
-//                    lock.unlockWrite(stamp);
-//                }
-//            }
-//        }
-//*/
 
         private void ensureCapacity() {
             int capacity = data.length + (data.length >> 1);

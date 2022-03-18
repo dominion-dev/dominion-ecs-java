@@ -81,11 +81,28 @@ class ChunkedPoolTest {
         }
 
         @Test
-        public void concurrentIds() throws InterruptedException {
+        public void concurrentNextId() throws InterruptedException {
             ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
             try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
                 final int capacity = 1 << 20;
-                final ExecutorService pool = Executors.newFixedThreadPool(2);
+                final ExecutorService pool = Executors.newFixedThreadPool(8);
+                for (int i = 0; i < capacity; i++) {
+                    pool.execute(tenant::nextId);
+                }
+                pool.shutdown();
+                Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
+                Assertions.assertEquals(capacity, chunkedPool.size());
+                Assertions.assertEquals(capacity, tenant.nextId());
+            }
+        }
+
+        @Test
+        public void concurrentNextAndFreeId() throws InterruptedException {
+            ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+            try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
+                final int capacity = 1 << 20;
+                final ExecutorService pool = Executors.newFixedThreadPool(8);
+                int added = 0;
                 int removed = 0;
                 for (int i = 0; i < capacity; i++) {
                     if (i % 10 == 0) {
@@ -94,11 +111,13 @@ class ChunkedPoolTest {
                         removed++;
                     }
                     pool.execute(tenant::nextId);
+                    added++;
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-                Assertions.assertEquals(capacity - removed, chunkedPool.size());
-                Assertions.assertEquals((int) (capacity * .9), tenant.nextId());
+                Assertions.assertEquals(0, tenant.getStack().size());
+                Assertions.assertEquals(added - removed, chunkedPool.size());
+                Assertions.assertTrue(tenant.nextId() >= added - removed);
             }
         }
 

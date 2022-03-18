@@ -42,9 +42,9 @@ public final class IdStack implements AutoCloseable {
         }
         int returnValue = unsafe.getInt(address + i);
         returnValue = index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                             , "Popping id=" + idSchema.idToString(returnValue)
                     )
             );
@@ -56,9 +56,9 @@ public final class IdStack implements AutoCloseable {
         long offset = index.addAndGet(INT_BYTES);
         if (offset < capacity) {
             unsafe.putInt(address + offset, id);
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
                 LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                                 , "Pushing id=" + idSchema.idToString(id)
                         )
                 );
