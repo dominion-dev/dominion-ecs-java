@@ -7,20 +7,22 @@ package dev.dominion.ecs.engine.collections;
 
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.StampedLock;
 
 public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    private final LinkedChunk<T>[] chunks;
+    private final AtomicReferenceArray<LinkedChunk<T>> chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
     private final LoggingSystem.Context loggingContext;
 
-    @SuppressWarnings("unchecked")
     public ChunkedPool(IdSchema idSchema, LoggingSystem.Context loggingContext) {
         this.idSchema = idSchema;
         this.loggingContext = loggingContext;
@@ -31,7 +33,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                     )
             );
         }
-        chunks = new LinkedChunk[idSchema.chunkCount];
+        chunks = new AtomicReferenceArray<>(idSchema.chunkCount);
     }
 
     @Override
@@ -42,8 +44,11 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 + '}';
     }
 
-    private LinkedChunk<T> newChunk(Tenant<T> owner) {
-        int id = chunkIndex.incrementAndGet();
+    private LinkedChunk<T> newChunk(Tenant<T> owner, int currentChunkIndex) {
+        int id;
+        if (!chunkIndex.compareAndSet(currentChunkIndex, id = currentChunkIndex + 1)) {
+            return null;
+        }
         if (id > idSchema.chunkCount - 1) {
             throw new OutOfMemoryError(ChunkedPool.class.getName() + ": cannot create a new memory chunk");
         }
@@ -52,11 +57,12 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         if (currentChunk != null) {
             currentChunk.setNext(newChunk);
         }
-        return chunks[id] = newChunk;
+        chunks.set(id, newChunk);
+        return newChunk;
     }
 
     private LinkedChunk<T> getChunk(int id) {
-        return chunks[idSchema.fetchChunkId(id)];
+        return chunks.get(idSchema.fetchChunkId(id));
     }
 
     public T getEntry(int id) {
@@ -64,17 +70,18 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     public Tenant<T> newTenant() {
-        Tenant<T> newTenant = new Tenant<>(this, idSchema, loggingContext);
+        Tenant<T> newTenant = new Tenant<>(this, chunks, chunkIndex, idSchema, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
 
     public int size() {
-        return Arrays.stream(chunks)
-                .filter(Objects::nonNull)
-                .mapToInt(LinkedChunk::size)
-//                .peek(System.out::println)
-                .sum();
+        int sum = 0;
+        for (int i = 0; i < chunks.length(); i++) {
+            var chunk = chunks.get(i);
+            sum += chunk != null ? chunk.size() : 0;
+        }
+        return sum;
     }
 
     @Override
@@ -151,6 +158,8 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
     public static final class Tenant<T extends Identifiable> implements AutoCloseable {
         private final ChunkedPool<T> pool;
+        private final AtomicReferenceArray<LinkedChunk<T>> chunks;
+        private final AtomicInteger chunkIndex;
         private final IdSchema idSchema;
         private final StampedLock lock = new StampedLock();
         private final IdStack stack;
@@ -159,8 +168,13 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private LinkedChunk<T> currentChunk;
         private int newId = Integer.MIN_VALUE;
 
-        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, LoggingSystem.Context loggingContext) {
+        @SuppressWarnings("StatementWithEmptyBody")
+        private Tenant(ChunkedPool<T> pool
+                , AtomicReferenceArray<LinkedChunk<T>> chunks, AtomicInteger chunkIndex
+                , IdSchema idSchema, LoggingSystem.Context loggingContext) {
             this.pool = pool;
+            this.chunks = chunks;
+            this.chunkIndex = chunkIndex;
             this.idSchema = idSchema;
             this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
@@ -171,56 +185,17 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 );
             }
             stack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
-            firstChunk = currentChunk = pool.newChunk(this);
+            while ((currentChunk = pool.newChunk(this, chunkIndex.get())) == null) {
+            }
+            firstChunk = currentChunk;
             nextId();
         }
 
-//        public int nextId() {
-//            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//                LOGGER.log(
-//                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                                , "Getting nextId from " + currentChunk
-//                                        + " having newId " + idSchema.idToString(newId)
-//                        )
-//                );
-//            }
-//            int returnValue = stack.pop();
-//            if (returnValue != Integer.MIN_VALUE) {
-//                return returnValue;
-//            }
-//            for (; ; ) {
-//                returnValue = newId;
-//                int objectId;
-//                if (currentChunk.get().index.get() < idSchema.chunkCapacity - 1) {
-//                    while ((objectId = currentChunk.get().index.get()) < idSchema.chunkCapacity - 1) {
-//                        var chunk = currentChunk.get();
-//                        if (chunk.index.compareAndSet(objectId, objectId + 1)) {
-//                            newId = idSchema.createId(chunk.id, ++objectId);
-//                            return returnValue;
-//                        }
-//                    }
-//                } else {
-//                    LinkedChunk<T> oldChunk = currentChunk.get();
-//                    long stamp = lock.writeLock();
-//                    try {
-//                        LinkedChunk<T> chunk;
-//                        if (currentChunk.compareAndSet(oldChunk, (chunk = pool.newChunk(this)))) {
-//                            objectId = chunk.incrementIndex();
-//                            newId = idSchema.createId(chunk.id, objectId);
-//                            return returnValue;
-//                        }
-//                    } finally {
-//                        lock.unlockWrite(stamp);
-//                    }
-//                }
-//            }
-//        }
-//
-
+        @SuppressWarnings("StatementWithEmptyBody")
         public int nextId() {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
                 LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                                 , "Getting nextId from " + currentChunk
                                         + " having newId " + idSchema.idToString(newId)
                         )
@@ -230,43 +205,27 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
-            long stamp = lock.tryOptimisticRead();
-            try {
-                for (; ; ) {
-                    if (stamp == 0L) {
-                        stamp = lock.writeLock();
-                        continue;
-                    }
-                    // possibly racy reads
-                    returnValue = newId;
-                    int objectId;
-                    if ((objectId = currentChunk.index.get()) < idSchema.chunkCapacity - 1) {
-                        boolean incremented = false;
-                        while (!incremented && (objectId = currentChunk.index.get()) < idSchema.chunkCapacity - 1) {
-                            if (currentChunk.index.compareAndSet(objectId, objectId + 1)) {
-                                incremented = true;
-                                objectId++;
-                            }
-                        }
-                        if (!incremented) {
-                            stamp = lock.tryOptimisticRead();
-                            continue;
-                        }
-                    } else {
-                        stamp = lock.tryConvertToWriteLock(stamp);
-                        if (stamp == 0L) {
-                            stamp = lock.writeLock();
-                            continue;
-                        }
-                        // exclusive access
-                        objectId = (currentChunk = pool.newChunk(this)).incrementIndex();
-                    }
-                    newId = idSchema.createId(currentChunk.id, objectId);
-                    return returnValue;
+            for (; ; ) {
+                returnValue = newId;
+                int objectId;
+                int currentChunkIndex = chunkIndex.get();
+                LinkedChunk<T> chunk;
+                while ((chunk = chunks.get(currentChunkIndex)) == null) {
                 }
-            } finally {
-                if (StampedLock.isWriteLockStamp(stamp)) {
-                    lock.unlockWrite(stamp);
+                if (chunk.index.get() < idSchema.chunkCapacity - 1) {
+                    while ((objectId = chunk.index.get()) < idSchema.chunkCapacity - 1) {
+                        if (chunk.index.compareAndSet(objectId, objectId + 1)) {
+                            newId = idSchema.createId(chunk.id, ++objectId);
+                            return returnValue;
+                        }
+                    }
+                } else {
+                    if ((chunk = pool.newChunk(this, currentChunkIndex)) != null) {
+                        currentChunk = chunk;
+                        objectId = chunk.incrementIndex();
+                        newId = idSchema.createId(chunk.id, objectId);
+                        return returnValue;
+                    }
                 }
             }
         }
@@ -282,9 +241,9 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             }
             boolean notCurrentChunk = chunk != currentChunk;
             int reusableId = chunk.remove(id, notCurrentChunk);
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
                 LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                                 , "Freeing id=" + idSchema.idToString(id)
                                         + " > reusableId=" + idSchema.idToString(reusableId)
                                         + " having current " + currentChunk
@@ -310,6 +269,10 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
         public int currentChunkSize() {
             return currentChunk.size();
+        }
+
+        public IdStack getStack() {
+            return stack;
         }
 
         public ChunkedPool<T> getPool() {
