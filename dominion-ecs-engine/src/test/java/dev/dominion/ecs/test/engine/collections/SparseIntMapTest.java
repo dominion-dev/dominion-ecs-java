@@ -43,7 +43,6 @@ class SparseIntMapTest {
         Assertions.assertEquals(0, concurrentIntMap.get(0));
     }
 
-
     @Test
     public void concurrentPut() throws InterruptedException {
         final int capacity = 1 << 22;
@@ -72,7 +71,6 @@ class SparseIntMapTest {
         Assertions.assertEquals(capacity, concurrentIntMap.size());
     }
 
-
     @Test
     public void values() {
         SparseIntMap<Integer> concurrentIntMap = new SparseIntMap<>();
@@ -80,24 +78,5 @@ class SparseIntMapTest {
         concurrentIntMap.put(1, 11);
         Integer[] values = concurrentIntMap.values();
         Assertions.assertArrayEquals(new Integer[]{10, 11}, values);
-    }
-
-    @Test
-    public void sortedKeysHashCode() {
-        SparseIntMap<Integer> map1 = new SparseIntMap<>();
-        map1.put(1, 0);
-        map1.put(2, 0);
-        Assertions.assertEquals(8191 + 2, map1.sortedKeysHashCode());
-        map1.put(3, 0);
-        map1.put(4, 0);
-        map1.put(5, 0);
-
-        SparseIntMap<Integer> map2 = new SparseIntMap<>();
-        map2.put(5, 0);
-        map2.put(4, 0);
-        map2.put(3, 0);
-        map2.put(2, 0);
-        map2.put(1, 0);
-        Assertions.assertEquals(map2.sortedKeysHashCode(), map1.sortedKeysHashCode());
     }
 }

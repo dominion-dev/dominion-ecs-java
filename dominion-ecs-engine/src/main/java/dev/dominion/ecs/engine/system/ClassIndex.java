@@ -138,7 +138,7 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    public long longHashCode(Object[] objects) {
+    public HashKey getHashKey(Object[] objects) {
         boolean[] checkArray = new boolean[index + objects.length + 1];
         int min = Integer.MAX_VALUE, max = 0;
         for (int i = 0; i < objects.length; i++) {
@@ -151,13 +151,7 @@ public final class ClassIndex implements AutoCloseable {
             min = Math.min(value, min);
             max = Math.max(value, max);
         }
-        long hashCode = 0;
-        for (int i = min; i <= max; i++) {
-            if (checkArray[i]) {
-                hashCode = 31 * hashCode + i;
-            }
-        }
-        return hashCode;
+        return new HashKey(checkArray, min, max);
     }
 
     private int capHashCode(int hashCode, int hashBits) {

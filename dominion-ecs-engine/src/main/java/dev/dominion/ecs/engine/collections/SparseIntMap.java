@@ -5,14 +5,10 @@
 
 package dev.dominion.ecs.engine.collections;
 
-import dev.dominion.ecs.engine.system.HashCode;
-
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
@@ -27,8 +23,6 @@ public final class SparseIntMap<V> {
     private final StampedLock lock = new StampedLock();
     private final int capacity;
     private final AtomicInteger size = new AtomicInteger(0);
-    private final AtomicBoolean isKeysHashCodeValid = new AtomicBoolean(false);
-    private long keysHashCode;
 
     private SparseIntMap(int[] dense, int[] sparse, Object[] values) {
         this.dense = dense;
@@ -55,7 +49,6 @@ public final class SparseIntMap<V> {
         dense[i] = key;
         sparse[key] = i;
         values[i] = value;
-        isKeysHashCodeValid.set(false);
         return current;
     }
 
@@ -126,22 +119,6 @@ public final class SparseIntMap<V> {
                 .boxed();
     }
 
-    public void invalidateKeysHashCode() {
-        isKeysHashCodeValid.set(false);
-    }
-
-    public long sortedKeysHashCode() {
-        if (isKeysHashCodeValid.get()) {
-            return keysHashCode;
-        }
-        int length = size();
-        int[] keys = new int[length];
-        System.arraycopy(dense, 0, keys, 0, length);
-        Arrays.sort(keys);
-        keysHashCode = HashCode.longHashCode(keys);
-        isKeysHashCodeValid.set(true);
-        return keysHashCode;
-    }
 
     @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
     public V[] values() {
