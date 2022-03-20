@@ -1,7 +1,7 @@
 # <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion Benchmark
 
-Below is a list of the most significant benchmarks related to the current implementation of the API. More benchmarks
-will come as new API methods are implemented.
+Below is a list of the most significant benchmarks related to the current implementation of the API. 
+More benchmarks will come as new API methods are implemented in the Dominion Engine.
 
 These single-threaded benchmarks were run on a notebook, a MacBook Pro 2021 with M1 Pro 10 core, compiled and executed
 natively with JDK Azul-17 aarch64:
