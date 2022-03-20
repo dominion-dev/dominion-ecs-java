@@ -5,6 +5,9 @@
 
 package dev.dominion.ecs.engine.collections;
 
+/**
+ * Counting sort
+ */
 public final class IntArraySort {
 
     public static final int DEFAULT_CAPACITY = 1 << 8;
@@ -18,8 +21,21 @@ public final class IntArraySort {
     }
 
     public static int[] sort(int[] input, int start, int end, int capacity) {
-        boolean[] checkArray = new boolean[capacity];
+        int[] minMax = new int[2];
+        boolean[] checkArray = fetchCheckArray(input, start, end, capacity, minMax);
+        int min = minMax[0], max = minMax[1];
         int[] sorted = new int[end - start];
+        int j = 0;
+        for (int i = min; i <= max; i++) {
+            if (checkArray[i]) {
+                sorted[j++] = i;
+            }
+        }
+        return sorted;
+    }
+
+    public static boolean[] fetchCheckArray(int[] input, int start, int end, int capacity, int[] minMax) {
+        boolean[] checkArray = new boolean[capacity];
         int min = capacity, max = 0;
         for (int i = start; i < end; i++) {
             int value = input[i];
@@ -30,14 +46,11 @@ public final class IntArraySort {
             min = Math.min(value, min);
             max = Math.max(value, max);
         }
-        int j = 0;
-        for (int i = min; i <= max; i++) {
-            if (checkArray[i]) {
-                sorted[j++] = i;
-            }
-        }
-        return sorted;
+        minMax[0] = min;
+        minMax[1] = max;
+        return checkArray;
     }
+
 
     public static class DuplicateValueException extends IllegalArgumentException {
         public DuplicateValueException(int duplicateValue) {
