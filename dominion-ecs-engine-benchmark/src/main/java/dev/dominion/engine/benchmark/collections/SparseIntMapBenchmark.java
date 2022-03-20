@@ -5,8 +5,8 @@
 
 package dev.dominion.engine.benchmark.collections;
 
-import dev.dominion.ecs.engine.collections.SparseIntMap;
 import dev.dominion.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.collections.SparseIntMap;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 

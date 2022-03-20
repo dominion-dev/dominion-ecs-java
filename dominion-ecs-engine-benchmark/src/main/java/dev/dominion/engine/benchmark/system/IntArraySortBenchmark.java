@@ -5,8 +5,8 @@
 
 package dev.dominion.engine.benchmark.system;
 
-import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.collections.IntArraySort;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 
