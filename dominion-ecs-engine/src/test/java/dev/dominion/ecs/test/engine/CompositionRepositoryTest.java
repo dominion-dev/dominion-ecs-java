@@ -3,7 +3,7 @@ package dev.dominion.ecs.test.engine;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.system.HashCode;
+import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -66,9 +66,7 @@ class CompositionRepositoryTest {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             Assertions.assertTrue(compositionRepository.getNodeCache()
-                    .contains(HashCode.longHashCode(new int[]{
-                            compositionRepository.getClassIndex().getIndex(C1.class)
-                    })));
+                    .contains(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class))));
         }
     }
 
@@ -77,18 +75,18 @@ class CompositionRepositoryTest {
         try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
-            long longHashCode = HashCode.longHashCode(new int[]{
+            HashKey hashKey = new HashKey(new int[]{
                     compositionRepository.getClassIndex().getIndex(C1.class)
                     , compositionRepository.getClassIndex().getIndex(C2.class)
             });
             CompositionRepository.NodeCache nodeCache = compositionRepository.getNodeCache();
-            Assertions.assertTrue(nodeCache.contains(compositionRepository.getClassIndex().getIndex(C1.class)));
-            Assertions.assertTrue(nodeCache.contains(compositionRepository.getClassIndex().getIndex(C2.class)));
-            Assertions.assertTrue(nodeCache.contains(longHashCode));
-            CompositionRepository.Node nodeC1 = nodeCache.getNode(compositionRepository.getClassIndex().getIndex(C1.class));
-            CompositionRepository.Node nodeC2 = nodeCache.getNode(compositionRepository.getClassIndex().getIndex(C2.class));
-            Assertions.assertTrue(nodeC1.getLinkedNodes().containsKey(longHashCode));
-            Assertions.assertTrue(nodeC2.getLinkedNodes().containsKey(longHashCode));
+            Assertions.assertTrue(nodeCache.contains(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class))));
+            Assertions.assertTrue(nodeCache.contains(new HashKey(compositionRepository.getClassIndex().getIndex(C2.class))));
+            Assertions.assertTrue(nodeCache.contains(hashKey));
+            CompositionRepository.Node nodeC1 = nodeCache.getNode(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class)));
+            CompositionRepository.Node nodeC2 = nodeCache.getNode(new HashKey(compositionRepository.getClassIndex().getIndex(C2.class)));
+            Assertions.assertTrue(nodeC1.getLinkedNodes().containsKey(hashKey));
+            Assertions.assertTrue(nodeC2.getLinkedNodes().containsKey(hashKey));
         }
     }
 
@@ -147,9 +145,6 @@ class CompositionRepositoryTest {
     }
 
     record C3(int id) {
-    }
-
-    record C4(int id) {
     }
 
     @Nested

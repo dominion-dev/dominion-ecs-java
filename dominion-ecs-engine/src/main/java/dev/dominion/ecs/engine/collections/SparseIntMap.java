@@ -5,114 +5,155 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import java.lang.reflect.Array;
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.StampedLock;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-public interface SparseIntMap<V> {
+public final class SparseIntMap<V> {
+    private final int[] dense;
+    private final int[] sparse;
+    private final Object[] values;
+    private final StampedLock lock = new StampedLock();
+    private final int capacity;
+    private final AtomicInteger size = new AtomicInteger(0);
 
-    V put(int key, V value);
+    private SparseIntMap(int[] dense, int[] sparse, Object[] values) {
+        this.dense = dense;
+        this.sparse = sparse;
+        this.values = values;
+        capacity = values.length;
+    }
 
-    V get(int key);
+    public SparseIntMap() {
+        this(1 << 10);
+    }
 
-    Boolean contains(int key);
+    public SparseIntMap(int capacity) {
+        this(
+                new int[capacity],
+                new int[capacity],
+                new Object[capacity]
+        );
+    }
 
-    V computeIfAbsent(int key, Function<Integer, ? extends V> mappingFunction);
+    public V put(int key, V value) {
+        V current = get(key);
+        int i = current == null ? size.getAndIncrement() : sparse[key];
+        dense[i] = key;
+        sparse[key] = i;
+        values[i] = value;
+        return current;
+    }
 
-    int size();
+    public V get(int key) {
+        int i = sparse[key];
+        if (i > size.get() || dense[i] != key) return null;
+        return valueAt(i);
+    }
 
-    boolean isEmpty();
+    public Boolean contains(int key) {
+        int i = sparse[key];
+        return i <= size.get() && dense[i] == key;
+    }
 
-    Iterator<V> iterator();
-
-    Stream<V> stream();
-
-    Stream<Integer> keysStream();
-
-    void invalidateKeysHashCode();
-
-    long sortedKeysHashCode();
-
-    V[] values();
-
-    int getCapacity();
-
-    @SuppressWarnings("ClassCanBeRecord")
-    final class UnmodifiableView<V> implements SparseIntMap<V> {
-
-        private final SparseIntMap<V> subject;
-
-        private UnmodifiableView(SparseIntMap<V> subject) {
-            this.subject = subject;
+    public V computeIfAbsent(int key, Function<Integer, ? extends V> mappingFunction) {
+        V value;
+        long stamp = lock.tryOptimisticRead();
+        try {
+            for (; ; stamp = lock.writeLock()) {
+                if (stamp == 0L)
+                    continue;
+                // possibly racy reads
+                value = get(key);
+                if (!lock.validate(stamp))
+                    continue;
+                if (value != null)
+                    break;
+                stamp = lock.tryConvertToWriteLock(stamp);
+                if (stamp == 0L)
+                    continue;
+                // exclusive access
+                put(key, value = mappingFunction.apply(key));
+                break;
+            }
+            return value;
+        } finally {
+            if (StampedLock.isWriteLockStamp(stamp)) {
+                lock.unlockWrite(stamp);
+            }
         }
+    }
 
-        public static <T> SparseIntMap<T> wrap(SparseIntMap<T> subject) {
-            return new UnmodifiableView<>(subject);
-        }
+    public int size() {
+        return size.get();
+    }
 
-        @Override
-        public V put(int key, V value) {
-            throw new UnsupportedOperationException();
-        }
+    public boolean isEmpty() {
+        return size.get() == 0;
+    }
 
-        @Override
-        public V get(int key) {
+    @SuppressWarnings("unchecked")
+    private V valueAt(int index) {
+        return (V) values[index];
+    }
+
+    @SuppressWarnings("unchecked")
+    public Iterator<V> iterator() {
+        return new ObjectIterator<>((V[]) values, size.get());
+    }
+
+    public Stream<V> stream() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED), false);
+    }
+
+    public Stream<Integer> keysStream() {
+        return IntStream.of(dense)
+                .limit(size.get())
+                .boxed();
+    }
+
+
+    @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
+    public V[] values() {
+        if (isEmpty()) {
             return null;
         }
+        int length = size.get();
+        V[] target = (V[]) Array.newInstance(values[0].getClass(), length);
+        System.arraycopy(values, 0, target, 0, length);
+        return target;
+    }
 
-        @Override
-        public Boolean contains(int key) {
-            return null;
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public static final class ObjectIterator<V> implements Iterator<V> {
+
+        private final V[] data;
+        private final int limit;
+        int next = 0;
+
+        ObjectIterator(V[] data, int limit) {
+            this.data = data;
+            this.limit = limit;
         }
 
         @Override
-        public V computeIfAbsent(int key, Function<Integer, ? extends V> mappingFunction) {
-            throw new UnsupportedOperationException();
+        public boolean hasNext() {
+            return next < limit;
         }
 
         @Override
-        public int size() {
-            return subject.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return subject.isEmpty();
-        }
-
-        @Override
-        public Iterator<V> iterator() {
-            return subject.iterator();
-        }
-
-        @Override
-        public Stream<V> stream() {
-            return subject.stream();
-        }
-
-        @Override
-        public Stream<Integer> keysStream() {
-            return subject.keysStream();
-        }
-
-        @Override
-        public void invalidateKeysHashCode() {
-            subject.invalidateKeysHashCode();
-        }
-
-        @Override
-        public long sortedKeysHashCode() {
-            return subject.sortedKeysHashCode();
-        }
-
-        @Override
-        public V[] values() {
-            return subject.values();
-        }
-
-        @Override
-        public int getCapacity() {
-            return subject.getCapacity();
+        public V next() {
+            return data[next++];
         }
     }
 }

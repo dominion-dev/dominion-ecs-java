@@ -16,7 +16,7 @@ import java.util.concurrent.locks.StampedLock;
 public final class ObjectArrayPool {
     public static final int INITIAL_CAPACITY = 1 << 10;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    private final SparseIntMap<Stack> arraysByLengthMap = new ConcurrentIntMap<>();
+    private final SparseIntMap<Stack> arraysByLengthMap = new SparseIntMap<>();
     private final LoggingSystem.Context loggingContext;
 
     public ObjectArrayPool(LoggingSystem.Context loggingContext) {

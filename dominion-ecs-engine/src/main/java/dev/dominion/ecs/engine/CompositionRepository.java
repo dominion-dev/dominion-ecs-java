@@ -8,11 +8,10 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.collections.IntArraySort;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.HashCode;
+import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.*;
@@ -73,30 +72,23 @@ public final class CompositionRepository implements AutoCloseable {
                 return root.composition;
             case 1:
                 Class<?> componentType = components[0].getClass();
-                Node node = nodeCache.getNode(classIndex.getIndex(componentType));
+                Node node = nodeCache.getNode(new HashKey(classIndex.getIndex(componentType)));
                 if (node == null) {
-                    int key = classIndex.getIndexOrAddClass(componentType);
+                    HashKey key = new HashKey(classIndex.getIndexOrAddClass(componentType));
                     node = nodeCache.getNode(key);
                     if (node == null) {
                         node = nodeCache.getOrCreateNode(key, componentType);
                     }
                 } else {
                     // node may not yet be connected to itself
-                    node.linkNode(classIndex.getIndex(componentType), node);
+                    node.linkNode(new HashKey(classIndex.getIndex(componentType)), node);
                 }
                 return getNodeComposition(node);
             default:
-                long hashCode = classIndex.longHashCode(components);
-                node = nodeCache.getNode(hashCode);
+                HashKey hashKey = classIndex.getHashKey(components);
+                node = nodeCache.getNode(hashKey);
                 if (node == null) {
-                    hashCode = HashCode.longHashCode(
-                            IntArraySort.sort(classIndex.getIndexOrAddClassBatch(components)
-                                    , classIndex.size() + 1)
-                    );
-                    node = nodeCache.getNode(hashCode);
-                }
-                if (node == null) {
-                    node = nodeCache.getOrCreateNode(hashCode, getComponentTypes(components));
+                    node = nodeCache.getOrCreateNode(hashKey, getComponentTypes(components));
                 }
                 return getNodeComposition(node);
         }
@@ -209,12 +201,12 @@ public final class CompositionRepository implements AutoCloseable {
             case 0:
                 return null;
             case 1:
-                Node node = nodeCache.getNode(classIndex.getIndex(componentTypes[0]));
+                Node node = nodeCache.getNode(new HashKey(classIndex.getIndex(componentTypes[0])));
                 return node == null ? null : node.linkedNodes.values();
             default:
-                Map<Long, Node> currentCompositions = null;
+                Map<HashKey, Node> currentCompositions = null;
                 for (int i = 0; i < componentTypes.length; i++) {
-                    node = nodeCache.getNode(classIndex.getIndex(componentTypes[i]));
+                    node = nodeCache.getNode(new HashKey(classIndex.getIndex(componentTypes[i])));
                     if (node == null) {
                         continue;
                     }
@@ -228,9 +220,9 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     @SuppressWarnings("Java8CollectionRemoveIf")
-    private Map<Long, Node> retainAll(Map<Long, Node> subject, Map<Long, Node> other) {
-        Set<Long> longSet = subject.keySet();
-        Iterator<Long> iterator = longSet.iterator();
+    private Map<HashKey, Node> retainAll(Map<HashKey, Node> subject, Map<HashKey, Node> other) {
+        Set<HashKey> longSet = subject.keySet();
+        Iterator<HashKey> iterator = longSet.iterator();
         while (iterator.hasNext()) {
             if (!other.containsKey(iterator.next())) {
                 iterator.remove();
@@ -259,15 +251,15 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public final class NodeCache {
-        private final Map<Long, Node> data = new ConcurrentHashMap<>();
+        private final Map<HashKey, Node> data = new ConcurrentHashMap<>();
 
         @SuppressWarnings("ForLoopReplaceableByForEach")
-        public Node getOrCreateNode(long key, Class<?>... componentTypes) {
+        public Node getOrCreateNode(HashKey key, Class<?>... componentTypes) {
             Node node = data.computeIfAbsent(key, k -> new Node(componentTypes));
             if (componentTypes.length > 1) {
                 for (int i = 0; i < componentTypes.length; i++) {
                     Class<?> componentType = componentTypes[i];
-                    long typeKey = classIndex.getIndex(componentType);
+                    HashKey typeKey = new HashKey(classIndex.getIndex(componentType));
                     Node singleTypeNode = data.computeIfAbsent(typeKey, k -> new Node(componentType));
                     singleTypeNode.linkNode(key, node);
                 }
@@ -278,11 +270,11 @@ public final class CompositionRepository implements AutoCloseable {
             return node;
         }
 
-        public Node getNode(long key) {
+        public Node getNode(HashKey key) {
             return data.get(key);
         }
 
-        public boolean contains(long key) {
+        public boolean contains(HashKey key) {
             return data.containsKey(key);
         }
 
@@ -293,7 +285,7 @@ public final class CompositionRepository implements AutoCloseable {
 
     public final class Node {
         private final StampedLock lock = new StampedLock();
-        private final Map<Long, Node> linkedNodes = new ConcurrentHashMap<>();
+        private final Map<HashKey, Node> linkedNodes = new ConcurrentHashMap<>();
         private final Class<?>[] componentTypes;
         private Composition composition;
 
@@ -307,7 +299,7 @@ public final class CompositionRepository implements AutoCloseable {
             }
         }
 
-        public void linkNode(long key, Node node) {
+        public void linkNode(HashKey key, Node node) {
             linkedNodes.putIfAbsent(key, node);
         }
 
@@ -343,11 +335,11 @@ public final class CompositionRepository implements AutoCloseable {
             return composition;
         }
 
-        public Map<Long, Node> getLinkedNodes() {
+        public Map<HashKey, Node> getLinkedNodes() {
             return Collections.unmodifiableMap(linkedNodes);
         }
 
-        public Map<Long, Node> copyLinkedNodeMap() {
+        public Map<HashKey, Node> copyLinkedNodeMap() {
             return new HashMap<>(linkedNodes);
         }
 
@@ -364,5 +356,6 @@ public final class CompositionRepository implements AutoCloseable {
 //                    + ", links=" + linkedNodes
                     + "}";
         }
+
     }
 }

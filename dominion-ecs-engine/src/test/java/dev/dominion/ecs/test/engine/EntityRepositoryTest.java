@@ -154,14 +154,14 @@ class EntityRepositoryTest {
             Assertions.assertNotNull(iterator);
             Assertions.assertTrue(iterator.hasNext());
             var next = iterator.next();
-            Assertions.assertEquals(1, next.comp1().id);
-            Assertions.assertEquals(2, next.comp2().id);
-            Assertions.assertEquals(entity1, next.entity());
-            Assertions.assertTrue(iterator.hasNext());
-            next = iterator.next();
+            Assertions.assertEquals(entity2, next.entity());
             Assertions.assertEquals(3, next.comp1().id);
             Assertions.assertEquals(4, next.comp2().id);
-            Assertions.assertEquals(entity2, next.entity());
+            Assertions.assertTrue(iterator.hasNext());
+            next = iterator.next();
+            Assertions.assertEquals(entity1, next.entity());
+            Assertions.assertEquals(1, next.comp1().id);
+            Assertions.assertEquals(2, next.comp2().id);
 
             var results2 = entityRepository.findComponents(C2.class, C3.class);
             var iterator2 = results2.iterator();
