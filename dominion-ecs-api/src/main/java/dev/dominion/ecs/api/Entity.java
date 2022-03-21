@@ -17,9 +17,9 @@ public interface Entity {
 
     boolean contains(Object component);
 
-    <S extends Enum<S>> void setState(S state);
+    <S extends Enum<S>> Entity setState(S state);
 
     boolean isEnabled();
 
-    void setEnabled(boolean enabled);
+    Entity setEnabled(boolean enabled);
 }

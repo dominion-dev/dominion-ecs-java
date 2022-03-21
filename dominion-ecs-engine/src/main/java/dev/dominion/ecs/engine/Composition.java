@@ -9,9 +9,13 @@ import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.StampedLock;
 
 public final class Composition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
@@ -22,6 +26,8 @@ public final class Composition {
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final int[] componentIndex;
+    private final Map<HashKey, IntEntity> states = new ConcurrentHashMap<>();
+    private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
     public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
@@ -114,9 +120,9 @@ public final class Composition {
 
     public IntEntity attachEntity(IntEntity entity, Object... components) {
         entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
-            case 0 -> entity.setData(new IntEntity.Data(this, null));
-            case 1 -> entity.setData(new IntEntity.Data(this, components));
-            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components)));
+            case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData().stateRoot()));
+            case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData().stateRoot()));
+            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData().stateRoot()));
         });
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -141,6 +147,70 @@ public final class Composition {
             );
         }
         return entity;
+    }
+
+    public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
+        detachEntityState(entity);
+        if (state != null) {
+            attachEntityState(entity, state);
+        }
+        return entity;
+    }
+
+    private <S extends Enum<S>> boolean detachEntityState(IntEntity entity) {
+        HashKey key = entity.getData().stateRoot();
+        // if entity is root
+        if (key != null) {
+            // if alone
+            if (entity.getPrev() == null) {
+                if (states.remove(key) != null) {
+                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
+                    return true;
+                }
+            } else {
+                IntEntity prev = (IntEntity) entity.getPrev();
+                if (states.replace(key, entity, prev)) {
+                    prev.setNext(null);
+                    entity.setPrev(null);
+                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
+                    return true;
+                }
+            }
+        } else if (entity.getNext() != null) {
+            long stamp = stateLock.writeLock();
+            try {
+                IntEntity prev, next;
+                if ((next = (IntEntity) entity.getNext()) != null) {
+                    if ((prev = (IntEntity) entity.getPrev()) != null) {
+                        prev.setNext(next);
+                        next.setPrev(prev);
+                    } else {
+                        next.setPrev(null);
+                    }
+                }
+                return true;
+            } finally {
+                stateLock.unlockWrite(stamp);
+            }
+        }
+        return false;
+    }
+
+    private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
+        HashKey hashKey = calcHashKey(state);
+        if (states.putIfAbsent(hashKey, entity) != null) {
+            states.computeIfPresent(hashKey, (k, oldEntity) -> {
+                entity.setPrev(oldEntity);
+                oldEntity.setNext(entity);
+                return entity;
+            });
+        }
+    }
+
+    private <S extends Enum<S>> HashKey calcHashKey(S state) {
+        int cIndex = classIndex.getIndex(state.getClass());
+        cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
+        return new HashKey(new int[]{cIndex, state.ordinal()});
     }
 
     public Class<?>[] getComponentTypes() {

@@ -16,9 +16,12 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import static dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
+import static dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+
 public class ChunkedPoolBenchmark extends DominionBenchmark {
-    private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+    private static final IdSchema ID_SCHEMA =
+            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
@@ -154,7 +157,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         public void setupInvocation() {
             tenant = new ChunkedPool<Id>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
-                tenant.register(tenant.nextId(), new Id(i, -1, -1));
+                tenant.register(tenant.nextId(), new Id(i, null, null));
             }
         }
 
@@ -171,7 +174,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             tenant.close();
         }
 
-        public record Id(int id, int prevId, int nextId) implements ChunkedPool.Identifiable {
+        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
             @Override
             public int getId() {
                 return id;
@@ -183,23 +186,23 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public int getPrevId() {
-                return prevId;
+            public Identifiable getPrev() {
+                return prev;
             }
 
             @Override
-            public int setPrevId(int prevId) {
-                return prevId;
+            public Identifiable setPrev(Identifiable prev) {
+                return prev;
             }
 
             @Override
-            public int getNextId() {
-                return nextId;
+            public Identifiable getNext() {
+                return next;
             }
 
             @Override
-            public int setNextId(int nextId) {
-                return nextId;
+            public Identifiable setNext(Identifiable next) {
+                return next;
             }
         }
     }
