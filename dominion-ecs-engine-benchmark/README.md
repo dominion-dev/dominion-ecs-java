@@ -1,4 +1,4 @@
-# <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion Benchmark
+# <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion Engine Benchmark
 
 Below is a list of the most significant benchmarks related to the current implementation of the API. 
 More benchmarks will come as new API methods are implemented in the Dominion Engine.
