@@ -1,7 +1,7 @@
-# <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion Benchmark
+# <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion Engine Benchmark
 
-Below is a list of the most significant benchmarks related to the current implementation of the API. More benchmarks
-will come as new API methods are implemented.
+Below is a list of the most significant benchmarks related to the current implementation of the API. 
+More benchmarks will come as new API methods are implemented in the Dominion Engine.
 
 These single-threaded benchmarks were run on a notebook, a MacBook Pro 2021 with M1 Pro 10 core, compiled and executed
 natively with JDK Azul-17 aarch64:
@@ -55,8 +55,8 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **6** comp. |                              0.054 s                               |                              0.061 s                               |
 |                                            |                                                                    |                                                                    |
 
-
-Implementing good benchmarks for Java libraries is not an easy task.
+## Java and benchmarks
+Implementing good benchmarks for libraries in Java is not an easy task.
 
 There are several optimizations that the JVM might apply by running Java code in isolation, and the same optimizations
 might not apply when the code is running as part of a larger application. This means that the wrong benchmarks could
@@ -67,18 +67,15 @@ is a project developed by the OpenJDK organization - guys who really know what t
 the JVM from applying optimizations when you start micro-benchmarking your Java code.
 
 ## Dominion benchmarks with JMH
-
-To measure the actual performance of [Dominion](https://github.com/dominion-dev/dominion-ecs-java), this project
-provides several benchmark classes annotated with JMH, one for each Dominion engine class that is critical to
-performance.
+To measure the actual performance of Dominion, this project provides several benchmark classes annotated with JMH, one 
+for each Dominion engine class that is critical to performance.
 
 This means that you will find not only the benchmarks for the API interface implementation classes, but also the
 benchmarks for the internal data structure and algorithms that are in the critical path.
 
 If you want to run all the benchmarks on your local hardware, feel free to clone the project from git, build with Maven
-and a JDK 17 of your choice, and run the `DominionBenchmark.All` main
-class ([Dominion](https://github.com/dominion-dev/dominion-ecs-java) engine must be already built in your local
-repository).
+and a JDK 17 of your choice, and run the `DominionBenchmark.All` main class (Dominion engine must be already built in 
+your local repository).
 
 ## Support Dominion
 If you want to support Dominion project, consider giving it a **Star** ⭐️

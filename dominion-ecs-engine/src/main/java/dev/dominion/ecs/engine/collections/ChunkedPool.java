@@ -62,7 +62,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     private LinkedChunk<T> getChunk(int id) {
-        return chunks.get(idSchema.fetchChunkId(id));
+        return chunks.getPlain(idSchema.fetchChunkId(id));
     }
 
     public T getEntry(int id) {
@@ -78,7 +78,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     public int size() {
         int sum = 0;
         for (int i = 0; i < chunks.length(); i++) {
-            var chunk = chunks.get(i);
+            var chunk = chunks.getPlain(i);
             sum += chunk != null ? chunk.size() : 0;
         }
         return sum;
