@@ -7,11 +7,13 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 
 import java.util.concurrent.locks.StampedLock;
 
-public final class IntEntity implements Entity, ChunkedPool.Identifiable {
+public final class IntEntity implements Entity, Identifiable {
     private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
 
     static {
@@ -25,15 +27,15 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
     }
 
     private int id;
-    private int prevId = ChunkedPool.IdSchema.DETACHED_BIT;
-    private int nextId = ChunkedPool.IdSchema.DETACHED_BIT;
+    private IntEntity prev = null;
+    private IntEntity next = null;
     private volatile Data data;
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
     public IntEntity(int id, Composition composition, Object... components) {
         this.id = id;
-        data = new Data(composition, components);
+        data = new Data(composition, components, null);
     }
 
     @Override
@@ -47,23 +49,27 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
     }
 
     @Override
-    public int getPrevId() {
-        return prevId;
+    public Identifiable getPrev() {
+        return prev;
     }
 
     @Override
-    public int setPrevId(int prevId) {
-        return this.prevId = prevId;
+    public Identifiable setPrev(Identifiable prev) {
+        Identifiable old = this.prev;
+        this.prev = (IntEntity) prev;
+        return old;
     }
 
     @Override
-    public int getNextId() {
-        return nextId;
+    public Identifiable getNext() {
+        return next;
     }
 
     @Override
-    public int setNextId(int nextId) {
-        return this.nextId = nextId;
+    public Identifiable setNext(Identifiable next) {
+        Identifiable old = this.next;
+        this.next = (IntEntity) next;
+        return old;
     }
 
     public Composition getComposition() {
@@ -147,7 +153,8 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
     }
 
     @Override
-    public <S extends Enum<S>> void setState(S state) {
+    public <S extends Enum<S>> Entity setState(S state) {
+        return data.composition.setEntityState(this, state);
     }
 
     @Override
@@ -156,7 +163,7 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
+    public Entity setEnabled(boolean enabled) {
         createLock();
         long stamp = lock.writeLock();
         try {
@@ -165,6 +172,7 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
             } else if (!enabled && isEnabled()) {
                 data.composition.detachEntity(this);
             }
+            return this;
         } finally {
             lock.unlockWrite(stamp);
         }
@@ -207,15 +215,16 @@ public final class IntEntity implements Entity, ChunkedPool.Identifiable {
 
     @Override
     public String toString() {
-        ChunkedPool.IdSchema idSchema = data.composition.getRepository().getIdSchema();
+        ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
         return "Entity={" +
                 "id=" + idSchema.idToString(id) +
                 ", " + data.composition +
-                ", prevId=" + idSchema.idToString(prevId) +
-                ", nextId=" + idSchema.idToString(nextId) +
+                ", stateRootKey=" + data.stateRoot +
+                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
+                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
                 '}';
     }
 
-    public record Data(Composition composition, Object[] components) {
+    public record Data(Composition composition, Object[] components, HashKey stateRoot) {
     }
 }

@@ -64,17 +64,17 @@ public class CompositionBenchmark extends DominionBenchmark {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        composition2 = new Composition(null, null, null, classIndex
+        composition2 = new Composition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C3.class
         );
-        composition4 = new Composition(null, null, null, classIndex
+        composition4 = new Composition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C2.class
                 , C4.class
                 , C6.class
                 , C7.class
         );
-        composition8 = new Composition(null, null, null, classIndex
+        composition8 = new Composition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
@@ -121,7 +121,7 @@ public class CompositionBenchmark extends DominionBenchmark {
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
-            composition = new Composition(null, tenant, null, classIndex, LoggingSystem.Context.TEST, C1.class);
+            composition = new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
                 composition.createEntity(c1);

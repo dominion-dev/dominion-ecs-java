@@ -58,7 +58,7 @@ public final class CompositionRepository implements AutoCloseable {
         pool = new ChunkedPool<>(idSchema, loggingContext);
         root = new Node();
         arrayPool = new ObjectArrayPool(loggingContext);
-        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, loggingContext);
+        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
@@ -320,7 +320,8 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(CompositionRepository.this, pool.newTenant(), arrayPool, classIndex, loggingContext, componentTypes);
+                    value = composition = new Composition(CompositionRepository.this, pool.newTenant()
+                            , arrayPool, classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
                 return value;

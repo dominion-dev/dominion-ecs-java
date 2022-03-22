@@ -2,6 +2,7 @@ package dev.dominion.ecs.test.engine.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
@@ -126,7 +127,7 @@ class ChunkedPoolTest {
             try (ChunkedPool.Tenant<Id> tenant = new ChunkedPool<Id>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST).newTenant()) {
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
-                    tenant.register(nextId, new Id(i, -1, -1));
+                    tenant.register(nextId, new Id(i, null, null));
                 }
                 Iterator<Id> iterator = tenant.iterator();
                 int i = 0;
@@ -137,7 +138,7 @@ class ChunkedPoolTest {
             }
         }
 
-        public record Id(int id, int prevId, int nextId) implements ChunkedPool.Identifiable {
+        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
             @Override
             public int getId() {
                 return id;
@@ -149,23 +150,23 @@ class ChunkedPoolTest {
             }
 
             @Override
-            public int getPrevId() {
-                return prevId;
+            public Identifiable getPrev() {
+                return prev;
             }
 
             @Override
-            public int setPrevId(int prevId) {
-                return prevId;
+            public Identifiable setPrev(Identifiable prev) {
+                return prev;
             }
 
             @Override
-            public int getNextId() {
-                return nextId;
+            public Identifiable getNext() {
+                return next;
             }
 
             @Override
-            public int setNextId(int nextId) {
-                return nextId;
+            public Identifiable setNext(Identifiable next) {
+                return next;
             }
         }
     }
