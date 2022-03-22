@@ -215,10 +215,11 @@ public final class IntEntity implements Entity, Identifiable {
 
     @Override
     public String toString() {
-        ChunkedPool.IdSchema idSchema = data.composition.getRepository().getIdSchema();
+        ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
         return "Entity={" +
                 "id=" + idSchema.idToString(id) +
                 ", " + data.composition +
+                ", stateRootKey=" + data.stateRoot +
                 ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
                 ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
                 '}';

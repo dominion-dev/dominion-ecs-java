@@ -52,4 +52,11 @@ public final class HashKey {
     public int hashCode() {
         return (int) value;
     }
+
+    @Override
+    public String toString() {
+        return "|" + value + ":"
+                + length + ":"
+                + last + "|";
+    }
 }

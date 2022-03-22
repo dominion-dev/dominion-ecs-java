@@ -7,11 +7,13 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
+import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,18 +27,20 @@ public final class Composition {
     private final ChunkedPool.Tenant<IntEntity> tenant;
     private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
+    private final IdSchema idSchema;
     private final int[] componentIndex;
     private final Map<HashKey, IntEntity> states = new ConcurrentHashMap<>();
     private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
     public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
-            , ObjectArrayPool arrayPool, ClassIndex classIndex, LoggingSystem.Context loggingContext
+            , ObjectArrayPool arrayPool, ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
         this.arrayPool = arrayPool;
         this.classIndex = classIndex;
+        this.idSchema = idSchema;
         this.componentTypes = componentTypes;
         this.loggingContext = loggingContext;
         if (isMultiComponent()) {
@@ -52,20 +56,6 @@ public final class Composition {
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Creating " + this)
             );
-        }
-    }
-
-    @Override
-    public String toString() {
-        int iMax = componentTypes.length - 1;
-        if (iMax == -1)
-            return "Composition=[]";
-        StringBuilder b = new StringBuilder("Composition=[");
-        for (int i = 0; ; i++) {
-            b.append(componentTypes[i].getSimpleName());
-            if (i == iMax)
-                return b.append(']').toString();
-            b.append(", ");
         }
     }
 
@@ -150,7 +140,13 @@ public final class Composition {
     }
 
     public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
-        detachEntityState(entity);
+        boolean detached = detachEntityState(entity);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Detaching state from " + entity + " : " + detached)
+            );
+        }
         if (state != null) {
             attachEntityState(entity, state);
         }
@@ -171,6 +167,7 @@ public final class Composition {
                 IntEntity prev = (IntEntity) entity.getPrev();
                 if (states.replace(key, entity, prev)) {
                     prev.setNext(null);
+                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData().stateRoot()));
                     entity.setPrev(null);
                     entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
@@ -188,6 +185,8 @@ public final class Composition {
                         next.setPrev(null);
                     }
                 }
+                entity.setPrev(null);
+                entity.setNext(null);
                 return true;
             } finally {
                 stateLock.unlockWrite(stamp);
@@ -202,12 +201,22 @@ public final class Composition {
             states.computeIfPresent(hashKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
                 oldEntity.setNext(entity);
+                oldEntity.setData(new IntEntity.Data(this, oldEntity.getComponents(), null));
                 return entity;
             });
         }
+        entity.setData(new IntEntity.Data(this, entity.getComponents(), hashKey));
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Attaching state "
+                                    + state.getClass().getSimpleName() + "." + state
+                                    + " to " + entity)
+            );
+        }
     }
 
-    private <S extends Enum<S>> HashKey calcHashKey(S state) {
+    public <S extends Enum<S>> HashKey calcHashKey(S state) {
         int cIndex = classIndex.getIndex(state.getClass());
         cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
         return new HashKey(new int[]{cIndex, state.ordinal()});
@@ -223,6 +232,28 @@ public final class Composition {
 
     public ChunkedPool.Tenant<IntEntity> getTenant() {
         return tenant;
+    }
+
+    public Map<HashKey, IntEntity> getStates() {
+        return Collections.unmodifiableMap(states);
+    }
+
+    public IdSchema getIdSchema() {
+        return idSchema;
+    }
+
+    @Override
+    public String toString() {
+        int iMax = componentTypes.length - 1;
+        if (iMax == -1)
+            return "Composition=[]";
+        StringBuilder b = new StringBuilder("Composition=[");
+        for (int i = 0; ; i++) {
+            b.append(componentTypes[i].getSimpleName());
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(", ");
+        }
     }
 
     public <T> Iterator<Results.Comp1<T>> select(Class<T> type) {
