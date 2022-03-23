@@ -6,44 +6,49 @@ More benchmarks will come as new API methods are implemented in the Dominion Eng
 These single-threaded benchmarks were run on a notebook, a MacBook Pro 2021 with M1 Pro 10 core, compiled and executed
 natively with JDK Azul-17 aarch64:
 
-| 1,000,000 Entities                              | Average Time |
-|:------------------------------------------------|:------------:|
-| **Create** entities with **no** component       |   0.018 s    |
-| **Create** entities with **1** component        |   0.036 s    |
-| **Create** entities with **2** components       |   0.048 s    |
-| **Create** entities with **4** components       |   0.060 s    |
-| **Create** entities with **8** components       |   0.080 s    |
-| **Create** entities with **16** components      |   0.122 s    |
-|                                                 |              |
-| **Delete** entities with **any** comp.count     |   0.029 s    |
-|                                                 |              |
-| **En/Disable** entities with **any** comp.count |   0.009 s    |
-|                                                 |              |
+| 1,000,000 Entities                                  | Average Time |
+|:----------------------------------------------------|:------------:|
+| **Create** entities with **no** component           |   0.018 s    |
+| **Create** entities with **1** component            |   0.036 s    |
+| **Create** entities with **2** components           |   0.048 s    |
+| **Create** entities with **4** components           |   0.060 s    |
+| **Create** entities with **8** components           |   0.080 s    |
+| **Create** entities with **16** components          |   0.122 s    |
+|                                                     |              |
+| **Delete** entities with **any** comp.count         |   0.029 s    |
+|                                                     |              |
+| **Enable/Disable** entities with **any** comp.count |   0.009 s    |
+|                                                     |              |
 
-| 1,000,000 Entities                     | Average Time |
-|----------------------------------------|:------------:|
-| **Add** to **1** component             |   0.088 s    |
-| **Add** to **2** components            |   0.095 s    |
-| **Add** to **4** components            |   0.105 s    |
-| **Add** to **8** components            |   0.160 s    |
-| **Add** to **16** components           |   0.180 s    |
-|                                        |              |
-| **Remove** from **1** component        |   0.046 s    |
-| **Remove** from **2** components       |   0.088 s    |
-| **Remove** from **4** components       |   0.106 s    |
-| **Remove** from **8** components       |   0.163 s    |
-| **Remove** from **16** components      |   0.166 s    |
-|                                        |              ||                                        |              |
-| **Has** with **1** component type      |   0.008 s    |
-| **Has** with **4** component types     |   0.012 s    |
-| **Has** with **8** component types     |   0.012 s    |
-| **Has** with **16** component types    |   0.012 s    |
-|                                        |              |
-| **Contains** with **1** component      |   0.009 s    |
-| **Contains** with **4** components     |   0.016 s    |
-| **Contains** with **8** components     |   0.017 s    |
-| **Contains** with **16** components    |   0.017 s    |
-|                                        |              |
+| 1,000,000 Entities                  | Average Time |
+|-------------------------------------|:------------:|
+| **Add** to **1** component          |   0.088 s    |
+| **Add** to **2** components         |   0.095 s    |
+| **Add** to **4** components         |   0.105 s    |
+| **Add** to **8** components         |   0.160 s    |
+| **Add** to **16** components        |   0.180 s    |
+|                                     |              |
+| **Remove** from **1** component     |   0.046 s    |
+| **Remove** from **2** components    |   0.088 s    |
+| **Remove** from **4** components    |   0.106 s    |
+| **Remove** from **8** components    |   0.163 s    |
+| **Remove** from **16** components   |   0.166 s    |
+|                                     |              ||                                        |              |
+| **SetState** with **1** component   |   0.037 s    |
+| **SetState** with **4** components  |   0.038 s    |
+| **SetState** with **8** components  |   0.039 s    |
+| **SetState** with **16** components |   0.040 s    |
+|                                     |              |
+| **Has** with **1** component type   |   0.008 s    |
+| **Has** with **4** component types  |   0.012 s    |
+| **Has** with **8** component types  |   0.012 s    |
+| **Has** with **16** component types |   0.012 s    |
+|                                     |              |
+| **Contains** with **1** component   |   0.009 s    |
+| **Contains** with **4** components  |   0.016 s    |
+| **Contains** with **8** components  |   0.017 s    |
+| **Contains** with **16** components |   0.017 s    |
+|                                     |              |
 
 | 10,000,000 Entities                        | Entities from <br/> Single _Composition_ <br/> - <br/>Average Time | Entities from <br/> More _Compositions_ <br/> - <br/> Average Time |
 |--------------------------------------------|:------------------------------------------------------------------:|:------------------------------------------------------------------:|
