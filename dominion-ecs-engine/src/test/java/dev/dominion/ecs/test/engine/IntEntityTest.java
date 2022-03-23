@@ -186,7 +186,7 @@ class IntEntityTest {
             Assertions.assertTrue(entity.isEnabled());
             Assertions.assertNull(entity.remove(c3));
             Assertions.assertTrue(entityRepository.findComponents(C1.class).iterator().hasNext());
-            entity.setEnabled(false);
+            Assertions.assertNotNull(entity.setEnabled(false));
             Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
             Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertFalse(entity.isEnabled());

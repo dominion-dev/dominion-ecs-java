@@ -11,6 +11,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class CompositionTest {
 
@@ -163,7 +167,45 @@ class CompositionTest {
             Assertions.assertNull(entity2.getData().stateRoot());
             Assertions.assertEquals(entity3, entity.getNext());
             Assertions.assertEquals(entity, entity3.getPrev());
+        }
+    }
 
+    @Test
+    void concurrentSetEntityState() throws InterruptedException {
+        int capacity = 1 << 20;
+        int threadCount = 8;
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        IntEntity[] entities = new IntEntity[capacity];
+        ClassIndex classIndex = new ClassIndex();
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+        try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
+            Composition composition =
+                    new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+            for (int i = 0; i < capacity; i++) {
+                entities[i] = composition.createEntity();
+            }
+            AtomicInteger counter = new AtomicInteger(0);
+            for (int i = 0; i < capacity; i++) {
+                executorService.execute(() -> {
+                    int idx = counter.getAndIncrement();
+                    composition.setEntityState(entities[idx], State1.ONE);
+                });
+            }
+            executorService.shutdown();
+            Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+
+            int count = 1;
+            IntEntity entity = composition.getStates().get(composition.calcHashKey(State1.ONE));
+            System.out.println(entity);
+            Assertions.assertEquals(composition.calcHashKey(State1.ONE), entity.getData().stateRoot());
+            IntEntity last = entity;
+            while ((entity = (IntEntity) entity.getPrev()) != null) {
+                Assertions.assertNull(entity.getData().stateRoot());
+                Assertions.assertEquals(last, entity.getNext());
+                last = entity;
+                count++;
+            }
+            Assertions.assertEquals(capacity, count);
         }
     }
 

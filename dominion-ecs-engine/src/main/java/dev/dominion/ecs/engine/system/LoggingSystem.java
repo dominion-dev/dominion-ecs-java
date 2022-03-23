@@ -103,6 +103,7 @@ public final class LoggingSystem {
     private static String fetchPomVersion() throws IOException {
         InputStream is = LoggingSystem.class.getClassLoader()
                 .getResourceAsStream(POM_PROPERTIES);
+        if (is == null) return "?";
         Properties properties = new Properties();
         properties.load(is);
         return properties.getProperty(REVISION);
