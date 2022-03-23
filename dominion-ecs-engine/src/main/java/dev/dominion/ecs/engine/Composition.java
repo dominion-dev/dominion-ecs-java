@@ -153,7 +153,7 @@ public final class Composition {
         return entity;
     }
 
-    private <S extends Enum<S>> boolean detachEntityState(IntEntity entity) {
+    private boolean detachEntityState(IntEntity entity) {
         HashKey key = entity.getData().stateRoot();
         // if entity is root
         if (key != null) {
@@ -197,15 +197,17 @@ public final class Composition {
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
         HashKey hashKey = calcHashKey(state);
-        if (states.putIfAbsent(hashKey, entity) != null) {
+        IntEntity prev = states.computeIfAbsent(hashKey
+                , k -> entity.setData(new IntEntity.Data(this, entity.getComponents(), k)));
+        if (prev != entity) {
             states.computeIfPresent(hashKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
+                entity.setData(new IntEntity.Data(this, entity.getComponents(), k));
                 oldEntity.setNext(entity);
                 oldEntity.setData(new IntEntity.Data(this, oldEntity.getComponents(), null));
                 return entity;
             });
         }
-        entity.setData(new IntEntity.Data(this, entity.getComponents(), hashKey));
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()

@@ -21,6 +21,10 @@ public class EntityBenchmark extends DominionBenchmark {
         );
     }
 
+    enum State1 {
+        ONE, TWO
+    }
+
     record C0(int id) {
     }
 
@@ -422,6 +426,85 @@ public class EntityBenchmark extends DominionBenchmark {
             for (int i = 0; i < size; i++) {
                 entities16[i].setEnabled(false);
                 bh.consume(entities16[i].isEnabled());
+            }
+        }
+
+        @TearDown(Level.Iteration)
+        public void tearDown() {
+            entityRepository.close();
+        }
+    }
+
+    public static class SetState extends DominionBenchmark {
+        EntityRepository entityRepository;
+        Entity[] entities01;
+        Entity[] entities04;
+        Entity[] entities08;
+        Entity[] entities16;
+        Object input01 = new C1(0);
+        Object[] input04 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+        };
+        Object[] input08 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C5(0), new C6(0), new C7(0), new C8(0)
+        };
+        Object[] input16 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C5(0), new C6(0), new C7(0), new C8(0),
+                new C9(0), new C10(0), new C11(0), new C12(0),
+                new C13(0), new C14(0), new C15(0), new C16(0)
+        };
+
+        @Param(value = {"1000000"})
+        int size;
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetState.class)}
+            );
+        }
+
+        @Setup(Level.Iteration)
+        public void setup() {
+            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            entities01 = new Entity[size];
+            entities04 = new Entity[size];
+            entities08 = new Entity[size];
+            entities16 = new Entity[size];
+            for (int i = 0; i < size; i++) {
+                entities01[i] = entityRepository.createEntity(input01);
+                entities04[i] = entityRepository.createEntity(input04);
+                entities08[i] = entityRepository.createEntity(input08);
+                entities16[i] = entityRepository.createEntity(input16);
+            }
+        }
+
+        @Benchmark
+        public void setStateTo01(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities01[i].setState(State1.ONE));
+            }
+        }
+
+        @Benchmark
+        public void setStateTo04(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities04[i].setState(State1.ONE));
+            }
+        }
+
+        @Benchmark
+        public void setStateTo08(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities08[i].setState(State1.ONE));
+            }
+        }
+
+        @Benchmark
+        public void setStateTo16(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities16[i].setState(State1.ONE));
             }
         }
 
