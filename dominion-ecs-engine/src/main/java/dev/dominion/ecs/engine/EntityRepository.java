@@ -13,12 +13,10 @@ import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.HashKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
@@ -200,7 +198,7 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public Stream<T> stream() {
-            return null;
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED), false);
         }
 
         @Override

@@ -272,9 +272,23 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             iterateWithStateImpl(bh);
         }
 
+        @Benchmark
+        public void stream(Blackhole bh) {
+            streamImpl(bh);
+        }
+
+        @Benchmark
+        public void streamWithState(Blackhole bh) {
+            streamWithStateImpl(bh);
+        }
+
         abstract void iterateImpl(Blackhole bh);
 
         abstract void iterateWithStateImpl(Blackhole bh);
+
+        abstract void streamImpl(Blackhole bh);
+
+        abstract void streamWithStateImpl(Blackhole bh);
 
         @TearDown()
         public void tearDown() {
@@ -318,6 +332,18 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             }
         }
 
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream = entityRepository.findComponents(C1.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class).withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
+        }
     }
 
     public static class FindComponents1FromMoreCompositions extends FindComponents1 {
@@ -375,6 +401,20 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp2());
             }
+        }
+
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class).withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
         }
     }
 
@@ -434,6 +474,20 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp3());
             }
+        }
+
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class).withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
         }
     }
 
@@ -495,6 +549,21 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp4());
             }
+        }
+
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class)
+                            .withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
         }
     }
 
@@ -560,6 +629,21 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                 bh.consume(iterator.next().comp5());
             }
         }
+
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class)
+                            .withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
+        }
     }
 
     public static class FindComponents5FromMoreCompositions extends FindComponents5 {
@@ -622,6 +706,21 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp6());
             }
+        }
+
+        @Override
+        public void streamImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).stream();
+            stream.forEach(bh::consume);
+        }
+
+        @Override
+        public void streamWithStateImpl(Blackhole bh) {
+            var stream =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
+                            .withState(State1.ONE).stream();
+            stream.forEach(bh::consume);
         }
     }
 
