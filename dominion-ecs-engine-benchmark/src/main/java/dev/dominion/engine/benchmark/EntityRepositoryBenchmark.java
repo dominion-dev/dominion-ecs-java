@@ -18,6 +18,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         );
     }
 
+    enum State1 {
+        ONE
+    }
+
     record C1(int id) {
     }
 
@@ -263,7 +267,14 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             iterateImpl(bh);
         }
 
+        @Benchmark
+        public void iterateWithState(Blackhole bh) {
+            iterateWithStateImpl(bh);
+        }
+
         abstract void iterateImpl(Blackhole bh);
+
+        abstract void iterateWithStateImpl(Blackhole bh);
 
         @TearDown()
         public void tearDown() {
@@ -286,7 +297,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             C1 comp = new C1(0);
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comp);
+                entityRepository.createEntity(comp).setState(State1.ONE);
             }
         }
 
@@ -297,6 +308,16 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                 bh.consume(iterator.next().comp());
             }
         }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class).withState(State1.ONE).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp());
+            }
+        }
+
     }
 
     public static class FindComponents1FromMoreCompositions extends FindComponents1 {
@@ -312,10 +333,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             Object[] comps2 = new Object[]{new C1(0), new C2(0)};
             C1 comp = new C1(0);
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comp);
+                entityRepository.createEntity(comp).setState(State1.ONE);
             }
         }
     }
@@ -335,13 +356,22 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             Object[] comps = new Object[]{new C1(0), new C2(0)};
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
         }
 
         @Override
         public void iterateImpl(Blackhole bh) {
             var iterator = entityRepository.findComponents(C1.class, C2.class).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp2());
+            }
+        }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class, C2.class).withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp2());
             }
@@ -361,10 +391,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             Object[] comps = new Object[]{new C1(0), new C2(0)};
             Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0)};
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
         }
     }
@@ -384,7 +414,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0)};
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
         }
 
@@ -392,6 +422,15 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void iterateImpl(Blackhole bh) {
             var iterator =
                     entityRepository.findComponents(C1.class, C2.class, C3.class).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp3());
+            }
+        }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class).withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp3());
             }
@@ -412,10 +451,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void setupImpl() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
         }
     }
@@ -435,7 +474,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
         }
 
@@ -443,6 +482,16 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void iterateImpl(Blackhole bh) {
             var iterator =
                     entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp4());
+            }
+        }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class)
+                            .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp4());
             }
@@ -463,10 +512,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void setupImpl() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
         }
     }
@@ -489,7 +538,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                     new C4(0), new C5(0)
             };
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
         }
 
@@ -497,6 +546,16 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void iterateImpl(Blackhole bh) {
             var iterator =
                     entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp5());
+            }
+        }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class)
+                            .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp5());
             }
@@ -516,10 +575,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0)};
             Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
         }
     }
@@ -542,7 +601,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                     new C4(0), new C5(0), new C6(0),
             };
             for (int i = 0; i < size; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
             }
         }
 
@@ -550,6 +609,16 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void iterateImpl(Blackhole bh) {
             var iterator =
                     entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator();
+            while (iterator.hasNext()) {
+                bh.consume(iterator.next().comp6());
+            }
+        }
+
+        @Override
+        public void iterateWithStateImpl(Blackhole bh) {
+            var iterator =
+                    entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
+                            .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp6());
             }
@@ -569,11 +638,11 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
             Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0), new C7(0)};
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps);
+                entityRepository.createEntity(comps).setState(State1.ONE);
 
             }
             for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2);
+                entityRepository.createEntity(comps2).setState(State1.ONE);
             }
         }
     }

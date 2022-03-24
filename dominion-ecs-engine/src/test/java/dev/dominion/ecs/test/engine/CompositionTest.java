@@ -209,6 +209,34 @@ class CompositionTest {
         }
     }
 
+    @Test
+    public void select1CompWithState() {
+        ClassIndex classIndex = new ClassIndex();
+        classIndex.addClass(C1.class);
+        ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+        try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
+            Composition composition = new Composition(null, tenant, null, classIndex, null
+                    , LoggingSystem.Context.VERBOSE_TEST
+                    , C1.class);
+            int capacity = 1 << 16;
+            for (int i = 0; i < capacity; i++) {
+                IntEntity entity = composition.createEntity(new C1(i));
+                composition.setEntityState(entity, State1.ONE);
+            }
+            IntEntity entity = composition.getStateRootEntity(Composition.calcHashKey(State1.ONE, classIndex));
+            Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class, new Composition.StateIterator(entity));
+            int count = 0;
+            IntEntity last = null;
+            while (iterator.hasNext()) {
+                entity = (IntEntity) iterator.next().entity();
+                Assertions.assertEquals(last, entity.getNext());
+                last = entity;
+                count++;
+            }
+            Assertions.assertEquals(capacity, count);
+        }
+    }
+
     enum State1 {
         ONE, TWO
     }
