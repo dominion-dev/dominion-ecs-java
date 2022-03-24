@@ -8,7 +8,7 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 - :rocket: **_FAST_** : Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
   as ECS for C, C++, and Rust -
-  see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmark).
+  see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmark/README.md).
 - 🤏 **_TINY_** : just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.

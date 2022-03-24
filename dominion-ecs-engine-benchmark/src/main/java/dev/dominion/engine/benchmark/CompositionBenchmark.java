@@ -130,7 +130,7 @@ public class CompositionBenchmark extends DominionBenchmark {
 
         @Benchmark
         public void iterate1Comp(Blackhole bh) {
-            var iterator = composition.select(C1.class);
+            var iterator = composition.select(C1.class, composition.getTenant().iterator());
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp());
             }

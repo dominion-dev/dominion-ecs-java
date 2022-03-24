@@ -42,6 +42,7 @@ public class DominionBenchmark {
                             , fetchBenchmarkName(EntityRepositoryBenchmark.FindComponents.class)
                             , fetchBenchmarkName(EntityBenchmark.Add.class)
                             , fetchBenchmarkName(EntityBenchmark.Remove.class)
+                            , fetchBenchmarkName(EntityBenchmark.SetState.class)
                             , fetchBenchmarkName(EntityBenchmark.SetEnabled.class)
                             , fetchBenchmarkName(EntityBenchmark.Has.class)
                             , fetchBenchmarkName(EntityBenchmark.Contains.class)
