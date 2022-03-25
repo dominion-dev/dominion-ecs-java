@@ -50,17 +50,17 @@ natively with JDK Azul-17 aarch64:
 | **Contains** with **16** components |   0.015 s    |
 |                                     |              |
 
-| 10,000,000 Entities from <br/>Single _Composition_ | Average Time | Selecting _State_<br/>Average Time |
-|----------------------------------------------------|:------------:|:----------------------------------:|
-| **Iterate** entities unpacking **1** comp.         |   0.030 s    |              0.053 s               |
-| **Iterate** entities unpacking **2** comp.         |   0.030 s    |              0.064 s               |
-| **Iterate** entities unpacking **3** comp.         |   0.030 s    |              0.045 s               |
-| **Iterate** entities unpacking **4** comp.         |   0.032 s    |              0.047 s               |
-| **Iterate** entities unpacking **5** comp.         |   0.035 s    |              0.050 s               |
-| **Iterate** entities unpacking **6** comp.         |   0.048 s    |              0.099 s               |
-|                                                    |              |                                    |
+| 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
+|-----------------------------------------------|:------------:|:----------------------------------:|
+| **Iterate** entities unpacking **1** comp.    |   0.030 s    |              0.053 s               |
+| **Iterate** entities unpacking **2** comp.    |   0.030 s    |              0.064 s               |
+| **Iterate** entities unpacking **3** comp.    |   0.030 s    |              0.045 s               |
+| **Iterate** entities unpacking **4** comp.    |   0.032 s    |              0.047 s               |
+| **Iterate** entities unpacking **5** comp.    |   0.035 s    |              0.050 s               |
+| **Iterate** entities unpacking **6** comp.    |   0.048 s    |              0.099 s               |
+|                                               |              |                                    |
 
-| 10,000,000 Entities from <br/>More _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
+| 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
 |--------------------------------------------------------|:------------:|:----------------------------------:|
 | **Iterate** entities unpacking **1** comp.             |   0.053 s    |              0.054 s               |
 | **Iterate** entities unpacking **2** comp.             |   0.046 s    |              0.045 s               |
@@ -70,17 +70,17 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **6** comp.             |   0.061 s    |              0.105 s               |
 |                                                        |              |                                    |
 
-| 10,000,000 Entities from <br/>Single _Composition_ | Average Time | Selecting _State_<br/>Average Time |
-|----------------------------------------------------|:------------:|:----------------------------------:|
-| **Stream** entities unpacking **1** comp.          |   0.051 s    |              0.049 s               |
-| **Stream** entities unpacking **2** comp.          |   0.057 s    |              0.052 s               |
-| **Stream** entities unpacking **3** comp.          |   0.065 s    |              0.059 s               |
-| **Stream** entities unpacking **4** comp.          |   0.072 s    |              0.067 s               |
-| **Stream** entities unpacking **5** comp.          |   0.084 s    |              0.078 s               |
-| **Stream** entities unpacking **6** comp.          |   0.105 s    |              0.102 s               |
-|                                                    |              |                                    |
+| 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
+|-----------------------------------------------|:------------:|:----------------------------------:|
+| **Stream** entities unpacking **1** comp.     |   0.051 s    |              0.049 s               |
+| **Stream** entities unpacking **2** comp.     |   0.057 s    |              0.052 s               |
+| **Stream** entities unpacking **3** comp.     |   0.065 s    |              0.059 s               |
+| **Stream** entities unpacking **4** comp.     |   0.072 s    |              0.067 s               |
+| **Stream** entities unpacking **5** comp.     |   0.084 s    |              0.078 s               |
+| **Stream** entities unpacking **6** comp.     |   0.105 s    |              0.102 s               |
+|                                               |              |                                    |
 
-| 10,000,000 Entities from <br/>More _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
+| 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
 |--------------------------------------------------------|:------------:|:----------------------------------:|
 | **Stream** entities unpacking **1** comp.              |   0.060 s    |              0.075 s               |
 | **Stream** entities unpacking **2** comp.              |   0.066 s    |              0.080 s               |
