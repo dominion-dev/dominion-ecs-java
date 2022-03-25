@@ -6,7 +6,7 @@ With a bunch of well-organized interfaces, the library is capable of providing a
 engine. This documentation will focus on these few interfaces.
 
 As per tradition, Java projects come with a standard Javadoc site to provide API documentation. Domination breaks
-tradition by putting all API documents into this README to provide seamless navigation within the repository.
+tradition by putting all API references into this README to provide seamless navigation within the repository.
 
 ## Support Dominion
 
