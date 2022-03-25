@@ -8,7 +8,7 @@ engine. This documentation will focus on these few interfaces.
 As per tradition, Java projects come with a standard Javadoc site for API documentation. Domination breaks tradition by
 putting all API references into this README to provide seamless navigation within the repository.
 
-# Package _dev.dominion.ecs.api_
+## Package _dev.dominion.ecs.api_
 
 | interface | description                                                                         |
 |-----------|-------------------------------------------------------------------------------------|
