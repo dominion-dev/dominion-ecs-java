@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.concurrent.locks.StampedLock;
 
 public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
@@ -161,7 +160,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private final AtomicReferenceArray<LinkedChunk<T>> chunks;
         private final AtomicInteger chunkIndex;
         private final IdSchema idSchema;
-        private final StampedLock lock = new StampedLock();
         private final IdStack stack;
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;

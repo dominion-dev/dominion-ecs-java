@@ -59,6 +59,12 @@ public final class Composition {
         }
     }
 
+    public static <S extends Enum<S>> HashKey calcHashKey(S state, ClassIndex classIndex) {
+        int cIndex = classIndex.getIndex(state.getClass());
+        cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
+        return new HashKey(new int[]{cIndex, state.ordinal()});
+    }
+
     public int length() {
         return componentTypes.length;
     }
@@ -196,7 +202,7 @@ public final class Composition {
     }
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
-        HashKey hashKey = calcHashKey(state);
+        HashKey hashKey = calcHashKey(state, classIndex);
         IntEntity prev = states.computeIfAbsent(hashKey
                 , k -> entity.setData(new IntEntity.Data(this, entity.getComponents(), k)));
         if (prev != entity) {
@@ -218,12 +224,6 @@ public final class Composition {
         }
     }
 
-    public <S extends Enum<S>> HashKey calcHashKey(S state) {
-        int cIndex = classIndex.getIndex(state.getClass());
-        cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
-        return new HashKey(new int[]{cIndex, state.ordinal()});
-    }
-
     public Class<?>[] getComponentTypes() {
         return componentTypes;
     }
@@ -238,6 +238,10 @@ public final class Composition {
 
     public Map<HashKey, IntEntity> getStates() {
         return Collections.unmodifiableMap(states);
+    }
+
+    public IntEntity getStateRootEntity(HashKey key) {
+        return states.get(key);
     }
 
     public IdSchema getIdSchema() {
@@ -258,46 +262,46 @@ public final class Composition {
         }
     }
 
-    public <T> Iterator<Results.Comp1<T>> select(Class<T> type) {
+    public <T> Iterator<Results.Comp1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
         int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
-        return new Comp1Iterator<>(idx, tenant.iterator(), this);
+        return new Comp1Iterator<>(idx, iterator, this);
     }
 
-    public <T1, T2> Iterator<Results.Comp2<T1, T2>> select(Class<T1> type1, Class<T2> type2) {
+    public <T1, T2> Iterator<Results.Comp2<T1, T2>> select(Class<T1> type1, Class<T2> type2, Iterator<IntEntity> iterator) {
         return new Comp2Iterator<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
-                tenant.iterator(), this);
+                iterator, this);
     }
 
-    public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+    public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Iterator<IntEntity> iterator) {
         return new Comp3Iterator<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
-                tenant.iterator(), this);
+                iterator, this);
     }
 
-    public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+    public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Iterator<IntEntity> iterator) {
         return new Comp4Iterator<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
                 fetchComponentIndex(type4),
-                tenant.iterator(), this);
+                iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5> Iterator<Results.Comp5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+    public <T1, T2, T3, T4, T5> Iterator<Results.Comp5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Iterator<IntEntity> iterator) {
         return new Comp5Iterator<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
                 fetchComponentIndex(type4),
                 fetchComponentIndex(type5),
-                tenant.iterator(), this);
+                iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5, T6> Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+    public <T1, T2, T3, T4, T5, T6> Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Iterator<IntEntity> iterator) {
         return new Comp6Iterator<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
@@ -305,9 +309,27 @@ public final class Composition {
                 fetchComponentIndex(type4),
                 fetchComponentIndex(type5),
                 fetchComponentIndex(type6),
-                tenant.iterator(), this);
+                iterator, this);
     }
 
+    public static class StateIterator implements Iterator<IntEntity> {
+        private IntEntity currentEntity;
+
+        public StateIterator(IntEntity rootEntity) {
+            currentEntity = new IntEntity(IdSchema.DETACHED_BIT, null);
+            currentEntity.setPrev(rootEntity);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return currentEntity.getPrev() != null;
+        }
+
+        @Override
+        public IntEntity next() {
+            return currentEntity = (IntEntity) currentEntity.getPrev();
+        }
+    }
 
     record Comp1Iterator<T>(int idx, Iterator<IntEntity> iterator,
                             Composition composition) implements Iterator<Results.Comp1<T>> {
