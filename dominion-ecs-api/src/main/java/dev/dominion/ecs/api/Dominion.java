@@ -75,8 +75,24 @@ public interface Dominion extends AutoCloseable {
      */
     boolean deleteEntity(Entity entity);
 
+    /**
+     * Retrieves the component of the specified type by finding all entities that have the component type
+     *
+     * @param type the component class
+     * @param <T>  the component type
+     * @return the query results
+     */
     <T> Results<Results.Comp1<T>> findComponents(Class<T> type);
 
+    /**
+     * Retrieves all components of the given types by finding all entities that match the set of component types
+     *
+     * @param type1 the first component class
+     * @param type2 the second component class
+     * @param <T1>  the first component type
+     * @param <T2>  the second component type
+     * @return the query results
+     */
     <T1, T2> Results<Results.Comp2<T1, T2>> findComponents(Class<T1> type1, Class<T2> type2);
 
     <T1, T2, T3> Results<Results.Comp3<T1, T2, T3>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3);
