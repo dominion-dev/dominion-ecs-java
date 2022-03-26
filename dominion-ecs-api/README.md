@@ -10,17 +10,17 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class                       | Description                                                                                         |
-|-----------------------------|-----------------------------------------------------------------------------------------------------|
-| [Dominion](#class-dominion) | An independent container for all ECS data.                                                          |
-| [Entity](#class-entity)     | The entity identifies a single item and is represented as a unique integer value within a Dominion. |
-| [Results](#class-results)   | The results of selecting entities that have a certain set of components and, optionally, a state.   |
+| Class                       | Description                                                                                                       |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion) | A Dominion is an independent container for all ECS data.                                                          |
+| [Entity](#class-entity)     | An Entity identifies a single item and is represented as a unique integer value within a Dominion.                |
+| [Results](#class-results)   | A Results contains the results of selecting entities that match set of components and, optionally, have a state.  |
 
 ### Class Dominion
 
-An independent container for all ECS data. The User Application can create more than one _Dominion_ with different
-names. It is the entry point for using the library and provides methods for creating, finding, and deleting items
-required by the user application.
+A Dominion is an independent container for all ECS data. The User Application can create more than one Dominion with
+different names. It is the entry point for using the library and provides methods for creating, finding, and deleting
+items required by the user application.
 
 | Method                                                                           | Description                                                                                               |
 |----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -34,11 +34,13 @@ required by the user application.
 
 ### Class Entity
 
-The entity identifies a single item and is represented as a unique integer value within a Dominion.
+An Entity identifies a single item and is represented as a unique integer value within a Dominion. Entities can contain
+zero or more components that are POJOs with no behavior and can change components dynamically. Entities can be disabled
+and re-enabled and can use a given Enum to optionally set a state.
 
 ### Class Results
 
-The results of selecting entities that have a certain set of components and, optionally, a state.
+A Results contains the results of selecting entities that match set of components and, optionally, have a state.
 
 ## Support Dominion
 

@@ -9,9 +9,7 @@ import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
- * An independent container for all ECS data. The User Application can create more than one _Dominion_ with different
- * names. It is the entry point for using the library and provides methods for creating, finding, and deleting items
- * required by the user application.
+ *
  *
  * @author Enrico Stara
  */
