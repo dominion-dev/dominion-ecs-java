@@ -6,15 +6,15 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## Features
 
-- :rocket: **_FAST_** : Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
+- :rocket: **_FAST_** > Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
   as ECS for C, C++, and Rust -
   see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmark/README.md).
-- 🤏 **_TINY_** : just a high-performance and high-concurrency Java library with a minimal footprint and **no
+- 🤏 **_TINY_** > Just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
-- :coffee: **_SIMPLE_** : Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
+- :coffee: **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
   readme alone will provide a complete usage documentation.
-- :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
+- :muscle: _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
   announce the availability of the new version.
 
 ## About Performance
@@ -61,8 +61,9 @@ With Dominion now installed in your local folder, you can first run the example 
 java -jar dominion-ecs-example/target/hello-dominion.jar
 ```
 
-Dominion first API documentation is now
-available [here](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md).
+Use the
+[Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
+as a reference to get started implementing your solution.
 
 ## Dominion Release Cycle
 
