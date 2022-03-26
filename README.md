@@ -17,10 +17,6 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 - :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
   announce the availability of the new version.
 
-Dominion is still in early stages :baby_bottle:. The API is not yet complete and not fully implemented, but every part
-already built comes with unit tests and benchmarks. There are currently no releases yet and first release is scheduled
-for the first quarter of 2022.
-
 ## About Performance
 
 Designing a high-performance and high-concurrency Java library is ~~a piece of cake~~ quite a challenge as the execution
@@ -47,21 +43,36 @@ actions:
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
+## Ok, enough blah blah blah... Show me some code!
+
 ## Getting Started
 
-Dominion has not yet been released. The API is still under development and not yet ready to share detailed
-documentation. The "how to" to get started with Dominion will come very soon, as soon as the first version is
-ready. [Join the Discord for updates!](https://discord.gg/BHMz3axqUG)
+In your local environment you must have already installed a JDK 17 (or newer) and Maven.
 
-In the meantime, you can easily clone the repository, create a local build of the project, and install it in your local
-Maven repository. In your local environment, you must have already installed a JDK 17 (of your choice) and Maven. Then,
-in the root folder of the cloned project, type the following command:
+Clone the repository by following the GitHub Clone instructions and then install with the following Maven command:
 
-`mvn clean install`
+```
+mvn clean install`
+```
 
-With a Dominion build now available in your local repository you may build and run
-the [Dominion benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark) to independently check the
-performance.
+With Dominion now installed in your local folder, you can first of all run the example code with the following commands:
+
+```
+java -jar dominion-ecs-example/target/hello-dominion.jar
+```
+
+## Dominion Release Cycle
+
+| Phase                  | Description                                                                                             |
+|------------------------|---------------------------------------------------------------------------------------------------------|
+| Preview                | Features are under heavy development and often have changing requirements and scope.                    |
+| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    |
+| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. |
+| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            |
+
+Dominion is now a _**Preview**_.
+
+[Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
 ## Support Dominion
 
