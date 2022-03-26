@@ -12,6 +12,8 @@ public class DominionTest {
 
     @Test
     void factoryCreate() {
+        Assertions.assertThrows(NoSuchElementException.class, Dominion::create);
+        Assertions.assertThrows(NoSuchElementException.class, () -> Dominion.create("test"));
         Assertions.assertThrows(NoSuchElementException.class, () -> Dominion.factory().create());
         Assertions.assertEquals(MockDominion.class, Dominion.factory("MockDominionFactory").create().getClass());
         Assertions.assertEquals("test", Dominion.factory("MockDominionFactory").create("test").getName());

@@ -8,12 +8,30 @@ package dev.dominion.ecs.api;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
+/**
+ * An independent container for all ECS data. The User Application can create more than one _Dominion_ with different
+ * names. It is the entry point for using the library and provides methods for creating, finding, and deleting items
+ * required by the user application.
+ *
+ * @author Enrico Stara
+ */
 public interface Dominion extends AutoCloseable {
 
+    /**
+     * Creates a new Dominion with an automatically assigned name
+     *
+     * @return a new Dominion
+     */
     static Dominion create() {
         return factory().create();
     }
 
+    /**
+     * Creates a new Dominion with the provided name
+     *
+     * @param name the name of the new Dominion
+     * @return a new Dominion
+     */
     static Dominion create(String name) {
         return factory().create(name);
     }
@@ -32,12 +50,29 @@ public interface Dominion extends AutoCloseable {
                 .get();
     }
 
+    /**
+     * Returns the Dominion name
+     *
+     * @return the name
+     */
     String getName();
 
+    /**
+     * Creates a new Entity by adding zero or more POJO components.
+     *
+     * @param components zero o more POJO components assigned to the new Entity.
+     * @return a new Entity
+     */
     Entity createEntity(Object... components);
 
     Entity createEntityAs(Entity prefab, Object... components);
 
+    /**
+     * Delete the entity by freeing the id and canceling the reference to all components, if any
+     *
+     * @param entity the Entity to be deleted
+     * @return false if the Entity has already been deleted
+     */
     boolean deleteEntity(Entity entity);
 
     <T> Results<Results.Comp1<T>> findComponents(Class<T> type);

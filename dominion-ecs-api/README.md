@@ -8,19 +8,31 @@ engine. This documentation will focus on these few interfaces.
 As per tradition, Java projects come with a standard Javadoc site for API documentation. Domination breaks tradition by
 putting all API references into this README to provide seamless navigation within the repository.
 
-## Package _dev.dominion.ecs.api_
+## Package dev.dominion.ecs.api
 
-| interface | description                                                                                        |
-|-----------|----------------------------------------------------------------------------------------------------|
-| Dominion  | An independent named container for all ECS data.                                                   |
-| Entity    | The entity identifies a single item and is represented as a unique integer value within a Dominion |
-| Results   | The results of selecting entities that have a certain set of components and, optionally, a state   |
+| Class        | Description                                                                                         |
+|--------------|-----------------------------------------------------------------------------------------------------|
+| **Dominion** | An independent container for all ECS data.                                                          |
+| **Entity**   | The entity identifies a single item and is represented as a unique integer value within a Dominion. |
+| **Results**  | The results of selecting entities that have a certain set of components and, optionally, a state.   |
+|              |                                                                                                     |
 
-### Interface _Dominion_
+### Class **Dominion**
 
-An independent named container for all ECS data. The User Application can create more than one _Dominion_ with different
+An independent container for all ECS data. The User Application can create more than one _Dominion_ with different
 names. It is the entry point for using the library and provides methods for creating, finding, and deleting items
 required by the user application.
+
+| Method                                                      | Description                                                  |
+|-------------------------------------------------------------|--------------------------------------------------------------|
+| static [Dominion](#class-dominion) create()                 | Creates a new Dominion with an automatically assigned name   |
+| static [Dominion](#class-dominion) create(String name)      | Creates a new Dominion with the provided name                |
+| String getName()                                            | Returns the Dominion name                                    |
+| [Entity](#class-entity) createEntity(Object... components); | Creates a new Entity by adding zero or more POJO components. |
+
+### Class Entity
+
+The entity identifies a single item and is represented as a unique integer value within a Dominion.
 
 ## Support Dominion
 
