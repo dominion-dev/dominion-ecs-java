@@ -52,14 +52,17 @@ In your local environment you must have already installed a JDK 17 (or newer) an
 Clone the repository by following the GitHub Clone instructions and then install with the following Maven command:
 
 ```
-mvn clean install`
+mvn clean install
 ```
 
-With Dominion now installed in your local folder, you can first of all run the example code with the following commands:
+With Dominion now installed in your local folder, you can first run the example code with the following commands:
 
 ```
 java -jar dominion-ecs-example/target/hello-dominion.jar
 ```
+
+Dominion first API documentation is now
+available [here](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md).
 
 ## Dominion Release Cycle
 
