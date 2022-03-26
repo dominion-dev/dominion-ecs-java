@@ -10,14 +10,13 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class        | Description                                                                                         |
-|--------------|-----------------------------------------------------------------------------------------------------|
-| **Dominion** | An independent container for all ECS data.                                                          |
-| **Entity**   | The entity identifies a single item and is represented as a unique integer value within a Dominion. |
-| **Results**  | The results of selecting entities that have a certain set of components and, optionally, a state.   |
-|              |                                                                                                     |
+| Class                       | Description                                                                                         |
+|-----------------------------|-----------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion) | An independent container for all ECS data.                                                          |
+| [Entity](#class-entity)     | The entity identifies a single item and is represented as a unique integer value within a Dominion. |
+| [Results](#class-results)   | The results of selecting entities that have a certain set of components and, optionally, a state.   |
 
-### Class **Dominion**
+### Class Dominion
 
 An independent container for all ECS data. The User Application can create more than one _Dominion_ with different
 names. It is the entry point for using the library and provides methods for creating, finding, and deleting items
@@ -33,6 +32,10 @@ required by the user application.
 ### Class Entity
 
 The entity identifies a single item and is represented as a unique integer value within a Dominion.
+
+### Class Results
+
+The results of selecting entities that have a certain set of components and, optionally, a state.
 
 ## Support Dominion
 
