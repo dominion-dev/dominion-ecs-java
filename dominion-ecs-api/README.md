@@ -10,11 +10,11 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class                       | Description                                                                                                       |
-|-----------------------------|-------------------------------------------------------------------------------------------------------------------|
-| [Dominion](#class-dominion) | A Dominion is an independent container for all ECS data.                                                          |
-| [Entity](#class-entity)     | An Entity identifies a single item and is represented as a unique integer value within a Dominion.                |
-| [Results](#class-results)   | A Results contains the results of selecting entities that match set of components and, optionally, have a state.  |
+| Class                       | Description                                                                                                        |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion) | A Dominion is an independent container for all ECS data.                                                           |
+| [Entity](#class-entity)     | An Entity identifies a single item and is represented as a unique integer value within a Dominion.                 |
+| [Results](#class-results)   | A Results contains the results of selecting entities that match a set of components and, optionally, have a state. |
 
 ### Class Dominion
 
@@ -40,7 +40,7 @@ and re-enabled and can use a given Enum to optionally set a state.
 
 ### Class Results
 
-A Results contains the results of selecting entities that match set of components and, optionally, have a state.
+A Results contains the results of selecting entities that match a set of components and, optionally, have a state.
 
 ## Support Dominion
 

@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- * A Results contains the results of selecting entities that match set of components and, optionally, have a state.
+ * A Results contains the results of selecting entities that match a set of components and, optionally, have a state.
  *
  * @param <T>
  */
