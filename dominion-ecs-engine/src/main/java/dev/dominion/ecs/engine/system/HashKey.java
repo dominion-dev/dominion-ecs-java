@@ -5,24 +5,42 @@
 
 package dev.dominion.ecs.engine.system;
 
+import java.util.Arrays;
+
+/**
+ * HashKey objects run in Dominion's critical path, better performance here is not just an option.
+ * The constructor with int[] assumes to receive a sorted array as parameter.
+ * The constructor with boolean[] always produces a counting-sorted int[].
+ * <p>
+ * In case of hashCode collision the equals() will compare the most significant byte of each data element.
+ * In the "equals" algorithm, because the HashKey data elements are sorted, the only critical byte collision you might
+ * have due to int down-casting can only occur in the last data element. For this reason, the "equals" method will check
+ * the "last" property to avoid any HashKey collision.
+ */
 public final class HashKey {
     private final long value;
-    private final int length;
     private final int last;
+    private final byte[] data;
 
     public HashKey(int value) {
         this.value = value;
-        length = 1;
         last = value;
+        data = null;
     }
 
+    /**
+     * @param array must be a sorted array.
+     */
     public HashKey(int[] array) {
         int result = 1;
-        for (int value : array) {
+        int length = array.length;
+        data = new byte[length];
+        for (int i = 0; i < length; i++) {
+            int value = array[i];
             result = result * 31 + value;
+            data[i] = (byte) value;
         }
         value = result;
-        length = array.length;
         last = array[length - 1];
     }
 
@@ -30,14 +48,14 @@ public final class HashKey {
         int result = 1;
         int idx = 0;
         int i = min;
+        data = new byte[((max - min) + 1)];
         for (; i <= max; i++) {
             if (checkArray[i]) {
                 result = result * 31 + i;
-                idx++;
+                data[idx++] = (byte) i;
             }
         }
         value = result;
-        length = idx;
         last = max;
     }
 
@@ -45,7 +63,7 @@ public final class HashKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return ((HashKey) o).length == length && ((HashKey) o).value == value && ((HashKey) o).last == last;
+        return ((HashKey) o).last == last && Arrays.equals(((HashKey) o).data, data);
     }
 
     @Override
@@ -56,7 +74,7 @@ public final class HashKey {
     @Override
     public String toString() {
         return "|" + value + ":"
-                + length + ":"
-                + last + "|";
+                + last + ":"
+                + Arrays.toString(data) + "|";
     }
 }
