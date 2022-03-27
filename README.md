@@ -63,7 +63,7 @@ java -jar dominion-ecs-example/target/hello-dominion.jar
 
 Use the
 [Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
-as a reference to get started implementing your solution.
+as a reference to get started implementing your first app.
 
 ## Dominion Release Cycle
 
@@ -74,7 +74,7 @@ as a reference to get started implementing your solution.
 | Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. |
 | Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            |
 
-Dominion is now a _**Preview**_.
+Dominion is now in _**Preview**_.
 
 [Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
