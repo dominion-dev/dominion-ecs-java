@@ -33,11 +33,11 @@ public final class HashKey {
         value = result;
     }
 
-    public HashKey(boolean[] checkArray, int min, int max) {
+    public HashKey(boolean[] checkArray, int min, int max, int length) {
         int result = 1;
         int idx = 0;
         int i = min;
-        data = new byte[((max - min) + 1)];
+        data = new byte[length];
         for (; i <= max; i++) {
             if (checkArray[i]) {
                 result = result * 31 + i;

@@ -151,7 +151,7 @@ public final class ClassIndex implements AutoCloseable {
             min = Math.min(value, min);
             max = Math.max(value, max);
         }
-        return new HashKey(checkArray, min, max);
+        return new HashKey(checkArray, min, max, objects.length);
     }
 
     private int capHashCode(int hashCode, int hashBits) {
