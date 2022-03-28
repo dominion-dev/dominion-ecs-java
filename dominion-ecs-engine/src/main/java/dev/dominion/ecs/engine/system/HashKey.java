@@ -9,28 +9,18 @@ import java.util.Arrays;
 
 /**
  * HashKey objects run in Dominion's critical path, better performance here is not just an option.
- * The constructor with int[] assumes to receive a sorted array as parameter.
- * The constructor with boolean[] always produces a counting-sorted int[].
- * <p>
- * In case of hashCode collision the equals() will compare the most significant byte of each data element.
- * In the "equals" algorithm, because the HashKey data elements are sorted, the only critical byte collision you might
- * have due to int down-casting can only occur in the last data element. For this reason, the "equals" method will check
- * the "last" property to avoid any HashKey collision.
+ * In case of an int hashCode collision, the equals() method will compare the long value of the HashKey and the
+ * most significant byte of each data element to keep the event of a HashKey collision statistically irrelevant.
  */
 public final class HashKey {
     private final long value;
-    private final int last;
     private final byte[] data;
 
     public HashKey(int value) {
         this.value = value;
-        last = value;
         data = null;
     }
 
-    /**
-     * @param array must be a sorted array.
-     */
     public HashKey(int[] array) {
         int result = 1;
         int length = array.length;
@@ -41,7 +31,6 @@ public final class HashKey {
             data[i] = (byte) value;
         }
         value = result;
-        last = array[length - 1];
     }
 
     public HashKey(boolean[] checkArray, int min, int max) {
@@ -56,14 +45,13 @@ public final class HashKey {
             }
         }
         value = result;
-        last = max;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return ((HashKey) o).last == last && Arrays.equals(((HashKey) o).data, data);
+        return Arrays.equals(((HashKey) o).data, data) && ((HashKey) o).value == value ;
     }
 
     @Override
@@ -74,7 +62,6 @@ public final class HashKey {
     @Override
     public String toString() {
         return "|" + value + ":"
-                + last + ":"
                 + Arrays.toString(data) + "|";
     }
 }

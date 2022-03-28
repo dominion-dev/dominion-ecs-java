@@ -22,7 +22,7 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     enum State1 {
-        ONE, TWO
+        ONE
     }
 
     record C0(int id) {
