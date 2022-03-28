@@ -128,16 +128,16 @@ class CompositionTest {
                     new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity();
             composition.setEntityState(entity, State1.ONE);
-            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcHashKey(State1.ONE, classIndex)));
+            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.ONE, classIndex)));
 
             composition.setEntityState(entity, State1.TWO);
-            Assertions.assertFalse(composition.getStates().containsKey(Composition.calcHashKey(State1.ONE, classIndex)));
-            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcHashKey(State1.TWO, classIndex)));
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity.getData().stateRoot());
+            Assertions.assertFalse(composition.getStates().containsKey(Composition.calcIndexKey(State1.ONE, classIndex)));
+            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.TWO, classIndex)));
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
 
             IntEntity entity2 = composition.createEntity();
             composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
             Assertions.assertEquals(entity, entity2.getPrev());
             Assertions.assertEquals(entity2, entity.getNext());
             Assertions.assertNull(entity.getData().stateRoot());
@@ -146,20 +146,20 @@ class CompositionTest {
             Assertions.assertNull(entity2.getData().stateRoot());
             Assertions.assertNull(entity2.getPrev());
             Assertions.assertNull(entity2.getNext());
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
 
             composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
             IntEntity entity3 = composition.createEntity();
             composition.setEntityState(entity3, State1.TWO);
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
             Assertions.assertNull(entity2.getData().stateRoot());
             Assertions.assertEquals(entity2, entity.getNext());
             Assertions.assertEquals(entity, entity2.getPrev());
             Assertions.assertEquals(entity3, entity2.getNext());
             Assertions.assertEquals(entity2, entity3.getPrev());
             Assertions.assertNull(entity3.getNext());
-            Assertions.assertEquals(Composition.calcHashKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
 
             composition.setEntityState(entity2, null);
             Assertions.assertNull(entity2.getPrev());
@@ -195,9 +195,9 @@ class CompositionTest {
             Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
 
             int count = 1;
-            IntEntity entity = composition.getStates().get(Composition.calcHashKey(State1.ONE, classIndex));
+            IntEntity entity = composition.getStates().get(Composition.calcIndexKey(State1.ONE, classIndex));
             System.out.println(entity);
-            Assertions.assertEquals(Composition.calcHashKey(State1.ONE, classIndex), entity.getData().stateRoot());
+            Assertions.assertEquals(Composition.calcIndexKey(State1.ONE, classIndex), entity.getData().stateRoot());
             IntEntity last = entity;
             while ((entity = (IntEntity) entity.getPrev()) != null) {
                 Assertions.assertNull(entity.getData().stateRoot());
@@ -223,7 +223,7 @@ class CompositionTest {
                 IntEntity entity = composition.createEntity(new C1(i));
                 composition.setEntityState(entity, State1.ONE);
             }
-            IntEntity entity = composition.getStateRootEntity(Composition.calcHashKey(State1.ONE, classIndex));
+            IntEntity entity = composition.getStateRootEntity(Composition.calcIndexKey(State1.ONE, classIndex));
             Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class, new Composition.StateIterator(entity));
             int count = 0;
             IntEntity last = null;

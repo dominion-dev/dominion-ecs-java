@@ -10,7 +10,7 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.HashKey;
+import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Collections;
@@ -29,7 +29,7 @@ public final class Composition {
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
-    private final Map<HashKey, IntEntity> states = new ConcurrentHashMap<>();
+    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
     private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
@@ -59,10 +59,10 @@ public final class Composition {
         }
     }
 
-    public static <S extends Enum<S>> HashKey calcHashKey(S state, ClassIndex classIndex) {
+    public static <S extends Enum<S>> IndexKey calcIndexKey(S state, ClassIndex classIndex) {
         int cIndex = classIndex.getIndex(state.getClass());
         cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
-        return new HashKey(new int[]{cIndex, state.ordinal()});
+        return new IndexKey(new int[]{cIndex, state.ordinal()});
     }
 
     public int length() {
@@ -160,7 +160,7 @@ public final class Composition {
     }
 
     private boolean detachEntityState(IntEntity entity) {
-        HashKey key = entity.getData().stateRoot();
+        IndexKey key = entity.getData().stateRoot();
         // if entity is root
         if (key != null) {
             // if alone
@@ -202,11 +202,11 @@ public final class Composition {
     }
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
-        HashKey hashKey = calcHashKey(state, classIndex);
-        IntEntity prev = states.computeIfAbsent(hashKey
+        IndexKey indexKey = calcIndexKey(state, classIndex);
+        IntEntity prev = states.computeIfAbsent(indexKey
                 , k -> entity.setData(new IntEntity.Data(this, entity.getComponents(), k)));
         if (prev != entity) {
-            states.computeIfPresent(hashKey, (k, oldEntity) -> {
+            states.computeIfPresent(indexKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
                 entity.setData(new IntEntity.Data(this, entity.getComponents(), k));
                 oldEntity.setNext(entity);
@@ -236,11 +236,11 @@ public final class Composition {
         return tenant;
     }
 
-    public Map<HashKey, IntEntity> getStates() {
+    public Map<IndexKey, IntEntity> getStates() {
         return Collections.unmodifiableMap(states);
     }
 
-    public IntEntity getStateRootEntity(HashKey key) {
+    public IntEntity getStateRootEntity(IndexKey key) {
         return states.get(key);
     }
 

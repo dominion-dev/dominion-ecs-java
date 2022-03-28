@@ -3,7 +3,7 @@ package dev.dominion.ecs.test.engine;
 import dev.dominion.ecs.engine.Composition;
 import dev.dominion.ecs.engine.CompositionRepository;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.system.HashKey;
+import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
@@ -66,7 +66,7 @@ class CompositionRepositoryTest {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             Assertions.assertTrue(compositionRepository.getNodeCache()
-                    .contains(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class))));
+                    .contains(new IndexKey(compositionRepository.getClassIndex().getIndex(C1.class))));
         }
     }
 
@@ -75,18 +75,18 @@ class CompositionRepositoryTest {
         try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             Composition composition = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
-            HashKey hashKey = new HashKey(new int[]{
+            IndexKey indexKey = new IndexKey(new int[]{
                     compositionRepository.getClassIndex().getIndex(C1.class)
                     , compositionRepository.getClassIndex().getIndex(C2.class)
             });
             CompositionRepository.NodeCache nodeCache = compositionRepository.getNodeCache();
-            Assertions.assertTrue(nodeCache.contains(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class))));
-            Assertions.assertTrue(nodeCache.contains(new HashKey(compositionRepository.getClassIndex().getIndex(C2.class))));
-            Assertions.assertTrue(nodeCache.contains(hashKey));
-            CompositionRepository.Node nodeC1 = nodeCache.getNode(new HashKey(compositionRepository.getClassIndex().getIndex(C1.class)));
-            CompositionRepository.Node nodeC2 = nodeCache.getNode(new HashKey(compositionRepository.getClassIndex().getIndex(C2.class)));
-            Assertions.assertTrue(nodeC1.getLinkedNodes().containsKey(hashKey));
-            Assertions.assertTrue(nodeC2.getLinkedNodes().containsKey(hashKey));
+            Assertions.assertTrue(nodeCache.contains(new IndexKey(compositionRepository.getClassIndex().getIndex(C1.class))));
+            Assertions.assertTrue(nodeCache.contains(new IndexKey(compositionRepository.getClassIndex().getIndex(C2.class))));
+            Assertions.assertTrue(nodeCache.contains(indexKey));
+            CompositionRepository.Node nodeC1 = nodeCache.getNode(new IndexKey(compositionRepository.getClassIndex().getIndex(C1.class)));
+            CompositionRepository.Node nodeC2 = nodeCache.getNode(new IndexKey(compositionRepository.getClassIndex().getIndex(C2.class)));
+            Assertions.assertTrue(nodeC1.getLinkedNodes().containsKey(indexKey));
+            Assertions.assertTrue(nodeC2.getLinkedNodes().containsKey(indexKey));
         }
     }
 

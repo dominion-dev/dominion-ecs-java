@@ -10,7 +10,7 @@ import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.HashKey;
+import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.*;
@@ -161,7 +161,7 @@ public final class EntityRepository implements Dominion {
     public static abstract class AbstractResults<T> implements Results<T> {
         private final ClassIndex classIndex;
         private final Collection<CompositionRepository.Node> nodes;
-        protected HashKey stateKey;
+        protected IndexKey stateKey;
 
         public AbstractResults(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes) {
             this.classIndex = classIndex;
@@ -192,7 +192,7 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public <S extends Enum<S>> Results<T> withState(S state) {
-            stateKey = Composition.calcHashKey(state, classIndex);
+            stateKey = Composition.calcIndexKey(state, classIndex);
             return this;
         }
 

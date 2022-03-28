@@ -8,20 +8,20 @@ package dev.dominion.ecs.engine.system;
 import java.util.Arrays;
 
 /**
- * HashKey objects run in Dominion's critical path, better performance here is not just an option.
- * In case of an int hashCode collision, the equals() method will compare the long value of the HashKey and the
- * most significant byte of each data element to keep the event of a HashKey collision statistically irrelevant.
+ * IndexKey objects run in Dominion's critical path, better performance here is not just an option.
+ * In case of an int hashCode collision, the equals() method will compare the long value of the IndexKey and the
+ * most significant byte of each data element to keep the event of a IndexKey collision statistically irrelevant.
  */
-public final class HashKey {
+public final class IndexKey {
     private final long value;
     private final byte[] data;
 
-    public HashKey(int value) {
+    public IndexKey(int value) {
         this.value = value;
         data = null;
     }
 
-    public HashKey(int[] array) {
+    public IndexKey(int[] array) {
         int result = 1;
         int length = array.length;
         data = new byte[length];
@@ -33,7 +33,7 @@ public final class HashKey {
         value = result;
     }
 
-    public HashKey(boolean[] checkArray, int min, int max, int length) {
+    public IndexKey(boolean[] checkArray, int min, int max, int length) {
         int result = 1;
         int idx = 0;
         int i = min;
@@ -51,7 +51,7 @@ public final class HashKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return Arrays.equals(((HashKey) o).data, data) && ((HashKey) o).value == value ;
+        return Arrays.equals(((IndexKey) o).data, data) && ((IndexKey) o).value == value;
     }
 
     @Override
