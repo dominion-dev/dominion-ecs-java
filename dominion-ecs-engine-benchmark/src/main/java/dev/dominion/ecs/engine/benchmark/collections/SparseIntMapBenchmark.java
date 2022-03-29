@@ -3,9 +3,9 @@
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
 
-package dev.dominion.engine.benchmark.collections;
+package dev.dominion.ecs.engine.benchmark.collections;
 
-import dev.dominion.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.benchmark.DominionBenchmark;
 import dev.dominion.ecs.engine.collections.SparseIntMap;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
