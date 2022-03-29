@@ -3,13 +3,13 @@
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
 
-package dev.dominion.ecs.engine.benchmark.collections;
+package dev.dominion.ecs.engine.benchmarks.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
-import dev.dominion.ecs.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 

@@ -1,4 +1,4 @@
-open module dev.dominion.ecs.benchmark {
+open module dev.dominion.ecs.engine.benchmarks {
     requires dev.dominion.ecs.api;
     requires dev.dominion.ecs.engine;
     requires jmh.core;

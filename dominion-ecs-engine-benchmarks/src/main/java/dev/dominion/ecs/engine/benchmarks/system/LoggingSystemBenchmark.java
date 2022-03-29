@@ -3,9 +3,9 @@
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
 
-package dev.dominion.ecs.engine.benchmark.system;
+package dev.dominion.ecs.engine.benchmarks.system;
 
-import dev.dominion.ecs.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.OutputTimeUnit;

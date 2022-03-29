@@ -12,7 +12,8 @@
     <modules>
         <module>dominion-ecs-api</module>
         <module>dominion-ecs-engine</module>
-        <module>dominion-ecs-engine-benchmark</module>
+        <module>dominion-ecs-engine-benchmarks</module>
+<!--        <module>dominion-ecs-examples</module>-->
     </modules>
 
     <properties>
