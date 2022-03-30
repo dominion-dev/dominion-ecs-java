@@ -3,9 +3,9 @@
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
 
-package dev.dominion.engine.benchmark.system;
+package dev.dominion.ecs.engine.benchmarks.system;
 
-import dev.dominion.engine.benchmark.DominionBenchmark;
+import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;

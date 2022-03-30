@@ -12,11 +12,12 @@
     <modules>
         <module>dominion-ecs-api</module>
         <module>dominion-ecs-engine</module>
-        <module>dominion-ecs-engine-benchmark</module>
+        <module>dominion-ecs-engine-benchmarks</module>
+<!--        <module>dominion-ecs-examples</module>-->
     </modules>
 
     <properties>
-        <revision>0.1.0-SNAPSHOT</revision>
+        <revision>0.4-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

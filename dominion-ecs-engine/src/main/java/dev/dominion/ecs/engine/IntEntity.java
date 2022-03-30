@@ -8,7 +8,7 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
-import dev.dominion.ecs.engine.system.HashKey;
+import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
 
 import java.util.concurrent.locks.StampedLock;
@@ -225,6 +225,6 @@ public final class IntEntity implements Entity, Identifiable {
                 '}';
     }
 
-    public record Data(Composition composition, Object[] components, HashKey stateRoot) {
+    public record Data(Composition composition, Object[] components, IndexKey stateRoot) {
     }
 }

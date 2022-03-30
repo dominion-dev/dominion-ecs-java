@@ -1,4 +1,4 @@
-# <img src="dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
+# <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
@@ -6,20 +6,16 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## Features
 
-- :rocket: **_FAST_** : Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
+- :rocket: **_FAST_** > Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
   as ECS for C, C++, and Rust -
   see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmark/README.md).
-- 🤏 **_TINY_** : just a high-performance and high-concurrency Java library with a minimal footprint and **no
+- 🤏 **_TINY_** > Just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
-- :coffee: **_SIMPLE_** : Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
+- :coffee: **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
   readme alone will provide a complete usage documentation.
-- :muscle: **_with SUPPORT_** : [join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
+- :muscle: _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
   announce the availability of the new version.
-
-Dominion is still in early stages :baby_bottle:. The API is not yet complete and not fully implemented, but every part
-already built comes with unit tests and benchmarks. There are currently no releases yet and first release is scheduled
-for the first quarter of 2022.
 
 ## About Performance
 
@@ -47,21 +43,99 @@ actions:
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
+## Ok, enough blah blah blah..
+
+Here is an example:
+
+```java
+public class HelloDominion {
+
+    public static void main(String[] args) {
+        // create your world
+        Dominion hello = Dominion.create();
+
+        // create an entity with components
+        hello.createEntity(
+                new Position(0, 0),
+                new Velocity(1, 1)
+        );
+
+        // create a system
+        Runnable system = () -> {
+            //find matches
+            hello.findComponents(Position.class, Velocity.class)
+                    // stream the results
+                    .stream().forEach(result -> {
+                        Position position = result.comp1();
+                        Velocity velocity = result.comp2();
+                        position.x += velocity.x;
+                        position.y += velocity.y;
+                        System.out.printf("Entity %s moved with %s to %s\n",
+                                result.entity(), velocity, position);
+                    });
+        };
+
+        // run the system
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(system, 0, 1, TimeUnit.SECONDS);
+    }
+
+    // component types can be both classes and records
+
+    static class Position {
+        double x, y;
+
+        public Position(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return "Position{" +
+                    "x=" + x +
+                    ", y=" + y +
+                    '}';
+        }
+    }
+
+    record Velocity(double x, double y) {
+    }
+}
+```
+
 ## Getting Started
 
-Dominion has not yet been released. The API is still under development and not yet ready to share detailed
-documentation. The "how to" to get started with Dominion will come very soon, as soon as the first version is
-ready. [Join the Discord for updates!](https://discord.gg/BHMz3axqUG)
+In your local environment you must have already installed a JDK 17 (or newer) and Maven.
 
-In the meantime, you can easily clone the repository, create a local build of the project, and install it in your local
-Maven repository. In your local environment, you must have already installed a JDK 17 (of your choice) and Maven. Then,
-in the root folder of the cloned project, type the following command:
+Clone the repository or download the zip from GitHub and then install with the following Maven command:
 
-`mvn clean install`
+```
+mvn clean install
+```
 
-With a Dominion build now available in your local repository you may build and run
-the [Dominion benchmarks](https://github.com/dominion-dev/dominion-ecs-java-benchmark) to independently check the
-performance.
+With Dominion now built in your local folder, you can first run the example code with the following commands:
+
+```
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.4-SNAPSHOT.jar
+```
+
+Finally, start using the
+[Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
+as a reference to get started implementing your first app.
+
+## Dominion Release Cycle
+
+| Phase                  | Description                                                                                             | Distribution    |
+|------------------------|---------------------------------------------------------------------------------------------------------|-----------------|
+| Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only |
+| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven-EA        |
+| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven-RC        |
+| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven-release   |
+
+Dominion is now in _**Preview**_.
+
+[Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
 ## Support Dominion
 

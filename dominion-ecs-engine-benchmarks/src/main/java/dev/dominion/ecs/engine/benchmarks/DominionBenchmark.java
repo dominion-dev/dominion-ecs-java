@@ -3,7 +3,7 @@
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
 
-package dev.dominion.engine.benchmark;
+package dev.dominion.ecs.engine.benchmarks;
 
 import org.openjdk.jmh.annotations.*;
 
