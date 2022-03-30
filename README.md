@@ -13,8 +13,8 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 - 🤏 **_TINY_** > Just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
-- :coffee: **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. This
-  readme alone will provide a complete usage documentation.
+- :coffee: **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. A few
+  readme pages will provide complete usage documentation.
 - :muscle: _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
   announce the availability of the new version.
 
@@ -86,24 +86,19 @@ public class HelloDominion {
     static class Position {
         double x, y;
 
-        public Position(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
+        public Position(double x, double y) {/*...*/}
 
         @Override
-        public String toString() {
-            return "Position{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    '}';
-        }
+        public String toString() {/*...*/}
     }
 
     record Velocity(double x, double y) {
     }
 }
 ```
+
+You can find the complete source code in
+the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-examples) module.
 
 ## Getting Started
 

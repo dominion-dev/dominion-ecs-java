@@ -1,4 +1,4 @@
-# <img src="https://github.com/dominion-dev/dominion-ecs-java/raw/main/dominion-logo-square.png" align="right" width="100"> Dominion API
+# <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100"> Dominion API
 
 Dominion strives to have a minimal API surface to ease the learning curve for users.
 
