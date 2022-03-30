@@ -20,6 +20,9 @@ class EntityRepositoryTest {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             Assertions.assertNotNull(entity.getComposition());
             Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
+            Assertions.assertNull(entity.getName());
+            IntEntity entityWithName = (IntEntity) entityRepository.createEntity("an-entity");
+            Assertions.assertEquals("an-entity", entityWithName.getName());
         }
     }
 
@@ -44,6 +47,21 @@ class EntityRepositoryTest {
             Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponents());
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c2, c1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponents());
+        }
+    }
+
+    @Test
+    void createEntityAs() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            IntEntity entity0 = (IntEntity) entityRepository.createEntity();
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            IntEntity entity1 = (IntEntity) entityRepository.createEntityAs(entity0, c1);
+            Assertions.assertNotNull(entity1.getComposition());
+            Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
+            Assertions.assertArrayEquals(new Object[]{c1}, entity1.getComponents());
+            IntEntity entity2 = (IntEntity) entityRepository.createEntityAs(entity1, c2);
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponents());
         }
     }

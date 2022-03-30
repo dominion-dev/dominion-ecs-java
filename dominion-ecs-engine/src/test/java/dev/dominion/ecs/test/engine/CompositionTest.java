@@ -27,7 +27,7 @@ class CompositionTest {
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
             Composition composition =
                     new Composition(null, tenant, null, null, ID_SCHEMA, LoggingSystem.Context.TEST);
-            IntEntity entity = composition.createEntity();
+            IntEntity entity = composition.createEntity(null);
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
             IntEntity entry = chunkedPool.getEntry(entity.getId());
@@ -83,7 +83,7 @@ class CompositionTest {
                     , LoggingSystem.Context.TEST
                     , C1.class);
             for (int i = 0; i < 1_000_000; i++) {
-                composition.createEntity(new C1(i));
+                composition.createEntity(null, new C1(i));
             }
             Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class, composition.getTenant().iterator());
             int i = 0;
@@ -105,7 +105,7 @@ class CompositionTest {
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
-                composition.createEntity(new C1(i), new C2(i + 1));
+                composition.createEntity(null, new C1(i), new C2(i + 1));
             }
             Iterator<Results.Comp2<C1, C2>> iterator = composition.select(C1.class, C2.class, tenant.iterator());
             int i = 0;
@@ -126,7 +126,7 @@ class CompositionTest {
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
             Composition composition =
                     new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
-            IntEntity entity = composition.createEntity();
+            IntEntity entity = composition.createEntity(null);
             composition.setEntityState(entity, State1.ONE);
             Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.ONE, classIndex)));
 
@@ -135,7 +135,7 @@ class CompositionTest {
             Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.TWO, classIndex)));
             Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
 
-            IntEntity entity2 = composition.createEntity();
+            IntEntity entity2 = composition.createEntity(null);
             composition.setEntityState(entity2, State1.TWO);
             Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
             Assertions.assertEquals(entity, entity2.getPrev());
@@ -150,7 +150,7 @@ class CompositionTest {
 
             composition.setEntityState(entity2, State1.TWO);
             Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
-            IntEntity entity3 = composition.createEntity();
+            IntEntity entity3 = composition.createEntity(null);
             composition.setEntityState(entity3, State1.TWO);
             Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
             Assertions.assertNull(entity2.getData().stateRoot());
@@ -182,7 +182,7 @@ class CompositionTest {
             Composition composition =
                     new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
             for (int i = 0; i < capacity; i++) {
-                entities[i] = composition.createEntity();
+                entities[i] = composition.createEntity(null);
             }
             AtomicInteger counter = new AtomicInteger(0);
             for (int i = 0; i < capacity; i++) {
@@ -220,7 +220,7 @@ class CompositionTest {
                     , C1.class);
             int capacity = 1 << 16;
             for (int i = 0; i < capacity; i++) {
-                IntEntity entity = composition.createEntity(new C1(i));
+                IntEntity entity = composition.createEntity(null, new C1(i));
                 composition.setEntityState(entity, State1.ONE);
             }
             IntEntity entity = composition.getStateRootEntity(Composition.calcIndexKey(State1.ONE, classIndex));

@@ -29,7 +29,7 @@ class ChunkedPoolTest {
     public void register() {
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            IntEntity entry = new IntEntity(1, null);
+            IntEntity entry = new IntEntity(1, null, null);
             Assertions.assertEquals(entry, tenant.register(1, entry));
             Assertions.assertEquals(entry, chunkedPool.getEntry(1));
         }
@@ -201,7 +201,7 @@ class ChunkedPoolTest {
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, LoggingSystem.Context.TEST);
             ChunkedPool.LinkedChunk<IntEntity> chunk =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, previous, LoggingSystem.Context.TEST);
-            IntEntity entity = new IntEntity(1, null);
+            IntEntity entity = new IntEntity(1, null, null);
             chunk.set(10, entity);
             Assertions.assertEquals(entity, chunk.get(10));
             Assertions.assertEquals(previous, chunk.getPrevious());

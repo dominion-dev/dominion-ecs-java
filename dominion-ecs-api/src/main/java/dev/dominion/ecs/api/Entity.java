@@ -12,6 +12,8 @@ package dev.dominion.ecs.api;
  */
 public interface Entity {
 
+    String getName();
+
     Entity add(Object... components);
 
     Object remove(Object component);

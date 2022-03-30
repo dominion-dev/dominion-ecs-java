@@ -98,9 +98,9 @@ public final class Composition {
         components[i] = temp;
     }
 
-    public IntEntity createEntity(Object... components) {
+    public IntEntity createEntity(String name, Object... components) {
         int id = tenant.nextId();
-        return tenant.register(id, new IntEntity(id, this,
+        return tenant.register(id, new IntEntity(id, this, name,
                 isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
@@ -116,9 +116,9 @@ public final class Composition {
 
     public IntEntity attachEntity(IntEntity entity, Object... components) {
         entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
-            case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData().stateRoot()));
-            case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData().stateRoot()));
-            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData().stateRoot()));
+            case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData()));
+            case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData()));
+            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData()));
         });
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -173,7 +173,7 @@ public final class Composition {
                 IntEntity prev = (IntEntity) entity.getPrev();
                 if (states.replace(key, entity, prev)) {
                     prev.setNext(null);
-                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData().stateRoot()));
+                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
                     entity.setPrev(null);
                     entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
@@ -203,14 +203,16 @@ public final class Composition {
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
         IndexKey indexKey = calcIndexKey(state, classIndex);
+        IntEntity.Data entityData = entity.getData();
         IntEntity prev = states.computeIfAbsent(indexKey
-                , k -> entity.setData(new IntEntity.Data(this, entity.getComponents(), k)));
+                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k)));
         if (prev != entity) {
             states.computeIfPresent(indexKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
-                entity.setData(new IntEntity.Data(this, entity.getComponents(), k));
+                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k));
                 oldEntity.setNext(entity);
-                oldEntity.setData(new IntEntity.Data(this, oldEntity.getComponents(), null));
+                IntEntity.Data oldEntityData = oldEntity.getData();
+                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null));
                 return entity;
             });
         }
@@ -316,7 +318,7 @@ public final class Composition {
         private IntEntity currentEntity;
 
         public StateIterator(IntEntity rootEntity) {
-            currentEntity = new IntEntity(IdSchema.DETACHED_BIT, null);
+            currentEntity = new IntEntity(IdSchema.DETACHED_BIT, null, null);
             currentEntity.setPrev(rootEntity);
         }
 

@@ -124,7 +124,7 @@ public class CompositionBenchmark extends DominionBenchmark {
             composition = new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
-                composition.createEntity(c1);
+                composition.createEntity(null, c1);
             }
         }
 

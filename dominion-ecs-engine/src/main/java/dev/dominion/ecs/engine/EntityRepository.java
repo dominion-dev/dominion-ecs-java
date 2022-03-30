@@ -37,9 +37,19 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public Entity createEntity(Object... components) {
+        return createEntity(null, components);
+    }
+
+    @Override
+    public Entity createEntityAs(Entity prefab, Object... components) {
+        return createEntityAs(null, prefab, components);
+    }
+
+    @Override
+    public Entity createEntity(String name, Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
         Composition composition = compositions.getOrCreate(componentArray);
-        IntEntity entity = composition.createEntity(componentArray);
+        IntEntity entity = composition.createEntity(name, componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -50,15 +60,15 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public Entity createEntityAs(Entity prefab, Object... components) {
+    public Entity createEntityAs(String name, Entity prefab, Object... components) {
         IntEntity origin = (IntEntity) prefab;
         Object[] originComponents = origin.getComponents();
         if (originComponents == null || originComponents.length == 0) {
-            return createEntity(components);
+            return createEntity(name, components);
         }
         Object[] targetComponents = Arrays.copyOf(originComponents, originComponents.length + components.length);
         System.arraycopy(components, 0, targetComponents, originComponents.length, components.length);
-        return createEntity(targetComponents);
+        return createEntity(name, targetComponents);
     }
 
     @Override

@@ -57,6 +57,7 @@ public class HelloDominion {
 
         // create an entity with components
         hello.createEntity(
+                "my-entity",
                 new Position(0, 0),
                 new Velocity(1, 1)
         );
@@ -72,7 +73,7 @@ public class HelloDominion {
                         position.x += velocity.x;
                         position.y += velocity.y;
                         System.out.printf("Entity %s moved with %s to %s\n",
-                                result.entity(), velocity, position);
+                                result.entity().getName(), velocity, position);
                     });
         };
 
@@ -104,13 +105,13 @@ the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tr
 
 In your local environment you must have already installed a JDK 17 (or newer) and Maven.
 
-Clone the repository or download the zip from GitHub and then install with the following Maven command:
+Clone the repository or download the zip from GitHub, then install with the following Maven command:
 
 ```
 mvn clean install
 ```
 
-With Dominion now built in your local folder, you can first run the example code with the following commands:
+With Dominion already built in your local folder, you can run the example code with the following commands:
 
 ```
 java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.4-SNAPSHOT.jar
@@ -125,9 +126,9 @@ as a reference to get started implementing your first app.
 | Phase                  | Description                                                                                             | Distribution    |
 |------------------------|---------------------------------------------------------------------------------------------------------|-----------------|
 | Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only |
-| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven-EA        |
-| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven-RC        |
-| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven-release   |
+| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  |
+| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        |
+| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   |
 
 Dominion is now in _**Preview**_.
 
