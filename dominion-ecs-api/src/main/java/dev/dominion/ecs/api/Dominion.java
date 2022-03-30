@@ -102,7 +102,7 @@ public interface Dominion extends AutoCloseable {
     Entity createEntityAs(String name, Entity prefab, Object... components);
 
     /**
-     * Delete the entity by freeing the id and canceling the reference to all components, if any
+     * Removes the entity by freeing the id and canceling the reference to all components, if any
      *
      * @param entity the Entity to be deleted
      * @return false if the Entity has already been deleted

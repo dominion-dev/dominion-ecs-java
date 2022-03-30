@@ -27,19 +27,33 @@ items required by the user application.
 | static [Dominion](#class-dominion) **create**()                                                                | Creates a new Dominion with an automatically assigned name                                                |
 | static [Dominion](#class-dominion) **create**(String name)                                                     | Creates a new Dominion with the provided name                                                             |
 | String **getName**()                                                                                           | Returns the Dominion name                                                                                 |
-| [Entity](#class-entity) **createEntity**(Object... components);                                                | Creates a new Entity by adding zero or more POJO components.                                              |
-| [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);              | Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.           |
-| [Entity](#class-entity) **createEntity**(String name, Object... components);                                   | Creates a new Entity by adding zero or more POJO components.                                              |
-| [Entity](#class-entity) **createEntityAs**(String name, [Entity](#class-entity) prefab, Object... components); | Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.           |
+| [Entity](#class-entity) **createEntity**(Object... components);                                                | Creates an Entity by adding zero or more POJO components.                                                 |
+| [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);              | Creates an Entity by using another Entity as prefab and adding zero or more POJO components.              |
+| [Entity](#class-entity) **createEntity**(String name, Object... components);                                   | Creates a named Entity by adding zero or more POJO components.                                            |
+| [Entity](#class-entity) **createEntityAs**(String name, [Entity](#class-entity) prefab, Object... components); | Creates a named Entity by using another Entity as prefab and adding zero or more POJO components.         |
 | boolean **deleteEntity**([Entity](#class-entity) entity);                                                      | Delete the  entity by freeing the id and canceling the reference to all components, if any                |
 | [Results](#class-results)<Results.Comp1> **findComponents**(Class\<T> type);                                   | Retrieves the component of the given type by finding all entities that have the component type            |
 | [Results](#class-results)<Results.CompN> **findComponents**(Class\<T1> type1,..)                               | Retrieves all components of the given types by finding all entities that match the set of component types |
 
 ### Class Entity
 
-An Entity identifies a single item and is represented as a unique integer value within a Dominion. Entities can contain
-zero or more components that are POJOs with no behavior and can change components dynamically. Entities can be disabled
-and re-enabled and can use a given Enum to optionally set a state.
+An Entity identifies a single item and is represented as a unique integer value within a Dominion. Entities can have a
+name and contain zero or more components that are POJOs with no behavior. Entities can change components dynamically,
+can be disabled and re-enabled and can have a given Enum value to optionally set a state.
+
+| Method                                                  | Description                                                                    |
+|---------------------------------------------------------|--------------------------------------------------------------------------------|
+| String **getName**()                                    | Returns the entity name                                                        |
+| [Entity](#class-entity) **add**(Object... components)   | Adds one or more components that are POJOs with no behavior                    |
+| Object **remove**(Object component)                     | Removes a component if present                                                 |
+| Object **removeType**(Class\<?> componentType)          | Removes a component if there is a component of the specified type              |
+| boolean **has**(Class\<?> componentType)                | Checks if there is a component of the specified type                           |
+| boolean **contains**(Object component)                  | Checks if the specified component is present                                   |
+| <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value |
+| boolean **isEnabled**()                                 | Checks if the entity is enabled                                                |
+| [Entity](#class-entity) **setEnabled**(boolean enabled) | Enable/Disables the entity                                                     |
+|                                                         |                                                                                |
+
 
 ### Class Results
 
