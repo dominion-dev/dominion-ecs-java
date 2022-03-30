@@ -1,5 +1,6 @@
 package dev.dominion.ecs.test.engine;
 
+import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
@@ -7,6 +8,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class EntityRepositoryTest {
+
+    @Test
+    void factoryCreate() {
+        Assertions.assertEquals(EntityRepository.class, Dominion.factory().create().getClass());
+    }
 
     @Test
     void createEntity() {
