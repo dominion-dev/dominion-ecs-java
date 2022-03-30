@@ -86,24 +86,19 @@ public class HelloDominion {
     static class Position {
         double x, y;
 
-        public Position(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
+        public Position(double x, double y) {/*...*/}
 
         @Override
-        public String toString() {
-            return "Position{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    '}';
-        }
+        public String toString() {/*...*/}
     }
 
     record Velocity(double x, double y) {
     }
 }
 ```
+
+You can find the complete source code in
+the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-examples) module.
 
 ## Getting Started
 
