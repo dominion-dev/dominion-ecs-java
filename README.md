@@ -57,6 +57,7 @@ public class HelloDominion {
 
         // create an entity with components
         hello.createEntity(
+                "my-entity",
                 new Position(0, 0),
                 new Velocity(1, 1)
         );
@@ -72,7 +73,7 @@ public class HelloDominion {
                         position.x += velocity.x;
                         position.y += velocity.y;
                         System.out.printf("Entity %s moved with %s to %s\n",
-                                result.entity(), velocity, position);
+                                result.entity().getName(), velocity, position);
                     });
         };
 

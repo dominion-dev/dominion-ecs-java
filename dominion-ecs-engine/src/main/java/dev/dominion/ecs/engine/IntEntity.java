@@ -33,9 +33,9 @@ public final class IntEntity implements Entity, Identifiable {
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
-    public IntEntity(int id, Composition composition, Object... components) {
+    public IntEntity(int id, Composition composition, String name, Object... components) {
         this.id = id;
-        data = new Data(composition, components, null);
+        data = new Data(composition, components, name, null);
     }
 
     @Override
@@ -87,6 +87,11 @@ public final class IntEntity implements Entity, Identifiable {
     IntEntity setData(Data data) {
         this.data = data;
         return this;
+    }
+
+    @Override
+    public String getName() {
+        return data.name;
     }
 
     @Override
@@ -216,7 +221,8 @@ public final class IntEntity implements Entity, Identifiable {
     @Override
     public String toString() {
         ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
-        return "Entity={" +
+        String name = data.name == null ? "Entity" : data.name;
+        return name + "={" +
                 "id=" + idSchema.idToString(id) +
                 ", " + data.composition +
                 ", stateRootKey=" + data.stateRoot +
@@ -225,6 +231,9 @@ public final class IntEntity implements Entity, Identifiable {
                 '}';
     }
 
-    public record Data(Composition composition, Object[] components, IndexKey stateRoot) {
+    public record Data(Composition composition, Object[] components, String name, IndexKey stateRoot) {
+        public Data(Composition composition, Object[] components, Data other) {
+            this(composition, components, other == null ? null : other.name, other == null ? null : other.stateRoot);
+        }
     }
 }

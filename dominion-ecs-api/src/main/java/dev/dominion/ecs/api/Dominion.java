@@ -73,7 +73,33 @@ public interface Dominion extends AutoCloseable {
      */
     Entity createEntity(Object... components);
 
+    /**
+     * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
+     *
+     * @param prefab prefab Entity to start from
+     * @param components zero o more POJO components assigned to the new Entity.
+     * @return a new Entity
+     */
     Entity createEntityAs(Entity prefab, Object... components);
+
+    /**
+     * Creates a new Entity by adding zero or more POJO components.
+     *
+     * @param name entity name
+     * @param components zero o more POJO components assigned to the new Entity.
+     * @return a new Entity
+     */
+    Entity createEntity(String name, Object... components);
+
+    /**
+     * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
+     *
+     * @param name entity name
+     * @param prefab prefab Entity to start from
+     * @param components zero o more POJO components assigned to the new Entity.
+     * @return a new Entity
+     */
+    Entity createEntityAs(String name, Entity prefab, Object... components);
 
     /**
      * Delete the entity by freeing the id and canceling the reference to all components, if any

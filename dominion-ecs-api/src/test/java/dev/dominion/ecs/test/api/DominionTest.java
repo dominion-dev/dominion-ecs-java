@@ -64,6 +64,16 @@ public class DominionTest {
         }
 
         @Override
+        public Entity createEntity(String name, Object... components) {
+            return null;
+        }
+
+        @Override
+        public Entity createEntityAs(String name, Entity prefab, Object... components) {
+            return null;
+        }
+
+        @Override
         public boolean deleteEntity(Entity entity) {
             return false;
         }
