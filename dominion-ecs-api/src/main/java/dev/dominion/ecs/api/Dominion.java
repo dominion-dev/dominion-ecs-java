@@ -5,15 +5,16 @@
 
 package dev.dominion.ecs.api;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
- *
- *
  * @author Enrico Stara
  */
 public interface Dominion extends AutoCloseable {
+
+    String DEFAULT_DOMINION_IMPLEMENTATION = "dev.dominion.ecs.engine.EntityRepository$Factory";
 
     /**
      * Creates a new Dominion with an automatically assigned name
@@ -35,17 +36,26 @@ public interface Dominion extends AutoCloseable {
     }
 
     static Dominion.Factory factory() {
-        return factory("dev.dominion.ecs.engine");
+        return factory(DEFAULT_DOMINION_IMPLEMENTATION);
     }
 
     static Dominion.Factory factory(String implementation) {
-        return ServiceLoader
-                .load(Dominion.Factory.class)
-                .stream()
-                .filter(p -> p.get().getClass().getName().contains(implementation))
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("Unable to load " + implementation))
-                .get();
+        try {
+            return ServiceLoader
+                    .load(Dominion.Factory.class)
+                    .stream()
+                    .filter(p -> p.get().getClass().getName().contains(implementation))
+                    .findFirst()
+                    .orElseThrow(() -> new NoSuchElementException("Unable to load " + implementation))
+                    .get();
+        } catch (NoSuchElementException e) {
+            try {
+                return (Factory) Class.forName(implementation).getDeclaredConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException ex) {
+                ex.printStackTrace();
+                throw e;
+            }
+        }
     }
 
     /**
