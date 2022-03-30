@@ -1,4 +1,4 @@
-# <img src="dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
+# <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
 
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 
@@ -43,36 +43,95 @@ actions:
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
-## Ok, enough blah blah blah... Show me some code!
+## Ok, enough blah blah blah..
+
+Here is an example:
+
+```java
+public class HelloDominion {
+
+    public static void main(String[] args) {
+        // create your world
+        Dominion hello = Dominion.create();
+
+        // create an entity with components
+        hello.createEntity(
+                new Position(0, 0),
+                new Velocity(1, 1)
+        );
+
+        // create a system
+        Runnable system = () -> {
+            //find matches
+            hello.findComponents(Position.class, Velocity.class)
+                    // stream the results
+                    .stream().forEach(result -> {
+                        Position position = result.comp1();
+                        Velocity velocity = result.comp2();
+                        position.x += velocity.x;
+                        position.y += velocity.y;
+                        System.out.printf("Entity %s moved with %s to %s\n",
+                                result.entity(), velocity, position);
+                    });
+        };
+
+        // run the system
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(system, 0, 1, TimeUnit.SECONDS);
+    }
+
+    // component types can be both classes and records
+
+    static class Position {
+        double x, y;
+
+        public Position(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return "Position{" +
+                    "x=" + x +
+                    ", y=" + y +
+                    '}';
+        }
+    }
+
+    record Velocity(double x, double y) {
+    }
+}
+```
 
 ## Getting Started
 
 In your local environment you must have already installed a JDK 17 (or newer) and Maven.
 
-Clone the repository by following the GitHub Clone instructions and then install with the following Maven command:
+Clone the repository or download the zip from GitHub and then install with the following Maven command:
 
 ```
 mvn clean install
 ```
 
-With Dominion now installed in your local folder, you can first run the example code with the following commands:
+With Dominion now built in your local folder, you can first run the example code with the following commands:
 
 ```
-java -jar dominion-ecs-example/target/hello-dominion.jar
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.4-SNAPSHOT.jar
 ```
 
-Use the
+Finally, start using the
 [Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
 as a reference to get started implementing your first app.
 
 ## Dominion Release Cycle
 
-| Phase                  | Description                                                                                             |
-|------------------------|---------------------------------------------------------------------------------------------------------|
-| Preview                | Features are under heavy development and often have changing requirements and scope.                    |
-| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    |
-| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. |
-| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            |
+| Phase                  | Description                                                                                             | Distribution    |
+|------------------------|---------------------------------------------------------------------------------------------------------|-----------------|
+| Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only |
+| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven-EA        |
+| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven-RC        |
+| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven-release   |
 
 Dominion is now in _**Preview**_.
 
