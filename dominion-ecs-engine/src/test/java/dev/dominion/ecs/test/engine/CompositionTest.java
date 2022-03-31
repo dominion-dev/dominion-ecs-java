@@ -85,7 +85,7 @@ class CompositionTest {
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(null, new C1(i));
             }
-            Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class, composition.getTenant().iterator());
+            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, composition.getTenant().iterator());
             int i = 0;
             while (iterator.hasNext()) {
                 long id = iterator.next().comp().id;
@@ -107,10 +107,10 @@ class CompositionTest {
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(null, new C1(i), new C2(i + 1));
             }
-            Iterator<Results.Comp2<C1, C2>> iterator = composition.select(C1.class, C2.class, tenant.iterator());
+            Iterator<Results.With2<C1, C2>> iterator = composition.select(C1.class, C2.class, tenant.iterator());
             int i = 0;
             while (iterator.hasNext()) {
-                Results.Comp2<C1, C2> next = iterator.next();
+                Results.With2<C1, C2> next = iterator.next();
                 long id1 = next.comp1().id;
                 long id2 = next.comp2().id;
                 Assertions.assertEquals(i++, id1);
@@ -224,7 +224,7 @@ class CompositionTest {
                 composition.setEntityState(entity, State1.ONE);
             }
             IntEntity entity = composition.getStateRootEntity(Composition.calcIndexKey(State1.ONE, classIndex));
-            Iterator<Results.Comp1<C1>> iterator = composition.select(C1.class, new Composition.StateIterator(entity));
+            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, new Composition.StateIterator(entity));
             int count = 0;
             IntEntity last = null;
             while (iterator.hasNext()) {

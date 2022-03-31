@@ -185,14 +185,14 @@ class IntEntityTest {
             Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertTrue(entity.isEnabled());
             Assertions.assertNull(entity.remove(c3));
-            Assertions.assertTrue(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertNotNull(entity.setEnabled(false));
-            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertFalse(entity.isEnabled());
             Assertions.assertNull(entity.remove(c2));
             entity.setEnabled(true);
-            Assertions.assertTrue(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertEquals(c2, entity.remove(c2));
             entity.setEnabled(false);
@@ -200,7 +200,7 @@ class IntEntityTest {
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
             entity.setEnabled(true);
             Assertions.assertTrue(entityRepository.deleteEntity(entity));
-            Assertions.assertFalse(entityRepository.findComponents(C1.class).iterator().hasNext());
+            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertFalse(entity.isEnabled());
             Assertions.assertFalse(entityRepository.deleteEntity(entity));
         }

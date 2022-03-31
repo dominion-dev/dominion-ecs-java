@@ -5,11 +5,17 @@
 
 package dev.dominion.ecs.api;
 
+import dev.dominion.ecs.api.Results.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
+ * A Dominion is an independent container for all ECS data. The User Application can create more than one Dominion with
+ * different names. It is the entry point for using the library and provides methods for creating, finding, and deleting
+ * items required by the user application.
+ *
  * @author Enrico Stara
  */
 public interface Dominion extends AutoCloseable {
@@ -76,7 +82,7 @@ public interface Dominion extends AutoCloseable {
     /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
-     * @param prefab prefab Entity to start from
+     * @param prefab     prefab Entity to start from
      * @param components zero o more POJO components assigned to the new Entity.
      * @return a new Entity
      */
@@ -85,7 +91,7 @@ public interface Dominion extends AutoCloseable {
     /**
      * Creates a new Entity by adding zero or more POJO components.
      *
-     * @param name entity name
+     * @param name       entity name
      * @param components zero o more POJO components assigned to the new Entity.
      * @return a new Entity
      */
@@ -94,15 +100,15 @@ public interface Dominion extends AutoCloseable {
     /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
-     * @param name entity name
-     * @param prefab prefab Entity to start from
+     * @param name       entity name
+     * @param prefab     prefab Entity to start from
      * @param components zero o more POJO components assigned to the new Entity.
      * @return a new Entity
      */
     Entity createEntityAs(String name, Entity prefab, Object... components);
 
     /**
-     * Delete the entity by freeing the id and canceling the reference to all components, if any
+     * Removes the entity by freeing the id and canceling the reference to all components, if any
      *
      * @param entity the Entity to be deleted
      * @return false if the Entity has already been deleted
@@ -110,32 +116,32 @@ public interface Dominion extends AutoCloseable {
     boolean deleteEntity(Entity entity);
 
     /**
-     * Retrieves the component of the specified type by finding all entities that have the component type
+     * Finds all entities with a component of the specified type
      *
      * @param type the component class
      * @param <T>  the component type
-     * @return the query results
+     * @return the results
      */
-    <T> Results<Results.Comp1<T>> findComponents(Class<T> type);
+    <T> Results<With1<T>> findEntitiesWith(Class<T> type);
 
     /**
-     * Retrieves all components of the given types by finding all entities that match the set of component types
+     * Finds all entities with components of the specified types
      *
-     * @param type1 the first component class
-     * @param type2 the second component class
-     * @param <T1>  the first component type
-     * @param <T2>  the second component type
-     * @return the query results
+     * @param type1 the 1st component class
+     * @param type2 the 2nd component class
+     * @param <T1>  the 1st component type
+     * @param <T2>  the 2nd component type
+     * @return the results
      */
-    <T1, T2> Results<Results.Comp2<T1, T2>> findComponents(Class<T1> type1, Class<T2> type2);
+    <T1, T2> Results<With2<T1, T2>> findEntitiesWith(Class<T1> type1, Class<T2> type2);
 
-    <T1, T2, T3> Results<Results.Comp3<T1, T2, T3>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3);
+    <T1, T2, T3> Results<With3<T1, T2, T3>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3);
 
-    <T1, T2, T3, T4> Results<Results.Comp4<T1, T2, T3, T4>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4);
+    <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4);
 
-    <T1, T2, T3, T4, T5> Results<Results.Comp5<T1, T2, T3, T4, T5>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5);
+    <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5);
 
-    <T1, T2, T3, T4, T5, T6> Results<Results.Comp6<T1, T2, T3, T4, T5, T6>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6);
+    <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6);
 
     interface Factory {
         Dominion create();
