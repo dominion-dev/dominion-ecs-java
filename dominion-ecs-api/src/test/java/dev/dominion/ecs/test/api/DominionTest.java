@@ -79,32 +79,32 @@ public class DominionTest {
         }
 
         @Override
-        public <T> Results<Results.Comp1<T>> findComponents(Class<T> type) {
+        public <T> Results<Results.With1<T>> findEntitiesWith(Class<T> type) {
             return null;
         }
 
         @Override
-        public <T1, T2> Results<Results.Comp2<T1, T2>> findComponents(Class<T1> type1, Class<T2> type2) {
+        public <T1, T2> Results<Results.With2<T1, T2>> findEntitiesWith(Class<T1> type1, Class<T2> type2) {
             return null;
         }
 
         @Override
-        public <T1, T2, T3> Results<Results.Comp3<T1, T2, T3>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+        public <T1, T2, T3> Results<Results.With3<T1, T2, T3>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
             return null;
         }
 
         @Override
-        public <T1, T2, T3, T4> Results<Results.Comp4<T1, T2, T3, T4>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+        public <T1, T2, T3, T4> Results<Results.With4<T1, T2, T3, T4>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
             return null;
         }
 
         @Override
-        public <T1, T2, T3, T4, T5> Results<Results.Comp5<T1, T2, T3, T4, T5>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+        public <T1, T2, T3, T4, T5> Results<Results.With5<T1, T2, T3, T4, T5>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
             return null;
         }
 
         @Override
-        public <T1, T2, T3, T4, T5, T6> Results<Results.Comp6<T1, T2, T3, T4, T5, T6>> findComponents(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+        public <T1, T2, T3, T4, T5, T6> Results<Results.With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
             return null;
         }
 

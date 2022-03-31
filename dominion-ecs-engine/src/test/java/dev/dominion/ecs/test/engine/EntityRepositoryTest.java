@@ -108,27 +108,27 @@ class EntityRepositoryTest {
             entityRepository.createEntity(c1, c2, c3, c4, c5);
             entityRepository.createEntity(c1, c2, c3, c4, c5, c6);
 
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class).iterator().next().comp());
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class, C2.class).iterator().next().comp1());
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class, C2.class, C3.class).iterator().next().comp1());
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).iterator().next().comp1());
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp1());
-            Assertions.assertEquals(c1, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp1());
-            Assertions.assertEquals(c2, entityRepository.findComponents(C1.class, C2.class).iterator().next().comp2());
-            Assertions.assertEquals(c2, entityRepository.findComponents(C1.class, C2.class, C3.class).iterator().next().comp2());
-            Assertions.assertEquals(c2, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).iterator().next().comp2());
-            Assertions.assertEquals(c2, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp2());
-            Assertions.assertEquals(c2, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp2());
-            Assertions.assertEquals(c3, entityRepository.findComponents(C1.class, C2.class, C3.class).iterator().next().comp3());
-            Assertions.assertEquals(c3, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).iterator().next().comp3());
-            Assertions.assertEquals(c3, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp3());
-            Assertions.assertEquals(c3, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp3());
-            Assertions.assertEquals(c4, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class).iterator().next().comp4());
-            Assertions.assertEquals(c4, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp4());
-            Assertions.assertEquals(c4, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp4());
-            Assertions.assertEquals(c5, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp5());
-            Assertions.assertEquals(c5, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp5());
-            Assertions.assertEquals(c6, entityRepository.findComponents(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp6());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class).iterator().next().comp());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class, C2.class).iterator().next().comp1());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).iterator().next().comp1());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).iterator().next().comp1());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp1());
+            Assertions.assertEquals(c1, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp1());
+            Assertions.assertEquals(c2, entityRepository.findEntitiesWith(C1.class, C2.class).iterator().next().comp2());
+            Assertions.assertEquals(c2, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).iterator().next().comp2());
+            Assertions.assertEquals(c2, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).iterator().next().comp2());
+            Assertions.assertEquals(c2, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp2());
+            Assertions.assertEquals(c2, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp2());
+            Assertions.assertEquals(c3, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).iterator().next().comp3());
+            Assertions.assertEquals(c3, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).iterator().next().comp3());
+            Assertions.assertEquals(c3, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp3());
+            Assertions.assertEquals(c3, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp3());
+            Assertions.assertEquals(c4, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).iterator().next().comp4());
+            Assertions.assertEquals(c4, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp4());
+            Assertions.assertEquals(c4, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp4());
+            Assertions.assertEquals(c5, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp5());
+            Assertions.assertEquals(c5, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp5());
+            Assertions.assertEquals(c6, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp6());
         }
     }
 
@@ -138,7 +138,7 @@ class EntityRepositoryTest {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(new C1(0));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(new C1(1), new C2(2));
 
-            var results = entityRepository.findComponents(C1.class);
+            var results = entityRepository.findEntitiesWith(C1.class);
             Assertions.assertNotNull(results);
             var iterator = results.iterator();
             Assertions.assertNotNull(iterator);
@@ -151,7 +151,7 @@ class EntityRepositoryTest {
             Assertions.assertEquals(1, next.comp().id);
             Assertions.assertEquals(entity2, next.entity());
 
-            var results2 = entityRepository.findComponents(C2.class);
+            var results2 = entityRepository.findEntitiesWith(C2.class);
             var iterator2 = results2.iterator();
             Assertions.assertNotNull(iterator2);
             Assertions.assertTrue(iterator2.hasNext());
@@ -159,7 +159,7 @@ class EntityRepositoryTest {
             Assertions.assertEquals(2, next2.comp().id);
             Assertions.assertEquals(entity2, next2.entity());
 
-            var results3 = entityRepository.findComponents(C3.class);
+            var results3 = entityRepository.findEntitiesWith(C3.class);
             var iterator3 = results3.iterator();
             Assertions.assertNotNull(iterator3);
             Assertions.assertFalse(iterator3.hasNext());
@@ -172,7 +172,7 @@ class EntityRepositoryTest {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(new C1(1), new C2(2));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(new C1(3), new C2(4), new C3(5));
 
-            var results = entityRepository.findComponents(C1.class, C2.class);
+            var results = entityRepository.findEntitiesWith(C1.class, C2.class);
             Assertions.assertNotNull(results);
             var iterator = results.iterator();
             Assertions.assertNotNull(iterator);
@@ -187,7 +187,7 @@ class EntityRepositoryTest {
             Assertions.assertEquals(1, next.comp1().id);
             Assertions.assertEquals(2, next.comp2().id);
 
-            var results2 = entityRepository.findComponents(C2.class, C3.class);
+            var results2 = entityRepository.findEntitiesWith(C2.class, C3.class);
             var iterator2 = results2.iterator();
             Assertions.assertNotNull(iterator2);
             Assertions.assertTrue(iterator2.hasNext());

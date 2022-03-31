@@ -264,28 +264,28 @@ public final class Composition {
         }
     }
 
-    public <T> Iterator<Results.Comp1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
+    public <T> Iterator<Results.With1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
         int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
-        return new Comp1Iterator<>(idx, iterator, this);
+        return new IteratorWith1<>(idx, iterator, this);
     }
 
-    public <T1, T2> Iterator<Results.Comp2<T1, T2>> select(Class<T1> type1, Class<T2> type2, Iterator<IntEntity> iterator) {
-        return new Comp2Iterator<>(
+    public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, Iterator<IntEntity> iterator) {
+        return new IteratorWith2<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 iterator, this);
     }
 
-    public <T1, T2, T3> Iterator<Results.Comp3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Iterator<IntEntity> iterator) {
-        return new Comp3Iterator<>(
+    public <T1, T2, T3> Iterator<Results.With3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Iterator<IntEntity> iterator) {
+        return new IteratorWith3<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4> Iterator<Results.Comp4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Iterator<IntEntity> iterator) {
-        return new Comp4Iterator<>(
+    public <T1, T2, T3, T4> Iterator<Results.With4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Iterator<IntEntity> iterator) {
+        return new IteratorWith4<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
@@ -293,8 +293,8 @@ public final class Composition {
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5> Iterator<Results.Comp5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Iterator<IntEntity> iterator) {
-        return new Comp5Iterator<>(
+    public <T1, T2, T3, T4, T5> Iterator<Results.With5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Iterator<IntEntity> iterator) {
+        return new IteratorWith5<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
@@ -303,8 +303,8 @@ public final class Composition {
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5, T6> Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Iterator<IntEntity> iterator) {
-        return new Comp6Iterator<>(
+    public <T1, T2, T3, T4, T5, T6> Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Iterator<IntEntity> iterator) {
+        return new IteratorWith6<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 fetchComponentIndex(type3),
@@ -333,8 +333,8 @@ public final class Composition {
         }
     }
 
-    record Comp1Iterator<T>(int idx, Iterator<IntEntity> iterator,
-                            Composition composition) implements Iterator<Results.Comp1<T>> {
+    record IteratorWith1<T>(int idx, Iterator<IntEntity> iterator,
+                            Composition composition) implements Iterator<Results.With1<T>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -342,19 +342,19 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp1<T> next() {
+        public Results.With1<T> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp1<>((T) components[idx], intEntity);
+            return new Results.With1<>((T) components[idx], intEntity);
         }
     }
 
-    record Comp2Iterator<T1, T2>(int idx1, int idx2,
+    record IteratorWith2<T1, T2>(int idx1, int idx2,
                                  Iterator<IntEntity> iterator,
-                                 Composition composition) implements Iterator<Results.Comp2<T1, T2>> {
+                                 Composition composition) implements Iterator<Results.With2<T1, T2>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -362,19 +362,19 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp2<T1, T2> next() {
+        public Results.With2<T1, T2> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp2<>((T1) components[idx1], (T2) components[idx2], intEntity);
+            return new Results.With2<>((T1) components[idx1], (T2) components[idx2], intEntity);
         }
     }
 
-    record Comp3Iterator<T1, T2, T3>(int idx1, int idx2, int idx3,
+    record IteratorWith3<T1, T2, T3>(int idx1, int idx2, int idx3,
                                      Iterator<IntEntity> iterator,
-                                     Composition composition) implements Iterator<Results.Comp3<T1, T2, T3>> {
+                                     Composition composition) implements Iterator<Results.With3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -382,13 +382,13 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp3<T1, T2, T3> next() {
+        public Results.With3<T1, T2, T3> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp3<>(
+            return new Results.With3<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
                     (T3) components[idx3],
@@ -396,9 +396,9 @@ public final class Composition {
         }
     }
 
-    record Comp4Iterator<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
+    record IteratorWith4<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
                                          Iterator<IntEntity> iterator,
-                                         Composition composition) implements Iterator<Results.Comp4<T1, T2, T3, T4>> {
+                                         Composition composition) implements Iterator<Results.With4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -406,13 +406,13 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp4<T1, T2, T3, T4> next() {
+        public Results.With4<T1, T2, T3, T4> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp4<>(
+            return new Results.With4<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
                     (T3) components[idx3],
@@ -421,9 +421,9 @@ public final class Composition {
         }
     }
 
-    record Comp5Iterator<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
+    record IteratorWith5<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
                                              Iterator<IntEntity> iterator,
-                                             Composition composition) implements Iterator<Results.Comp5<T1, T2, T3, T4, T5>> {
+                                             Composition composition) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -431,13 +431,13 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp5<T1, T2, T3, T4, T5> next() {
+        public Results.With5<T1, T2, T3, T4, T5> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp5<>(
+            return new Results.With5<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
                     (T3) components[idx3],
@@ -447,9 +447,9 @@ public final class Composition {
         }
     }
 
-    record Comp6Iterator<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
+    record IteratorWith6<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
                                                  Iterator<IntEntity> iterator,
-                                                 Composition composition) implements Iterator<Results.Comp6<T1, T2, T3, T4, T5, T6>> {
+                                                 Composition composition) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -457,13 +457,13 @@ public final class Composition {
 
         @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
         @Override
-        public Results.Comp6<T1, T2, T3, T4, T5, T6> next() {
+        public Results.With6<T1, T2, T3, T4, T5, T6> next() {
             IntEntity intEntity;
             IntEntity.Data data;
             while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
             }
             Object[] components = data.components();
-            return new Results.Comp6<>(
+            return new Results.With6<>(
                     (T1) components[idx1],
                     (T2) components[idx2],
                     (T3) components[idx3],
