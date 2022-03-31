@@ -64,8 +64,8 @@ public class HelloDominion {
 
         // create a system
         Runnable system = () -> {
-            //find matches
-            hello.findComponents(Position.class, Velocity.class)
+            //find entities
+            hello.findEntitiesWith(Position.class, Velocity.class)
                     // stream the results
                     .stream().forEach(result -> {
                         Position position = result.comp1();
