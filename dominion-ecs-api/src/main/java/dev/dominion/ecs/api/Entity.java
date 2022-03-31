@@ -9,6 +9,8 @@ package dev.dominion.ecs.api;
  * An Entity identifies a single item and is represented as a unique integer value within a Dominion. Entities can contain
  * zero or more components that are POJOs with no behavior and can change components dynamically. Entities can be disabled
  * and re-enabled and can use a given Enum to optionally set a state.
+ *
+ * @author Enrico Stara
  */
 public interface Entity {
 

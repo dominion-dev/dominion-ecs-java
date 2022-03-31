@@ -12,6 +12,10 @@ import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 
 /**
+ * A Dominion is an independent container for all ECS data. The User Application can create more than one Dominion with
+ * different names. It is the entry point for using the library and provides methods for creating, finding, and deleting
+ * items required by the user application.
+ *
  * @author Enrico Stara
  */
 public interface Dominion extends AutoCloseable {

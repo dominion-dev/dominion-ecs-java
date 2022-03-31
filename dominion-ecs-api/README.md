@@ -32,8 +32,8 @@ items required by the user application.
 | [Entity](#class-entity) **createEntity**(String name, Object... components);                                   | Creates a named Entity by adding zero or more POJO components.                                    |
 | [Entity](#class-entity) **createEntityAs**(String name, [Entity](#class-entity) prefab, Object... components); | Creates a named Entity by using another Entity as prefab and adding zero or more POJO components. |
 | boolean **deleteEntity**([Entity](#class-entity) entity);                                                      | Delete the  entity by freeing the id and canceling the reference to all components, if any        |
-| [Results](#class-results)<Results.Comp1> **findEntitiesWith**(Class\<T> type);                                 | Finds all entities with a component of the specified type                                         |
-| [Results](#class-results)<Results.CompN> **findEntitiesWith**(Class\<T1> type1,..)                             | Finds all entities with components of the specified types                                         |
+| [Results](#class-results)<With1> **findEntitiesWith**(Class\<T> type);                                         | Finds all entities with a component of the specified type                                         |
+| [Results](#class-results)<WithN> **findEntitiesWith**(Class\<T1> type1,..)                                     | Finds all entities with components of the specified types                                         |
 
 ## Class Entity
 

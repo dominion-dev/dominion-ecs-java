@@ -15,6 +15,7 @@ import java.util.stream.Stream;
  * sequence.
  *
  * @param <T> the type of each fetched row
+ * @author Enrico Stara
  */
 public interface Results<T> {
 
