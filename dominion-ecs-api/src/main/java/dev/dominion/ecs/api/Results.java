@@ -14,17 +14,40 @@ import java.util.stream.Stream;
  * one or more component types to exclude. Both iterator and stream methods are available to retrieve found entities in
  * sequence.
  *
- * @param <T> the type of each fetched row
+ * @param <T> the type of each result
  * @author Enrico Stara
  */
 public interface Results<T> {
 
+    /**
+     * Provides an iterator to retrieve found entities in sequence
+     *
+     * @return the iterator
+     */
     Iterator<T> iterator();
 
+    /**
+     * Creates a sequential stream to supports functional-style operations on found entities
+     *
+     * @return the stream
+     */
     Stream<T> stream();
 
+    /**
+     * Provides a filtered Results without one or more component types to exclude
+     *
+     * @param componentTypes one or more component types to exclude
+     * @return the Results without excluded component types
+     */
     Results<T> excludeWith(Class<?>... componentTypes);
 
+    /**
+     * Provides a filtered Results with only entities having the required state
+     *
+     * @param state the requested state
+     * @param <S>   the state enumeration type
+     * @return the Results with only entities having the required state
+     */
     <S extends Enum<S>> Results<T> withState(S state);
 
     record With1<T>(T comp, Entity entity) {

@@ -10,15 +10,15 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class                       | Description                                                                                                        |
-|-----------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [Dominion](#class-dominion) | A Dominion is an independent container for all ECS data.                                                           |
-| [Entity](#class-entity)     | An Entity identifies a single item and is represented as a unique integer value within a Dominion.                 |
-| [Results](#class-results)   | A Results contains the results of selecting entities that match a set of components and, optionally, have a state. |
+| Class                       | Description                                                                                                          |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion) | A **Dominion** is an independent container for all ECS data.                                                         |
+| [Entity](#class-entity)     | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
+| [Results](#class-results)   | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
 
 ## Class Dominion
 
-A Dominion is an independent container for all ECS data. The User Application can create more than one Dominion with
+A **Dominion** is an independent container for all ECS data. The User Application can create more than one Dominion with
 different names. It is the entry point for using the library and provides methods for creating, finding, and deleting
 items required by the user application.
 
@@ -37,8 +37,8 @@ items required by the user application.
 
 ## Class Entity
 
-An Entity identifies a single item and is represented as a unique integer value within a Dominion. Entities can have a
-name and contain zero or more components that are POJOs with no behavior. Entities can change components dynamically,
+An **Entity** identifies a single item and is represented as a unique integer value within a Dominion. Entities can have 
+a name and contain zero or more components that are POJOs with no behavior. Entities can change components dynamically,
 can be disabled and re-enabled and can have a given Enum value to optionally set a state.
 
 | Method                                                  | Description                                                                    |
@@ -52,14 +52,22 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 | <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value |
 | boolean **isEnabled**()                                 | Checks if the entity is enabled                                                |
 | [Entity](#class-entity) **setEnabled**(boolean enabled) | Enable/Disables the entity                                                     |
-|                                                         |                                                                                |
 
 
 ## Class Results
 
-Results is the output of the Dominion.findEntitiesWith methods and represents a simple container of all entities that
-match a set of components and, optionally, have a specified state. Results can be further filtered by specifying one or 
-more component types to exclude. Both iterator and stream methods are available to retrieve found entities in sequence.
+A **Results** is the output of the Dominion.findEntitiesWith methods and represents a simple container of all entities 
+that match a set of components and, optionally, have a specified state. Results can be further filtered by specifying 
+one or more component types to exclude. Both iterator and stream methods are available to retrieve found entities in 
+sequence.
+
+| Method                                                                  | Description                                                                           |
+|-------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| Iterator\<T> iterator();                                                | Provides an iterator to retrieve found entities in sequence                           |
+| Stream\<T> stream();                                                    | Creates a sequential stream to supports functional-style operations on found entities |
+| [Results\<T>](#class-results) excludeWith(Class\<?>... componentTypes); | Provides a filtered Results without one or more component types to exclude            |
+| [Results\<T>](#class-results) withState(S state);                       | Provides a filtered Results with only entities having the required state              |
+
 
 ## Support Dominion
 
