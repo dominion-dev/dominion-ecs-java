@@ -130,7 +130,7 @@ as a reference to get started implementing your first app.
 | Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        |
 | Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   |
 
-Dominion is now in _**Preview**_.
+Dominion is officially in _**Preview**_.
 
 [Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
