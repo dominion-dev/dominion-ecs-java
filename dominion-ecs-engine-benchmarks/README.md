@@ -8,12 +8,12 @@ natively with JDK Azul-17 aarch64:
 
 | 1,000,000 Entities                                  | Average Time |
 |:----------------------------------------------------|:------------:|
-| **Create** entities with **no** component           |   0.019 s    |
-| **Create** entities with **1** component            |   0.037 s    |
-| **Create** entities with **2** components           |   0.047 s    |
+| **Create** entities with **no** component           |   0.018 s    |
+| **Create** entities with **1** component            |   0.039 s    |
+| **Create** entities with **2** components           |   0.051 s    |
 | **Create** entities with **4** components           |   0.064 s    |
-| **Create** entities with **8** components           |   0.082 s    |
-| **Create** entities with **16** components          |   0.120 s    |
+| **Create** entities with **8** components           |   0.085 s    |
+| **Create** entities with **16** components          |   0.124 s    |
 |                                                     |              |
 | **Delete** entities with **any** comp.count         |   0.030 s    |
 |                                                     |              |
@@ -22,72 +22,72 @@ natively with JDK Azul-17 aarch64:
 
 | 1,000,000 Entities                  | Average Time |
 |-------------------------------------|:------------:|
-| **Add** to **1** component          |   0.090 s    |
-| **Add** to **2** components         |   0.095 s    |
-| **Add** to **4** components         |   0.105 s    |
+| **Add** to **1** component          |   0.096 s    |
+| **Add** to **2** components         |   0.102 s    |
+| **Add** to **4** components         |   0.112 s    |
 | **Add** to **8** components         |   0.150 s    |
-| **Add** to **16** components        |   0.180 s    |
+| **Add** to **16** components        |   0.220 s    |
 |                                     |              |
-| **Remove** from **1** component     |   0.045 s    |
+| **Remove** from **1** component     |   0.046 s    |
 | **Remove** from **2** components    |   0.085 s    |
-| **Remove** from **4** components    |   0.110 s    |
+| **Remove** from **4** components    |   0.113 s    |
 | **Remove** from **8** components    |   0.140 s    |
-| **Remove** from **16** components   |   0.170 s    |
+| **Remove** from **16** components   |   0.216 s    |
 |                                     |              ||                                        |              |
-| **SetState** with **1** component   |   0.037 s    |
-| **SetState** with **4** components  |   0.038 s    |
-| **SetState** with **8** components  |   0.039 s    |
-| **SetState** with **16** components |   0.040 s    |
+| **SetState** with **1** component   |   0.050 s    |
+| **SetState** with **4** components  |   0.050 s    |
+| **SetState** with **8** components  |   0.050 s    |
+| **SetState** with **16** components |   0.050 s    |
 |                                     |              |
-| **Has** with **1** component type   |   0.007 s    |
-| **Has** with **4** component types  |   0.011 s    |
-| **Has** with **8** component types  |   0.011 s    |
-| **Has** with **16** component types |   0.011 s    |
+| **Has** with **1** component type   |   0.009 s    |
+| **Has** with **4** component types  |   0.016 s    |
+| **Has** with **8** component types  |   0.016 s    |
+| **Has** with **16** component types |   0.016 s    |
 |                                     |              |
-| **Contains** with **1** component   |   0.008 s    |
-| **Contains** with **4** components  |   0.014 s    |
-| **Contains** with **8** components  |   0.014 s    |
-| **Contains** with **16** components |   0.015 s    |
+| **Contains** with **1** component   |   0.009 s    |
+| **Contains** with **4** components  |   0.019 s    |
+| **Contains** with **8** components  |   0.019 s    |
+| **Contains** with **16** components |   0.019 s    |
 |                                     |              |
 
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
 |-----------------------------------------------|:------------:|:----------------------------------:|
-| **Iterate** entities unpacking **1** comp.    |   0.030 s    |              0.053 s               |
-| **Iterate** entities unpacking **2** comp.    |   0.030 s    |              0.064 s               |
-| **Iterate** entities unpacking **3** comp.    |   0.030 s    |              0.045 s               |
-| **Iterate** entities unpacking **4** comp.    |   0.032 s    |              0.047 s               |
-| **Iterate** entities unpacking **5** comp.    |   0.035 s    |              0.050 s               |
-| **Iterate** entities unpacking **6** comp.    |   0.048 s    |              0.099 s               |
+| **Iterate** entities unpacking **1** comp.    |   0.030 s    |              0.056 s               |
+| **Iterate** entities unpacking **2** comp.    |   0.032 s    |              0.074 s               |
+| **Iterate** entities unpacking **3** comp.    |   0.033 s    |              0.048 s               |
+| **Iterate** entities unpacking **4** comp.    |   0.035 s    |              0.056 s               |
+| **Iterate** entities unpacking **5** comp.    |   0.038 s    |              0.052 s               |
+| **Iterate** entities unpacking **6** comp.    |   0.051 s    |              0.102 s               |
 |                                               |              |                                    |
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
 |--------------------------------------------------------|:------------:|:----------------------------------:|
-| **Iterate** entities unpacking **1** comp.             |   0.053 s    |              0.054 s               |
-| **Iterate** entities unpacking **2** comp.             |   0.046 s    |              0.045 s               |
-| **Iterate** entities unpacking **3** comp.             |   0.050 s    |              0.047 s               |
-| **Iterate** entities unpacking **4** comp.             |   0.053 s    |              0.049 s               |
-| **Iterate** entities unpacking **5** comp.             |   0.056 s    |              0.051 s               |
-| **Iterate** entities unpacking **6** comp.             |   0.061 s    |              0.105 s               |
+| **Iterate** entities unpacking **1** comp.             |   0.047 s    |              0.047 s               |
+| **Iterate** entities unpacking **2** comp.             |   0.047 s    |              0.047 s               |
+| **Iterate** entities unpacking **3** comp.             |   0.049 s    |              0.050 s               |
+| **Iterate** entities unpacking **4** comp.             |   0.053 s    |              0.054 s               |
+| **Iterate** entities unpacking **5** comp.             |   0.056 s    |              0.056 s               |
+| **Iterate** entities unpacking **6** comp.             |   0.059 s    |              0.109 s               |
 |                                                        |              |                                    |
 
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
 |-----------------------------------------------|:------------:|:----------------------------------:|
 | **Stream** entities unpacking **1** comp.     |   0.051 s    |              0.049 s               |
-| **Stream** entities unpacking **2** comp.     |   0.057 s    |              0.052 s               |
-| **Stream** entities unpacking **3** comp.     |   0.065 s    |              0.059 s               |
-| **Stream** entities unpacking **4** comp.     |   0.072 s    |              0.067 s               |
+| **Stream** entities unpacking **2** comp.     |   0.057 s    |              0.053 s               |
+| **Stream** entities unpacking **3** comp.     |   0.065 s    |              0.063 s               |
+| **Stream** entities unpacking **4** comp.     |   0.074 s    |              0.069 s               |
 | **Stream** entities unpacking **5** comp.     |   0.084 s    |              0.078 s               |
-| **Stream** entities unpacking **6** comp.     |   0.105 s    |              0.102 s               |
+| **Stream** entities unpacking **6** comp.     |   0.108 s    |              0.103 s               |
 |                                               |              |                                    |
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
 |--------------------------------------------------------|:------------:|:----------------------------------:|
-| **Stream** entities unpacking **1** comp.              |   0.060 s    |              0.075 s               |
-| **Stream** entities unpacking **2** comp.              |   0.066 s    |              0.080 s               |
-| **Stream** entities unpacking **3** comp.              |   0.075 s    |              0.089 s               |
-| **Stream** entities unpacking **4** comp.              |   0.095 s    |              0.096 s               |
-| **Stream** entities unpacking **5** comp.              |   0.111 s    |              0.104 s               |
-| **Stream** entities unpacking **6** comp.              |   0.123 s    |              0.111 s               |
+| **Stream** entities unpacking **1** comp.              |   0.062 s    |              0.076 s               |
+| **Stream** entities unpacking **2** comp.              |   0.066 s    |              0.081 s               |
+| **Stream** entities unpacking **3** comp.              |   0.075 s    |              0.088 s               |
+| **Stream** entities unpacking **4** comp.              |   0.094 s    |              0.096 s               |
+| **Stream** entities unpacking **5** comp.              |   0.109 s    |              0.102 s               |
+| **Stream** entities unpacking **6** comp.              |   0.124 s    |              0.109 s               |
 |                                                        |              |                                    |
 
 ## Java and benchmarks
