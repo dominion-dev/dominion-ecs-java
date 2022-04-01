@@ -9,7 +9,8 @@ import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.api.Results.*;
-import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.Composition.StateIterator;
+import dev.dominion.ecs.engine.CompositionRepository.Node;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
@@ -79,38 +80,38 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public <T> Results<With1<T>> findEntitiesWith(Class<T> type) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type);
-        return new ResultsWith1<>(compositions.getClassIndex(), nodes, type);
+        Map<IndexKey, Node> nodes = compositions.findWith(type);
+        return new ResultsWith1<>(compositions, nodes, type);
     }
 
     @Override
     public <T1, T2> Results<With2<T1, T2>> findEntitiesWith(Class<T1> type1, Class<T2> type2) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2);
-        return new ResultsWith2<>(compositions.getClassIndex(), nodes, type1, type2);
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2);
+        return new ResultsWith2<>(compositions, nodes, type1, type2);
     }
 
     @Override
     public <T1, T2, T3> Results<With3<T1, T2, T3>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3);
-        return new ResultsWith3<>(compositions.getClassIndex(), nodes, type1, type2, type3);
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3);
+        return new ResultsWith3<>(compositions, nodes, type1, type2, type3);
     }
 
     @Override
     public <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4);
-        return new ResultsWith4<>(compositions.getClassIndex(), nodes, type1, type2, type3, type4);
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4);
+        return new ResultsWith4<>(compositions, nodes, type1, type2, type3, type4);
     }
 
     @Override
     public <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4, type5);
-        return new ResultsWith5<>(compositions.getClassIndex(), nodes, type1, type2, type3, type4, type5);
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5);
+        return new ResultsWith5<>(compositions, nodes, type1, type2, type3, type4, type5);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
-        Collection<CompositionRepository.Node> nodes = compositions.find(type1, type2, type3, type4, type5, type6);
-        return new ResultsWith6<>(compositions.getClassIndex(), nodes, type1, type2, type3, type4, type5, type6);
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5, type6);
+        return new ResultsWith6<>(compositions, nodes, type1, type2, type3, type4, type5, type6);
     }
 
     @Override
@@ -177,23 +178,23 @@ public final class EntityRepository implements Dominion {
     }
 
     public static abstract class AbstractResults<T> implements Results<T> {
-        private final ClassIndex classIndex;
-        private final Collection<CompositionRepository.Node> nodes;
+        private final CompositionRepository compositionRepository;
+        private final Map<IndexKey, Node> nodeMap;
         protected IndexKey stateKey;
 
-        public AbstractResults(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes) {
-            this.classIndex = classIndex;
-            this.nodes = nodes;
+        public AbstractResults(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap) {
+            this.compositionRepository = compositionRepository;
+            this.nodeMap = nodeMap;
         }
 
         abstract Iterator<T> compositionIterator(Composition composition);
 
         @Override
         public Iterator<T> iterator() {
-            return nodes != null ?
-                    (nodes.size() > 1 ?
-                            new IteratorWrapper<>(this, nodes.iterator()) :
-                            compositionIterator(nodes.iterator().next().getComposition()))
+            return nodeMap != null ?
+                    (nodeMap.size() > 1 ?
+                            new IteratorWrapper<>(this, nodeMap.values().iterator()) :
+                            compositionIterator(nodeMap.values().iterator().next().getComposition()))
                     :
                     new Iterator<>() {
                         @Override
@@ -210,7 +211,7 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public <S extends Enum<S>> Results<T> withState(S state) {
-            stateKey = Composition.calcIndexKey(state, classIndex);
+            stateKey = Composition.calcIndexKey(state, compositionRepository.getClassIndex());
             return this;
         }
 
@@ -221,16 +222,17 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public Results<T> excludeWith(Class<?>... componentTypes) {
-            return null; //ToDo
+            compositionRepository.removeFrom(nodeMap, componentTypes);
+            return this;
         }
     }
 
     private static final class IteratorWrapper<T> implements Iterator<T> {
         private final AbstractResults<T> owner;
-        private final Iterator<CompositionRepository.Node> nodesIterator;
+        private final Iterator<Node> nodesIterator;
         private Iterator<T> wrapped;
 
-        public IteratorWrapper(AbstractResults<T> owner, Iterator<CompositionRepository.Node> nodesIterator) {
+        public IteratorWrapper(AbstractResults<T> owner, Iterator<Node> nodesIterator) {
             this.owner = owner;
             this.nodesIterator = nodesIterator;
             this.wrapped = this.nodesIterator.hasNext() ?
@@ -263,8 +265,8 @@ public final class EntityRepository implements Dominion {
     public final static class ResultsWith1<T> extends AbstractResults<With1<T>> {
         private final Class<T> type;
 
-        public ResultsWith1(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T> type) {
-            super(classIndex, nodes);
+        public ResultsWith1(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T> type) {
+            super(compositionRepository, nodeMap);
             this.type = type;
         }
 
@@ -272,7 +274,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With1<T>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type, iterator);
         }
     }
@@ -281,8 +283,8 @@ public final class EntityRepository implements Dominion {
         private final Class<T1> type1;
         private final Class<T2> type2;
 
-        public ResultsWith2(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2) {
-            super(classIndex, nodes);
+        public ResultsWith2(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T1> type1, Class<T2> type2) {
+            super(compositionRepository, nodeMap);
             this.type1 = type1;
             this.type2 = type2;
         }
@@ -291,7 +293,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With2<T1, T2>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type1, type2, iterator);
         }
     }
@@ -301,8 +303,8 @@ public final class EntityRepository implements Dominion {
         private final Class<T2> type2;
         private final Class<T3> type3;
 
-        public ResultsWith3(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
-            super(classIndex, nodes);
+        public ResultsWith3(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+            super(compositionRepository, nodeMap);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -312,7 +314,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With3<T1, T2, T3>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type1, type2, type3, iterator);
         }
     }
@@ -323,8 +325,8 @@ public final class EntityRepository implements Dominion {
         private final Class<T3> type3;
         private final Class<T4> type4;
 
-        public ResultsWith4(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
-            super(classIndex, nodes);
+        public ResultsWith4(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+            super(compositionRepository, nodeMap);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -335,7 +337,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With4<T1, T2, T3, T4>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type1, type2, type3, type4, iterator);
         }
     }
@@ -347,8 +349,8 @@ public final class EntityRepository implements Dominion {
         private final Class<T4> type4;
         private final Class<T5> type5;
 
-        public ResultsWith5(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
-            super(classIndex, nodes);
+        public ResultsWith5(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+            super(compositionRepository, nodeMap);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -360,7 +362,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With5<T1, T2, T3, T4, T5>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type1, type2, type3, type4, type5, iterator);
         }
     }
@@ -373,8 +375,8 @@ public final class EntityRepository implements Dominion {
         private final Class<T5> type5;
         private final Class<T6> type6;
 
-        public ResultsWith6(ClassIndex classIndex, Collection<CompositionRepository.Node> nodes, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
-            super(classIndex, nodes);
+        public ResultsWith6(CompositionRepository compositionRepository, Map<IndexKey, Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+            super(compositionRepository, nodeMap);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -387,7 +389,7 @@ public final class EntityRepository implements Dominion {
         Iterator<With6<T1, T2, T3, T4, T5, T6>> compositionIterator(Composition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
-                    new Composition.StateIterator(composition.getStateRootEntity(stateKey));
+                    new StateIterator(composition.getStateRootEntity(stateKey));
             return composition.select(type1, type2, type3, type4, type5, type6, iterator);
         }
     }

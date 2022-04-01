@@ -196,13 +196,13 @@ public final class CompositionRepository implements AutoCloseable {
 
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    public Collection<Node> find(Class<?>... componentTypes) {
+    public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
         switch (componentTypes.length) {
             case 0:
                 return null;
             case 1:
                 Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentTypes[0])));
-                return node == null ? null : node.linkedNodes.values();
+                return node == null ? null : node.copyOfLinkedNodes();
             default:
                 Map<IndexKey, Node> currentCompositions = null;
                 for (int i = 0; i < componentTypes.length; i++) {
@@ -211,18 +211,34 @@ public final class CompositionRepository implements AutoCloseable {
                         continue;
                     }
                     currentCompositions = currentCompositions == null ?
-                            node.copyLinkedNodeMap() :
-                            retainAll(currentCompositions, node.linkedNodes)
+                            node.copyOfLinkedNodes() :
+                            intersect(currentCompositions, node.linkedNodes)
                     ;
                 }
-                return currentCompositions == null ? null : currentCompositions.values();
+                return currentCompositions;
+        }
+    }
+
+    public void removeFrom(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+        if (componentTypes.length == 0) {
+            return;
+        }
+        for (Class<?> componentType : componentTypes) {
+            IndexKey indexKey = new IndexKey(classIndex.getIndex(componentType));
+            nodeMap.remove(indexKey);
+            Node node = nodeCache.getNode(indexKey);
+            if (node != null) {
+                for (IndexKey linkedNodeKey : node.linkedNodes.keySet()) {
+                    nodeMap.remove(linkedNodeKey);
+                }
+            }
         }
     }
 
     @SuppressWarnings("Java8CollectionRemoveIf")
-    private Map<IndexKey, Node> retainAll(Map<IndexKey, Node> subject, Map<IndexKey, Node> other) {
-        Set<IndexKey> longSet = subject.keySet();
-        Iterator<IndexKey> iterator = longSet.iterator();
+    private Map<IndexKey, Node> intersect(Map<IndexKey, Node> subject, Map<IndexKey, Node> other) {
+        Set<IndexKey> indexKeySet = subject.keySet();
+        Iterator<IndexKey> iterator = indexKeySet.iterator();
         while (iterator.hasNext()) {
             if (!other.containsKey(iterator.next())) {
                 iterator.remove();
@@ -340,7 +356,7 @@ public final class CompositionRepository implements AutoCloseable {
             return Collections.unmodifiableMap(linkedNodes);
         }
 
-        public Map<IndexKey, Node> copyLinkedNodeMap() {
+        public Map<IndexKey, Node> copyOfLinkedNodes() {
             return new HashMap<>(linkedNodes);
         }
 
