@@ -114,7 +114,7 @@ mvn clean install
 With Dominion already built in your local folder, you can run the example code with the following commands:
 
 ```
-java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.4-SNAPSHOT.jar
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar
 ```
 
 Finally, start using the
