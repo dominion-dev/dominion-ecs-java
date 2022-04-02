@@ -110,6 +110,9 @@ public final class Composition {
         if (components != null && entity.isPooledArray()) {
             arrayPool.push(components);
         }
+        if (entity.getPrev() != null || entity.getNext() != null) {
+            detachEntityState(entity);
+        }
         entity.setData(null);
         return true;
     }
