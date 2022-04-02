@@ -5,7 +5,7 @@ Dominion strives to have a minimal API surface to ease the learning curve for us
 With a bunch of well-organized classes, the library is capable of providing all the functionality implemented by the
 engine. This documentation will focus on these few interfaces.
 
-As per tradition, Java projects come with a standard Javadoc site for API documentation. Domination breaks tradition by
+As per tradition, Java projects come with a standard Javadoc site for API documentation. Dominion breaks tradition by
 putting all API references into this README to provide seamless navigation within the repository.
 
 ## Package dev.dominion.ecs.api
