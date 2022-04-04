@@ -9,9 +9,8 @@ import java.util.Arrays;
 
 /**
  * IndexKey objects run in Dominion's critical path, better performance here is not just an option.
- * In case of an int hashCode collision, the equals() method will compare the long value of the IndexKey and the
- * two most significant bytes (after the xor operation) of each data element to keep the event of a IndexKey collision
- * statistically irrelevant.
+ * In case of an int hashCode collision, the equals() method will compare the two most significant bytes
+ * (after the xor operation) of each data element to keep the event of a IndexKey collision statistically irrelevant.
  */
 public final class IndexKey {
     private final int hashCode;

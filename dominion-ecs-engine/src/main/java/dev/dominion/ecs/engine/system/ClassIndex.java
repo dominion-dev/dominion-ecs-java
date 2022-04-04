@@ -15,8 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * ClassIndex is the cornerstone of Dominion.
  * In less than 2 nanoseconds, this class can provide a progressive int value for each different component type.
- * This allows you to use the blazing fast counting sort algorithm - with O(n+k) time complexity - to sort component types
- * (even finding duplicates) and implement a very efficient IndexKey to represent a multi-component types key for Map.
+ * This allows you to use the blazing fast counting sort algorithm - with O(n+k) time complexity - to sort component
+ * types (even finding duplicates) and implement a very efficient {@link IndexKey} to represent a multi-component type
+ * key for Map.
  */
 public final class ClassIndex implements AutoCloseable {
     public final static int INT_BYTES_SHIFT = 2;
@@ -135,14 +136,12 @@ public final class ClassIndex implements AutoCloseable {
         return indexes;
     }
 
-    public int[] getIndexOrAddClassBatch(Object[] objects) {
-        int[] indexes = new int[objects.length];
-        for (int i = 0; i < objects.length; i++) {
-            indexes[i] = getIndexOrAddClass(objects[i].getClass());
-        }
-        return indexes;
-    }
-
+    /**
+     * Provides a multi-component type key by implementing the counting-sort algorithm
+     *
+     * @param objects the given components
+     * @return the multi-component type key
+     */
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public IndexKey getIndexKey(Object[] objects) {
         boolean[] checkArray = new boolean[index + objects.length + 1];
