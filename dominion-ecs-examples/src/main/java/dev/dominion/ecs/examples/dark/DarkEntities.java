@@ -7,6 +7,9 @@ package dev.dominion.ecs.examples.dark;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public final class DarkEntities {
 
@@ -17,17 +20,37 @@ public final class DarkEntities {
 
     public static void main(String[] args) {
         Screen screen = new Screen(100, 20);
-        screen.drawText("Hello Dominion", 2, 10, Alignment.LEFT);
-        screen.drawText("Hello Dominion", 2, 11, Alignment.CENTER);
-        screen.drawText("Hello Dominion", 2, 12, Alignment.RIGHT);
-        screen.drawRect(0, 0, screen.width, screen.height);
-        screen.update();
+        new Menu(screen);
     }
 
     enum Alignment {
         LEFT,
         CENTER,
         RIGHT
+    }
+
+    static class Menu {
+        Menu(Screen screen) {
+            screen.drawRect(0, 0, screen.width, screen.height);
+            screen.drawText("Dark Entities", screen.width >> 1, screen.height >> 1, Alignment.CENTER);
+            screen.prompt("What's your name, Hero?", "^[a-zA-Z0-9-_]+$");
+            screen.update();
+            screen.prompt(String.format("Hello %s, are you ready to go? (press Y + ENTER)", screen.lastInput));
+            screen.update();
+            if (screen.lastInput.startsWith("y")) {
+                new Game(screen);
+            }
+        }
+    }
+
+    static class Game {
+        Game(Screen screen) {
+            screen.clear();
+            screen.drawRect(0, 0, screen.width, screen.height);
+            screen.drawText("The Game", screen.width >> 1, screen.height >> 1, Alignment.CENTER);
+            screen.prompt("To move, press WASD keys + ENTER", "^[wasd]+$");
+            screen.update();
+        }
     }
 
     static final class Position {
@@ -51,10 +74,12 @@ public final class DarkEntities {
         private final ProcessBuilder clearTermBuilder = System.getProperty("os.name").contains("Win") ?
                 new ProcessBuilder("cmd", "/c", "cls") :
                 new ProcessBuilder("clear");
-
         private final int width;
         private final int height;
         private final char[][] buffer;
+        private Scanner scanner = new Scanner(System.in);
+        private Prompt prompt;
+        private String lastInput;
 
         public Screen(int width, int height) {
             this.width = width;
@@ -103,10 +128,31 @@ public final class DarkEntities {
             }
         }
 
+        public void prompt(String outMessage) {
+            prompt(outMessage, null);
+        }
+
+        public void prompt(String outMessage, String inPattern) {
+            prompt = new Prompt(outMessage, inPattern == null ? null : Pattern.compile(inPattern));
+        }
+
         public void update() {
             clearTerm();
             for (char[] row : buffer) {
                 System.out.println(row);
+            }
+            if (prompt == null) {
+                return;
+            }
+            System.out.printf("\n> %s %s ", prompt.err, prompt.outMessage);
+            try {
+                lastInput = prompt.inPattern == null ? scanner.next() : scanner.next(prompt.inPattern);
+                scanner = new Scanner(System.in);
+            } catch (InputMismatchException e) {
+                prompt = new Prompt(prompt.outMessage, prompt.inPattern
+                        , String.format("'%s' is not good.. ", scanner.next()));
+                scanner = new Scanner(System.in);
+                update();
             }
         }
 
@@ -116,6 +162,16 @@ public final class DarkEntities {
                 clearTerm.waitFor();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+
+        public String getLastInput() {
+            return lastInput;
+        }
+
+        record Prompt(String outMessage, Pattern inPattern, String err) {
+            public Prompt(String outMessage, Pattern inPattern) {
+                this(outMessage, inPattern, "");
             }
         }
     }
