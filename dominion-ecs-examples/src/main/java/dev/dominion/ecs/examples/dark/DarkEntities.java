@@ -22,7 +22,7 @@ public final class DarkEntities {
         screen.drawRect(0, 0, screen.width, screen.height);
         screen.drawText("Dark Entities", screen.width >> 1, screen.height >> 1, Screen.TextAlignment.CENTER);
         String playerName = screen.prompt("What's your name, Hero?", "^[a-zA-Z0-9-_]+$");
-        String input = screen.prompt(String.format("Hello %s, are you ready to go? (press Y + ENTER)", playerName));
+        String input = screen.prompt(String.format("Hello %s, are you ready for the darkness? (press Y to confirm)", playerName));
         if (input.startsWith("y")) {
             new Game(playerName, screen);
         }
@@ -40,11 +40,12 @@ public final class DarkEntities {
         }
 
         private void loop() {
-            for (; ; ) {
+            boolean goOn = true;
+            while (goOn) {
                 String pressedKey = screen.prompt("Press WASD keys to Move, Q to Quit", "^[wasdq]+$");
-                screen.clear();
                 if (pressedKey.startsWith("q")) {
-                    break;
+                    goOn = !confirmQuit();
+                    continue;
                 }
                 String moveTo = switch (pressedKey.substring(0, 1)) {
                     case "w" -> "up";
@@ -53,8 +54,14 @@ public final class DarkEntities {
                     case "d" -> "right";
                     default -> "unknown";
                 };
+                screen.clear();
                 screen.drawText(String.format("Move to %s!", moveTo), screen.width >> 1, screen.height >> 1, Screen.TextAlignment.CENTER);
             }
+        }
+
+        private boolean confirmQuit() {
+            String input = screen.prompt("Do you really want to quit? (press Y to confirm)");
+            return input.startsWith("y");
         }
     }
 
