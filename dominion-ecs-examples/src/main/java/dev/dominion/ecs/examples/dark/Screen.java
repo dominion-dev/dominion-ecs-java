@@ -5,17 +5,21 @@
 
 package dev.dominion.ecs.examples.dark;
 
+import dev.dominion.ecs.examples.dark.DarkEntities.Position;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-final class Screen {
+public final class Screen {
     public final int width;
     public final int height;
+    public final Position center;
 
-    private final ProcessBuilder clearTermBuilder = System.getProperty("os.name").contains("Win") ? new ProcessBuilder("cmd", "/c", "cls") : new ProcessBuilder("clear");
+    private final ProcessBuilder clearTermBuilder = System.getProperty("os.name").contains("Win") ?
+            new ProcessBuilder("cmd", "/c", "cls") : new ProcessBuilder("clear");
     private final char[][] buffer;
     private Scanner scanner;
     private Prompt prompt;
@@ -23,6 +27,7 @@ final class Screen {
     public Screen(int width, int height) {
         this.width = width;
         this.height = height;
+        this.center = new Position(width >>>1, height >>> 1);
         buffer = new char[height][width];
         scanner = newScanner();
         clear();
@@ -36,6 +41,13 @@ final class Screen {
         for (char[] row : buffer) {
             Arrays.fill(row, ' ');
         }
+    }
+
+    public void drawGlyph(char glyph, int x, int y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+            return;
+        }
+        buffer[y][x] = glyph;
     }
 
     public void drawText(String text, int x, int y, TextAlignment alignment) {
@@ -56,7 +68,8 @@ final class Screen {
     }
 
     public void drawRect(int x, int y, int width, int height) {
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height || width <= 0 || x + width > this.width || height <= 0 || y + height > this.height) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height
+                || width <= 0 || x + width > this.width || height <= 0 || y + height > this.height) {
             return;
         }
         char horizontal = '-', vertical = '|';
