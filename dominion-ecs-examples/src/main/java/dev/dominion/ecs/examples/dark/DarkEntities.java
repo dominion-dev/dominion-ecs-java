@@ -7,6 +7,8 @@ package dev.dominion.ecs.examples.dark;
 
 import dev.dominion.ecs.examples.dark.MapModelBuilder.Tile;
 
+import java.util.Locale;
+
 public final class DarkEntities {
 
     // don't print Dominion's info on startup
@@ -22,10 +24,10 @@ public final class DarkEntities {
 
     private static void menu(Screen screen) {
         screen.drawRect(0, 0, screen.width, screen.height);
-        screen.drawText("Dark Entities", screen.center.x, screen.center.y, Screen.TextAlignment.CENTER);
+        screen.drawText("Dark Entities", screen.center.x(), screen.center.y(), Screen.TextAlignment.CENTER);
         String playerName = screen.prompt("What's your name, Hero?", "^[a-zA-Z0-9-_]+$");
         String input = screen.prompt(String.format("Hello %s, are you ready for the darkness? (press Y to confirm)", playerName));
-        if (input.startsWith("y")) {
+        if (input.toLowerCase().startsWith("y")) {
             new Game(playerName, screen);
         }
     }
@@ -41,7 +43,7 @@ public final class DarkEntities {
             screen.clear();
             renderMap();
             screen.drawText(String.format("Hello %s, your adventure starts here!", playerName)
-                    , screen.center.x, 5, Screen.TextAlignment.CENTER);
+                    , screen.center.x(), 3, Screen.TextAlignment.CENTER);
             loop();
         }
 
@@ -49,9 +51,11 @@ public final class DarkEntities {
             for (int y = 0; y < mapModel.length; y++) {
                 for (int x = 0; x < mapModel[y].length; x++) {
                     screen.drawGlyph(switch (mapModel[y][x]) {
-                        case WALL -> '#';
-                        case FLOOR -> ':';
-                    }, (x - cameraPosition.x) + screen.center.x, (y - cameraPosition.y) + screen.center.y);
+                                case WALL -> '#';
+                                case FLOOR -> ':';
+                            },
+                            (x - cameraPosition.x) * 2 + screen.center.x(),// * 2 to fix the char size ratio
+                            (y - cameraPosition.y) + screen.center.y());
                 }
             }
         }
@@ -59,7 +63,8 @@ public final class DarkEntities {
         private void loop() {
             boolean goOn = true;
             while (goOn) {
-                String pressedKey = screen.prompt("Press WASD keys to Move, Q to Quit", "^[wasdq]+$");
+                String pressedKey = screen.prompt("Press WASD keys to Move, Q to Quit",
+                        "^[wasdqWASDQ]+$").toLowerCase();
                 if (pressedKey.startsWith("q")) {
                     goOn = !confirmQuit();
                     continue;
@@ -77,7 +82,7 @@ public final class DarkEntities {
 
         private boolean confirmQuit() {
             String input = screen.prompt("Do you really want to quit? (press Y to confirm)");
-            return input.startsWith("y");
+            return input.toLowerCase().startsWith("y");
         }
     }
 

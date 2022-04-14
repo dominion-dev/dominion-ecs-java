@@ -5,8 +5,6 @@
 
 package dev.dominion.ecs.examples.dark;
 
-import dev.dominion.ecs.examples.dark.DarkEntities.Position;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.InputMismatchException;
@@ -16,7 +14,7 @@ import java.util.regex.Pattern;
 public final class Screen {
     public final int width;
     public final int height;
-    public final Position center;
+    public final Point center;
 
     private final ProcessBuilder clearTermBuilder = System.getProperty("os.name").contains("Win") ?
             new ProcessBuilder("cmd", "/c", "cls") : new ProcessBuilder("clear");
@@ -27,7 +25,7 @@ public final class Screen {
     public Screen(int width, int height) {
         this.width = width;
         this.height = height;
-        this.center = new Position(width >>>1, height >>> 1);
+        this.center = new Point(width >>> 1, height >>> 1);
         buffer = new char[height][width];
         scanner = newScanner();
         clear();
@@ -121,6 +119,9 @@ public final class Screen {
 
     enum TextAlignment {
         LEFT, CENTER, RIGHT
+    }
+
+    record Point(int x, int y) {
     }
 
     record Prompt(String outMessage, Pattern inPattern, String err) {
