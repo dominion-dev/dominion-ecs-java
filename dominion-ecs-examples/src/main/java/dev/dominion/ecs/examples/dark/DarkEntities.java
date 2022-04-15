@@ -7,8 +7,6 @@ package dev.dominion.ecs.examples.dark;
 
 import dev.dominion.ecs.examples.dark.MapModelBuilder.Tile;
 
-import java.util.Locale;
-
 public final class DarkEntities {
 
     // don't print Dominion's info on startup
@@ -35,11 +33,12 @@ public final class DarkEntities {
     private static class Game {
         private final Screen screen;
         private final Tile[][] mapModel;
-        private final Position cameraPosition = new Position(10, 10);
+        private final Position cameraPosition;
 
         Game(String playerName, Screen screen) {
             this.screen = screen;
-            this.mapModel = MapModelBuilder.build(20, 20, 1);
+            this.mapModel = MapModelBuilder.build(64, 32, 16);
+            this.cameraPosition = new Position(8, 16);
             screen.clear();
             renderMap();
             screen.drawText(String.format("Hello %s, your adventure starts here!", playerName)
