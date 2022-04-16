@@ -15,9 +15,8 @@ public final class DarkEntities {
     }
 
     public static void main(String[] args) {
-        Screen screen = new Screen(100, 20);
+        Screen screen = new Screen(120, 25);
         menu(screen);
-//        new Game("jumpixel", screen);
     }
 
     private static void menu(Screen screen) {
@@ -37,8 +36,8 @@ public final class DarkEntities {
 
         Game(String playerName, Screen screen) {
             this.screen = screen;
-            this.mapModel = MapModelBuilder.build(64, 32, 16);
-            this.cameraPosition = new Position(8, 16);
+            this.mapModel = MapModelBuilder.build(64, 48, 16);
+            this.cameraPosition = new Position(24, 24);
             screen.clear();
             renderMap();
             screen.drawText(String.format("Hello %s, your adventure starts here!", playerName)
