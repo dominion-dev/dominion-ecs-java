@@ -16,26 +16,36 @@ import java.util.Random;
 public final class MapModelBuilder {
     public final static int ROOM_MIN_SIDE_LENGTH = 4;
     public final static int ROOM_MAX_SIDE_LENGTH = 10;
-    private final int width, height;
-    private final Tile[][] mapModel;
-    private final Rect[] rooms;
 
-    private MapModelBuilder(int width, int height, int roomCount) {
-        this.width = width;
-        this.height = height;
-        mapModel = new Tile[height][width];
-        rooms = new Rect[roomCount];
+    private MapModelBuilder() {
     }
 
-    public static Tile[][] build(int width, int height, int roomCount) {
-        var builder = new MapModelBuilder(width, height, roomCount);
-        builder.fillRect(new Rect(0, 0, width, height), Tile.WALL);
-        builder.buildRooms();
-        builder.buildHallways();
-        return builder.mapModel;
+    public static MapModel build(int width, int height, int roomCount) {
+        return buildHallways(buildRooms(width, height, roomCount));
     }
 
-    private void buildRooms() {
+    private static void fillRect(Rect rect, Tile tile, Tile[][] map) {
+        for (int i = rect.top(); i < rect.bottom(); i++) {
+            Arrays.fill(map[i], rect.left(), rect.right(), tile);
+        }
+    }
+
+    private static void hLine(int x1, int x2, int y, Tile[][] map) {
+        Arrays.fill(map[y], Math.min(x1, x2), Math.max(x1, x2) + 1, Tile.FLOOR);
+    }
+
+    private static void vLine(int y1, int y2, int x, Tile[][] map) {
+        for (int i = Math.min(y1, y2); i <= Math.max(y1, y2); i++) {
+            map[i][x] = Tile.FLOOR;
+        }
+    }
+
+    private static MapModel buildRooms(int width, int height, int roomCount) {
+        var map = new Tile[height][width];
+        var rooms = new Rect[roomCount];
+        // first, fill the map with walls
+        fillRect(new Rect(0, 0, width, height), Tile.WALL, map);
+        // then carve randomly generated non-overlapping rooms
         var rand = new Random();
         for (int index = 0; index < rooms.length; ) {
             var room = new Rect(
@@ -53,16 +63,22 @@ public final class MapModelBuilder {
             }
             if (addRoom) {
                 rooms[index++] = room;
-                fillRect(room, Tile.FLOOR);
+                // carve the room
+                fillRect(room, Tile.FLOOR, map);
             }
         }
+        rooms = Arrays.stream(rooms)
+                .sorted(Comparator.comparingInt(r -> r.center.x))
+                .toArray(Rect[]::new);
+        return new MapModel(map, rooms, width, height);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void buildHallways() {
+    private static MapModel buildHallways(MapModel mapModel) {
+        var map = mapModel.map;
+        var rooms = mapModel.rooms;
         Random rand = new Random();
-        Arrays.stream(this.rooms)
-                .sorted(Comparator.comparingInt(r -> r.center.x))
+        Arrays.stream(rooms)
 //                .peek(System.out::println)
                 .reduce((prev, curr) -> {
                     int hY, vX;
@@ -73,39 +89,24 @@ public final class MapModelBuilder {
                         hY = curr.center.y;
                         vX = prev.center.x;
                     }
-                    hLine(prev.center.x, curr.center.x, hY);
-                    vLine(prev.center.y, curr.center.y, vX);
+                    hLine(prev.center.x, curr.center.x, hY, map);
+                    vLine(prev.center.y, curr.center.y, vX, map);
                     return curr;
                 });
-    }
-
-    private void fillRect(Rect rect, Tile tile) {
-        for (int i = rect.top(); i < rect.bottom(); i++) {
-            Arrays.fill(mapModel[i], rect.left(), rect.right(), tile);
-        }
-    }
-
-    private void hLine(int x1, int x2, int y) {
-        Arrays.fill(mapModel[y], Math.min(x1, x2), Math.max(x1, x2) + 1, Tile.FLOOR);
-    }
-
-    private void vLine(int y1, int y2, int x) {
-        for (int i = Math.min(y1, y2); i <= Math.max(y1, y2); i++) {
-            mapModel[i][x] = Tile.FLOOR;
-        }
+        return mapModel;
     }
 
     public enum Tile {
-        WALL,
-        FLOOR
+        WALL, FLOOR
+    }
+
+    record MapModel(Tile[][] map, Rect[] rooms, int width, int height) {
     }
 
     public record Rect(int left, int top, int right, int bottom, Point center) {
 
         public Rect(int left, int top, int right, int bottom) {
-            this(left, top, right, bottom
-                    , new Point((left + right) >>> 1, (top + bottom) >>> 1)
-            );
+            this(left, top, right, bottom, new Point((left + right) >>> 1, (top + bottom) >>> 1));
         }
 
         public Rect(int x, int y, short width, short height) {
@@ -113,11 +114,7 @@ public final class MapModelBuilder {
         }
 
         public boolean intersect(Rect other) {
-            return other != null &&
-                    !(other.left > right ||
-                            other.right < left ||
-                            other.top > bottom ||
-                            other.bottom < top);
+            return other != null && !(other.left > right || other.right < left || other.top > bottom || other.bottom < top);
         }
 
         record Point(int x, int y) {

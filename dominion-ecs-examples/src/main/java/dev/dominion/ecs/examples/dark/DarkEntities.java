@@ -5,6 +5,8 @@
 
 package dev.dominion.ecs.examples.dark;
 
+import dev.dominion.ecs.examples.dark.MapModelBuilder.MapModel;
+import dev.dominion.ecs.examples.dark.MapModelBuilder.Rect;
 import dev.dominion.ecs.examples.dark.MapModelBuilder.Tile;
 
 public final class DarkEntities {
@@ -31,13 +33,14 @@ public final class DarkEntities {
 
     private static class Game {
         private final Screen screen;
-        private final Tile[][] mapModel;
+        private final MapModel mapModel;
         private final Position cameraPosition;
 
         Game(String playerName, Screen screen) {
             this.screen = screen;
             this.mapModel = MapModelBuilder.build(64, 48, 16);
-            this.cameraPosition = new Position(24, 24);
+            Rect.Point firstRoomCenter = mapModel.rooms()[0].center();
+            this.cameraPosition = new Position(firstRoomCenter.x(), firstRoomCenter.y());
             screen.clear();
             renderMap();
             screen.drawText(String.format("Hello %s, your adventure starts here!", playerName)
@@ -46,9 +49,10 @@ public final class DarkEntities {
         }
 
         private void renderMap() {
-            for (int y = 0; y < mapModel.length; y++) {
-                for (int x = 0; x < mapModel[y].length; x++) {
-                    screen.drawGlyph(switch (mapModel[y][x]) {
+            Tile[][] map = mapModel.map();
+            for (int y = 0; y < map.length; y++) {
+                for (int x = 0; x < map[y].length; x++) {
+                    screen.drawGlyph(switch (map[y][x]) {
                                 case WALL -> '#';
                                 case FLOOR -> ':';
                             },
