@@ -116,6 +116,13 @@ public interface Dominion extends AutoCloseable {
     boolean deleteEntity(Entity entity);
 
     /**
+     * Create a new Scheduler to submit/suspend/resume systems that are executed on every tick.
+     *
+     * @return a new scheduler
+     */
+    Scheduler createScheduler();
+
+    /**
      * Finds all entities with a component of the specified type
      *
      * @param type the component class

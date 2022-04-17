@@ -9,6 +9,7 @@ import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.api.Results.*;
+import dev.dominion.ecs.api.Scheduler;
 import dev.dominion.ecs.engine.Composition.StateIterator;
 import dev.dominion.ecs.engine.CompositionRepository.Node;
 import dev.dominion.ecs.engine.system.ConfigSystem;
@@ -76,6 +77,11 @@ public final class EntityRepository implements Dominion {
     @Override
     public boolean deleteEntity(Entity entity) {
         return ((IntEntity) entity).delete();
+    }
+
+    @Override
+    public Scheduler createScheduler() {
+        return null;
     }
 
     @Override
