@@ -14,36 +14,38 @@ package dev.dominion.ecs.api;
  * Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
  * A deltaTime method provides the time in seconds between the last tick and the current tick.
  * <p>
+ * <pre>
  * schedule(A)
  * parallelSchedule(B,C)
  * schedule(D)
  * tickAtFixedRate(1)
- * <p>
+ *
  * system A ---#---------------|*------|*------|*------|*----------
  * system B --------#----------|-*-----|-*-----|-*-----|-*---------
  * system C --------#----------|-*-----|-*-----|-*-----|-*---------
  * system D -------------#-----|--*----|--*----|--*----|--*--------
- * |    |    |    tick0s  tick1s  tick2s  tickNs
- * +A   +B,C  +D    |>
- * <p>
+ *             |    |    |    tick0s  tick1s  tick2s  tickNs
+ *            +A   +B,C  +D    |>
+ *
  * suspend(B)
  * suspend(D)
- * <p>
+ *
  * system A -|*--------------|*--------------|*-------
  * system B -|-*----X--------|---------------|--------
  * system C -|-*-------------|-*-------------|-*------
  * system D -|--*-------X----|---------------|--------
- * tickNs  |   |   tickN+1s      tickN+2s
- * -B  -D
- * <p>
+ *          tickNs  |   |   tickN+1s      tickN+2s
+ *                 -B  -D
+ *
  * resume(B)
- * <p>
+ *
  * system A -|*----------|*-----------|*-------
  * system B -|------#----|-*----------|-*------
  * system C -|-*---------|-*----------|-*------
  * system D -|---------- |------------|--------
- * tickNs  |   tickN+1s     tickN+2s
- * +B
+ *          tickNs  |   tickN+1s     tickN+2s
+ *                 +B
+ * </pre>
  */
 public interface Scheduler {
 
