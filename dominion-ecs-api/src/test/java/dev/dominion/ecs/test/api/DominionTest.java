@@ -3,6 +3,7 @@ package dev.dominion.ecs.test.api;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.api.Scheduler;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -76,6 +77,11 @@ public class DominionTest {
         @Override
         public boolean deleteEntity(Entity entity) {
             return false;
+        }
+
+        @Override
+        public Scheduler createScheduler() {
+            return null;
         }
 
         @Override

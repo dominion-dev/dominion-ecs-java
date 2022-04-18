@@ -39,7 +39,7 @@ public class HelloDominion {
         };
 
         // run the system
-        Executors.newScheduledThreadPool(1)
+        Executors.newSingleThreadScheduledExecutor()
                 .scheduleAtFixedRate(system, 0, 1, TimeUnit.SECONDS);
     }
 
