@@ -6,14 +6,44 @@
 package dev.dominion.ecs.api;
 
 /**
- * A Scheduler provides methods to submit/suspend/resume systems that are executed on every tick.
+ * A light Scheduler that provides methods to submit/suspend/resume systems that are executed on every tick.
  * Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
  * guaranteed to run sequentially.
  * Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
- * A System, or a slot of parallel systems, can be suspended and resumed running at any time and preserving its
- * execution order.
+ * Systems, even if running parallel, can be suspended and resumed at any time, maintaining the order of execution.
  * Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
  * A deltaTime method provides the time in seconds between the last tick and the current tick.
+ * <p>
+ * schedule(A)
+ * parallelSchedule(B,C)
+ * schedule(D)
+ * tickAtFixedRate(1)
+ * <p>
+ * system A ---#---------------|*------|*------|*------|*----------
+ * system B --------#----------|-*-----|-*-----|-*-----|-*---------
+ * system C --------#----------|-*-----|-*-----|-*-----|-*---------
+ * system D -------------#-----|--*----|--*----|--*----|--*--------
+ * |    |    |    tick0s  tick1s  tick2s  tickNs
+ * +A   +B,C  +D    |>
+ * <p>
+ * suspend(B)
+ * suspend(D)
+ * <p>
+ * system A -|*--------------|*--------------|*-------
+ * system B -|-*----X--------|---------------|--------
+ * system C -|-*-------------|-*-------------|-*------
+ * system D -|--*-------X----|---------------|--------
+ * tickNs  |   |   tickN+1s      tickN+2s
+ * -B  -D
+ * <p>
+ * resume(B)
+ * <p>
+ * system A -|*----------|*-----------|*-------
+ * system B -|------#----|-*----------|-*------
+ * system C -|-*---------|-*----------|-*------
+ * system D -|---------- |------------|--------
+ * tickNs  |   tickN+1s     tickN+2s
+ * +B
  */
 public interface Scheduler {
 
@@ -32,12 +62,12 @@ public interface Scheduler {
      * Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
      *
      * @param systems list of systems to run concurrently in a slot
-     * @return the slot of the underlying parallel systems that can be suspended and resumed as a whole
+     * @return the parallel systems that can be suspended and resumed individually
      */
-    Runnable parallelSchedule(Runnable... systems);
+    Runnable[] parallelSchedule(Runnable... systems);
 
     /**
-     * Suspends an already scheduled system or a slot of parallel systems, preserving its execution order.
+     * Suspends an already scheduled system preserving its execution order.
      *
      * @param system the system to be suspended
      */
@@ -45,7 +75,7 @@ public interface Scheduler {
 
 
     /**
-     * Resumes an already suspended system or a slot of parallel systems, in the original execution order
+     * Resumes an already suspended system in the original execution order
      *
      * @param system the system to be resumed
      */
