@@ -15,9 +15,11 @@ public final class ConfigSystem {
     public static final String CLASS_INDEX_BIT = "class-index-bit";
     public static final String CHUNK_COUNT_BIT = "chunk-count-bit";
     public static final String CHUNK_BIT = "chunk-bit";
+    public static final String SYSTEM_TIMEOUT_SECONDS = "system-timeout-seconds";
     public static final int DEFAULT_CLASS_INDEX_BIT = 20;
     public static final int DEFAULT_CHUNK_COUNT_BIT = 16;
     public static final int DEFAULT_CHUNK_BIT = 14;
+    public static final int DEFAULT_SYSTEM_TIMEOUT_SECONDS = 3;
 
     public static boolean showBanner() {
         String showBanner = System.getProperty(getPropertyName(SHOW_BANNER));
