@@ -48,9 +48,11 @@ public class SystemScheduler implements Scheduler {
         };
         mainExecutor = Executors.newSingleThreadExecutor(threadFactory);
         tickExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        parallelExecutor = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors(),
-                threadFactory);
+        int nThreads = Runtime.getRuntime().availableProcessors();
+        parallelExecutor = Executors.newFixedThreadPool(nThreads, threadFactory);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
+        }
     }
 
     @Override
@@ -63,7 +65,7 @@ public class SystemScheduler implements Scheduler {
                 return single;
             });
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                LOGGER.log(System.Logger.Level.DEBUG, "Schedule a new system in #%d position", mainTasks.size());
+                LOGGER.log(System.Logger.Level.DEBUG, "Schedule a new system in #{0} position", mainTasks.size());
             }
             return system;
         } finally {
@@ -86,7 +88,7 @@ public class SystemScheduler implements Scheduler {
                     taskMap.putAll(cluster.taskMap);
                     if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(System.Logger.Level.DEBUG
-                                , "Schedule %d parallel-systems in #%d position", systems.length, mainTasks.size());
+                                , "Schedule {0} parallel-systems in #{1} position", systems.length, mainTasks.size());
                     }
                 }
             }
@@ -103,6 +105,9 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(false);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "A system has been suspended");
+        }
     }
 
     @Override
@@ -112,6 +117,9 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(true);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "A system has been resumed");
+        }
     }
 
     @Override
