@@ -121,6 +121,7 @@ system D -|---------- |------------|--------
 | void **tick**();                                      | Starts running all scheduled systems sequentially in a guaranteed order. Systems sent in parallel run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.         |
 | void **tickAtFixedRate**(int ticksPerSecond);         | Starts a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.                                                                                                 |
 | double **deltaTime**();                               | DeltaTime is the time in seconds between the last tick and the current tick.                                                                                                                        |
+| boolean **shutDown**();                               | Initiates an orderly shutdown in which previously submitted systems are executed, but no new systems will be accepted.                                                                              |
 
 
 ## Support Dominion
