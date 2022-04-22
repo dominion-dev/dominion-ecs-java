@@ -77,7 +77,7 @@ public interface Scheduler {
 
 
     /**
-     * Resumes an already suspended system in the original execution order
+     * Resumes an already suspended system in the original execution order.
      *
      * @param system the system to be resumed
      */
@@ -97,7 +97,7 @@ public interface Scheduler {
     void tickAtFixedRate(int ticksPerSecond);
 
     /**
-     * DeltaTime is the time in seconds between the last tick and the current tick
+     * DeltaTime is the time in seconds between the last tick and the current tick.
      *
      * @return the deltaTime in seconds
      */

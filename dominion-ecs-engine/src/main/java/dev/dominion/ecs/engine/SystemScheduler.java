@@ -30,6 +30,7 @@ public class SystemScheduler implements Scheduler {
     private final ReentrantLock tickLock = new ReentrantLock();
     private ScheduledFuture<?> scheduledTicks;
     private int currentTicksPerSecond = 0;
+    private TickTime tickTime;
 
     public SystemScheduler(int timeoutSeconds, LoggingSystem.Context loggingContext) {
         this.timeoutSeconds = timeoutSeconds;
@@ -48,9 +49,18 @@ public class SystemScheduler implements Scheduler {
         };
         mainExecutor = Executors.newSingleThreadExecutor(threadFactory);
         tickExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        parallelExecutor = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors(),
-                threadFactory);
+        int nThreads = Runtime.getRuntime().availableProcessors();
+        parallelExecutor = Executors.newFixedThreadPool(nThreads, threadFactory);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
+        }
+        tickTime = new TickTime(System.nanoTime(), 1);
+    }
+
+    private static TickTime calcTickTime(TickTime currentTickTime) {
+        long prevTime = currentTickTime.time;
+        long currentTime = System.nanoTime();
+        return new TickTime(currentTime, currentTime - prevTime);
     }
 
     @Override
@@ -63,7 +73,7 @@ public class SystemScheduler implements Scheduler {
                 return single;
             });
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                LOGGER.log(System.Logger.Level.DEBUG, "Schedule a new system in #%d position", mainTasks.size());
+                LOGGER.log(System.Logger.Level.DEBUG, "Schedule a new system in #{0} position", mainTasks.size());
             }
             return system;
         } finally {
@@ -86,7 +96,7 @@ public class SystemScheduler implements Scheduler {
                     taskMap.putAll(cluster.taskMap);
                     if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(System.Logger.Level.DEBUG
-                                , "Schedule %d parallel-systems in #%d position", systems.length, mainTasks.size());
+                                , "Schedule {0} parallel-systems in #{1} position", systems.length, mainTasks.size());
                     }
                 }
             }
@@ -103,6 +113,9 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(false);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "A system has been suspended");
+        }
     }
 
     @Override
@@ -112,12 +125,16 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(true);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(System.Logger.Level.DEBUG, "A system has been resumed");
+        }
     }
 
     @Override
     public void tick() {
         tickLock.lock();
         try {
+            tickTime = calcTickTime(tickTime);
             var futures = mainExecutor.invokeAll(mainTasks);
             futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -135,7 +152,7 @@ public class SystemScheduler implements Scheduler {
                 try {
                     scheduledTicks.cancel(false);
                     scheduledTicks.get(timeoutSeconds, TimeUnit.SECONDS);
-                } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
+                } catch (InterruptedException | ExecutionException | TimeoutException | CancellationException ignored) {
                 }
                 scheduledTicks = null;
             }
@@ -152,10 +169,13 @@ public class SystemScheduler implements Scheduler {
 
     @Override
     public double deltaTime() {
-        return 0;
+        return tickTime.deltaTime / 1_000_000_000d;
     }
 
     private interface Task extends Callable<Void> {
+    }
+
+    record TickTime(long time, long deltaTime) {
     }
 
     private static class Single implements Task {

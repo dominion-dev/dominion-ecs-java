@@ -10,11 +10,12 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class                       | Description                                                                                                          |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [Dominion](#class-dominion) | A **Dominion** is an independent container for all ECS data.                                                         |
-| [Entity](#class-entity)     | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
-| [Results](#class-results)   | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
+| Class                         | Description                                                                                                          |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion)   | A **Dominion** is an independent container for all ECS data.                                                         |
+| [Entity](#class-entity)       | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
+| [Results](#class-results)     | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
+| [Scheduler](#class-scheduler) | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
 
 ## Class Dominion
 
@@ -24,16 +25,16 @@ items required by the user application.
 
 | Method                                                                                                         | Description                                                                                       |
 |----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| static [Dominion](#class-dominion) **create**()                                                                | Creates a new Dominion with an automatically assigned name                                        |
-| static [Dominion](#class-dominion) **create**(String name)                                                     | Creates a new Dominion with the provided name                                                     |
-| String **getName**()                                                                                           | Returns the Dominion name                                                                         |
+| static [Dominion](#class-dominion) **create**()                                                                | Creates a new Dominion with an automatically assigned name.                                       |
+| static [Dominion](#class-dominion) **create**(String name)                                                     | Creates a new Dominion with the provided name.                                                    |
+| String **getName**()                                                                                           | Returns the Dominion name.                                                                        |
 | [Entity](#class-entity) **createEntity**(Object... components);                                                | Creates an Entity by adding zero or more POJO components.                                         |
 | [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);              | Creates an Entity by using another Entity as prefab and adding zero or more POJO components.      |
 | [Entity](#class-entity) **createEntity**(String name, Object... components);                                   | Creates a named Entity by adding zero or more POJO components.                                    |
 | [Entity](#class-entity) **createEntityAs**(String name, [Entity](#class-entity) prefab, Object... components); | Creates a named Entity by using another Entity as prefab and adding zero or more POJO components. |
 | boolean **deleteEntity**([Entity](#class-entity) entity);                                                      | Delete the  entity by freeing the id and canceling the reference to all components, if any        |
-| [Results](#class-results)<With1> **findEntitiesWith**(Class\<T> type);                                         | Finds all entities with a component of the specified type                                         |
-| [Results](#class-results)<WithN> **findEntitiesWith**(Class\<T1> type1,..)                                     | Finds all entities with components of the specified types                                         |
+| [Results](#class-results)<With1> **findEntitiesWith**(Class\<T> type);                                         | Finds all entities with a component of the specified type.                                        |
+| [Results](#class-results)<WithN> **findEntitiesWith**(Class\<T1> type1,..)                                     | Finds all entities with components of the specified types.                                        |
 
 ## Class Entity
 
@@ -41,17 +42,17 @@ An **Entity** identifies a single item and is represented as a unique integer va
 a name and contain zero or more components that are POJOs with no behavior. Entities can change components dynamically,
 can be disabled and re-enabled and can have a given Enum value to optionally set a state.
 
-| Method                                                  | Description                                                                    |
-|---------------------------------------------------------|--------------------------------------------------------------------------------|
-| String **getName**()                                    | Returns the entity name                                                        |
-| [Entity](#class-entity) **add**(Object... components)   | Adds one or more components that are POJOs with no behavior                    |
-| Object **remove**(Object component)                     | Removes a component if present                                                 |
-| Object **removeType**(Class\<?> componentType)          | Removes a component if there is a component of the specified type              |
-| boolean **has**(Class\<?> componentType)                | Checks if there is a component of the specified type                           |
-| boolean **contains**(Object component)                  | Checks if the specified component is present                                   |
-| <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value |
-| boolean **isEnabled**()                                 | Checks if the entity is enabled                                                |
-| [Entity](#class-entity) **setEnabled**(boolean enabled) | Enable/Disables the entity                                                     |
+| Method                                                  | Description                                                                     |
+|---------------------------------------------------------|---------------------------------------------------------------------------------|
+| String **getName**()                                    | Returns the entity name.                                                        |
+| [Entity](#class-entity) **add**(Object... components)   | Adds one or more components that are POJOs with no behavior.                    |
+| Object **remove**(Object component)                     | Removes a component if present.                                                 |
+| Object **removeType**(Class\<?> componentType)          | Removes a component if there is a component of the specified type.              |
+| boolean **has**(Class\<?> componentType)                | Checks if there is a component of the specified type.                           |
+| boolean **contains**(Object component)                  | Checks if the specified component is present.                                   |
+| <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value. |
+| boolean **isEnabled**()                                 | Checks if the entity is enabled.                                                |
+| [Entity](#class-entity) **setEnabled**(boolean enabled) | Enable/Disables the entity.                                                     |
 
 
 ## Class Results
@@ -61,12 +62,65 @@ container of all entities that match a set of components and, optionally, have a
 filtered by specifying one or more component types to exclude. Both iterator and stream methods are available to 
 retrieve found entities in sequence.
 
-| Method                                                                  | Description                                                                           |
-|-------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| Iterator\<T> iterator();                                                | Provides an iterator to retrieve found entities in sequence                           |
-| Stream\<T> stream();                                                    | Creates a sequential stream to supports functional-style operations on found entities |
-| [Results\<T>](#class-results) excludeWith(Class\<?>... componentTypes); | Provides a filtered Results without one or more component types to exclude            |
-| [Results\<T>](#class-results) withState(S state);                       | Provides a filtered Results with only entities having the required state              |
+| Method                                                                      | Description                                                                            |
+|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Iterator\<T> **iterator**();                                                | Provides an iterator to retrieve found entities in sequence.                           |
+| Stream\<T> **stream**();                                                    | Creates a sequential stream to supports functional-style operations on found entities. |
+| [Results\<T>](#class-results) **excludeWith**(Class\<?>... componentTypes); | Provides a filtered Results without one or more component types to exclude.            |
+| [Results\<T>](#class-results) **withState**(S state);                       | Provides a filtered Results with only entities having the required state.              |
+
+
+## Class Scheduler
+
+A light **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.
+Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
+guaranteed to run sequentially.
+Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
+Systems, even if running parallel, can be suspended and resumed at any time, maintaining the order of execution.
+Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
+A deltaTime method provides the time in seconds between the last tick and the current tick.
+<pre>
+schedule(A)
+parallelSchedule(B,C)
+schedule(D)
+tickAtFixedRate(1)
+
+system A ---#---------------|*------|*------|*------|*----------
+system B --------#----------|-*-----|-*-----|-*-----|-*---------
+system C --------#----------|-*-----|-*-----|-*-----|-*---------
+system D -------------#-----|--*----|--*----|--*----|--*--------
+            |    |    |    tick0s  tick1s  tick2s  tickNs
+           +A   +B,C  +D    |>
+
+suspend(B)
+suspend(D)
+
+system A -|*--------------|*--------------|*-------
+system B -|-*----X--------|---------------|--------
+system C -|-*-------------|-*-------------|-*------
+system D -|--*-------X----|---------------|--------
+         tickNs  |   |   tickN+1s      tickN+2s
+                -B  -D
+
+resume(B)
+
+system A -|*----------|*-----------|*-------
+system B -|------#----|-*----------|-*------
+system C -|-*---------|-*----------|-*------
+system D -|---------- |------------|--------
+         tickNs  |   tickN+1s     tickN+2s
+                +B
+</pre>
+
+| Method                                                | Description                                                                                                                                                                                         |
+|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Runnable **schedule**(Runnable system);               | Submits a system that becomes enabled immediately and executed on every tick. Scheduled systems are guaranteed to execute sequentially, and no more than one task will be active at any given time. |
+| Runnable[] **parallelSchedule**(Runnable... systems); | Submits systems that become enabled immediately and executed on every tick. Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.              |
+| void **suspend**(Runnable system);                    | Suspends an already scheduled system preserving its execution order.                                                                                                                                |
+| void **resume**(Runnable system);                     | Resumes an already suspended system in the original execution order.                                                                                                                                |
+| void **tick**();                                      | Starts running all scheduled systems sequentially in a guaranteed order. Systems sent in parallel run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.         |
+| void **tickAtFixedRate**(int ticksPerSecond);         | Starts a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.                                                                                                 |
+| double **deltaTime**();                               | DeltaTime is the time in seconds between the last tick and the current tick.                                                                                                                        |
 
 
 ## Support Dominion
