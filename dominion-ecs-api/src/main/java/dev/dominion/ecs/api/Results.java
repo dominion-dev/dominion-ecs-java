@@ -20,21 +20,21 @@ import java.util.stream.Stream;
 public interface Results<T> {
 
     /**
-     * Provides an iterator to retrieve found entities in sequence
+     * Provides an iterator to retrieve found entities in sequence.
      *
      * @return the iterator
      */
     Iterator<T> iterator();
 
     /**
-     * Creates a sequential stream to supports functional-style operations on found entities
+     * Creates a sequential stream to supports functional-style operations on found entities.
      *
      * @return the stream
      */
     Stream<T> stream();
 
     /**
-     * Provides a filtered Results without one or more component types to exclude
+     * Provides a filtered Results without one or more component types to exclude.
      *
      * @param componentTypes one or more component types to exclude
      * @return the Results without excluded component types
@@ -42,7 +42,7 @@ public interface Results<T> {
     Results<T> excludeWith(Class<?>... componentTypes);
 
     /**
-     * Provides a filtered Results with only entities having the required state
+     * Provides a filtered Results with only entities having the required state.
      *
      * @param state the requested state
      * @param <S>   the state enumeration type

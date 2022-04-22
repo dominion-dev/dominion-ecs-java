@@ -23,7 +23,7 @@ public interface Dominion extends AutoCloseable {
     String DEFAULT_DOMINION_IMPLEMENTATION = "dev.dominion.ecs.engine.EntityRepository$Factory";
 
     /**
-     * Creates a new Dominion with an automatically assigned name
+     * Creates a new Dominion with an automatically assigned name.
      *
      * @return a new Dominion
      */
@@ -32,7 +32,7 @@ public interface Dominion extends AutoCloseable {
     }
 
     /**
-     * Creates a new Dominion with the provided name
+     * Creates a new Dominion with the provided name.
      *
      * @param name the name of the new Dominion
      * @return a new Dominion
@@ -108,7 +108,7 @@ public interface Dominion extends AutoCloseable {
     Entity createEntityAs(String name, Entity prefab, Object... components);
 
     /**
-     * Removes the entity by freeing the id and canceling the reference to all components, if any
+     * Removes the entity by freeing the id and canceling the reference to all components, if any.
      *
      * @param entity the Entity to be deleted
      * @return false if the Entity has already been deleted
@@ -123,7 +123,7 @@ public interface Dominion extends AutoCloseable {
     Scheduler createScheduler();
 
     /**
-     * Finds all entities with a component of the specified type
+     * Finds all entities with a component of the specified type.
      *
      * @param type the component class
      * @param <T>  the component type
@@ -132,7 +132,7 @@ public interface Dominion extends AutoCloseable {
     <T> Results<With1<T>> findEntitiesWith(Class<T> type);
 
     /**
-     * Finds all entities with components of the specified types
+     * Finds all entities with components of the specified types.
      *
      * @param type1 the 1st component class
      * @param type2 the 2nd component class
