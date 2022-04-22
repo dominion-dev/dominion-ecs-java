@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 class SystemSchedulerTest {
 
@@ -84,10 +85,23 @@ class SystemSchedulerTest {
         scheduler.schedule(count::incrementAndGet);
         scheduler.tickAtFixedRate(60);
         Thread.sleep(100);
-        Assertions.assertTrue(count.get() >= 6 && count.get() <= 7);
+        scheduler.tickAtFixedRate(0);
+        int ticks = count.get();
+        double d = ticks / 10d;
+        Assertions.assertEquals(.6f, d, .1);
+        Thread.sleep(100);
+        Assertions.assertEquals(ticks, count.get());
     }
 
     @Test
-    void deltaTime() {
+    void deltaTime() throws InterruptedException {
+        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        AtomicReference<Double> count = new AtomicReference<>(0d);
+        scheduler.schedule(() -> count.set(count.get() + scheduler.deltaTime()));
+        scheduler.tickAtFixedRate(60);
+        Thread.sleep(100);
+        scheduler.tickAtFixedRate(0);
+        double d = count.get();
+        Assertions.assertEquals(0.1f, d, .05);
     }
 }

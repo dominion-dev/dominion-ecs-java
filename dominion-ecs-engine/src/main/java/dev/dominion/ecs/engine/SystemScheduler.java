@@ -30,6 +30,7 @@ public class SystemScheduler implements Scheduler {
     private final ReentrantLock tickLock = new ReentrantLock();
     private ScheduledFuture<?> scheduledTicks;
     private int currentTicksPerSecond = 0;
+    private TickTime tickTime;
 
     public SystemScheduler(int timeoutSeconds, LoggingSystem.Context loggingContext) {
         this.timeoutSeconds = timeoutSeconds;
@@ -53,6 +54,13 @@ public class SystemScheduler implements Scheduler {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
         }
+        tickTime = new TickTime(System.nanoTime(), 1);
+    }
+
+    private static TickTime calcTickTime(TickTime currentTickTime) {
+        long prevTime = currentTickTime.time;
+        long currentTime = System.nanoTime();
+        return new TickTime(currentTime, currentTime - prevTime);
     }
 
     @Override
@@ -126,6 +134,7 @@ public class SystemScheduler implements Scheduler {
     public void tick() {
         tickLock.lock();
         try {
+            tickTime = calcTickTime(tickTime);
             var futures = mainExecutor.invokeAll(mainTasks);
             futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -143,7 +152,7 @@ public class SystemScheduler implements Scheduler {
                 try {
                     scheduledTicks.cancel(false);
                     scheduledTicks.get(timeoutSeconds, TimeUnit.SECONDS);
-                } catch (InterruptedException | ExecutionException | TimeoutException ignored) {
+                } catch (InterruptedException | ExecutionException | TimeoutException | CancellationException ignored) {
                 }
                 scheduledTicks = null;
             }
@@ -160,10 +169,13 @@ public class SystemScheduler implements Scheduler {
 
     @Override
     public double deltaTime() {
-        return 0;
+        return tickTime.deltaTime / 1_000_000_000d;
     }
 
     private interface Task extends Callable<Void> {
+    }
+
+    record TickTime(long time, long deltaTime) {
     }
 
     private static class Single implements Task {
