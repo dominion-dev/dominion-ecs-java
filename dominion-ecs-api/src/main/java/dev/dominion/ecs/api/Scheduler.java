@@ -102,4 +102,11 @@ public interface Scheduler {
      * @return the deltaTime in seconds
      */
     double deltaTime();
+
+    /**
+     * Initiates an orderly shutdown in which previously submitted systems are executed, but no new systems will be accepted.
+     *
+     * @return true if this scheduler terminated and false if the timeout elapsed before termination
+     */
+    boolean shutDown() ;
 }

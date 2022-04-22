@@ -172,6 +172,22 @@ public class SystemScheduler implements Scheduler {
         return tickTime.deltaTime / 1_000_000_000d;
     }
 
+
+    @Override
+    public boolean shutDown()  {
+        tickExecutor.shutdown();
+        mainExecutor.shutdown();
+        parallelExecutor.shutdown();
+        try {
+            return mainExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)
+                    && parallelExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)
+                    && tickExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private interface Task extends Callable<Void> {
     }
 
