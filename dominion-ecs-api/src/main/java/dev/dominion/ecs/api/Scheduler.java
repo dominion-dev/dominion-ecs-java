@@ -6,11 +6,13 @@
 package dev.dominion.ecs.api;
 
 /**
- * A light Scheduler that provides methods to submit/suspend/resume systems that are executed on every tick.
+ * A Scheduler that provides methods to submit/suspend/resume systems that are executed on every tick.
  * Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
  * guaranteed to run sequentially.
  * Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
  * Systems, even if running parallel, can be suspended and resumed at any time, maintaining the order of execution.
+ * A system can fork by creating several subsystems for immediate parallel executions and "join" while waiting for
+ * all subsystems to execute.
  * Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
  * A deltaTime method provides the time in seconds between the last tick and the current tick.
  * <p>
@@ -45,6 +47,16 @@ package dev.dominion.ecs.api;
  * system D -|---------- |------------|--------
  *          tickNs  |   tickN+1s     tickN+2s
  *                 +B
+ *
+ * systemA.forkAndJoinAll(subsystemA1, subsystemA2)
+ *
+ * system A -|*_*--------|*_*--------|*_*--------|
+ *  sub A1  -|-*---------|-*---------|-*---------|
+ *  sub A2  -|-*---------|-*---------|-*---------|
+ * system B -|---*-------|---*-------|---*-------|
+ * system C -|---*-------|---*-------|---*-------|
+ *             |           |           |
+ *             *A1,A2     *A1,A2      *A1,A2
  * </pre>
  */
 public interface Scheduler {
@@ -69,12 +81,26 @@ public interface Scheduler {
     Runnable[] parallelSchedule(Runnable... systems);
 
     /**
+     * A system can fork by creating a subsystem for immediate execution and "join" while waiting for the subsystem to execute.
+     *
+     * @param subsystem the new subsystem to run and wait until the end
+     */
+    void forkAndJoin(Runnable subsystem);
+
+    /**
+     * A system can fork by creating several subsystems for immediate parallel executions and "join" while waiting for
+     * all subsystems to execute.
+     *
+     * @param subsystems the subsystems to run and wait until the end
+     */
+    void forkAndJoinAll(Runnable... subsystems);
+
+    /**
      * Suspends an already scheduled system preserving its execution order.
      *
      * @param system the system to be suspended
      */
     void suspend(Runnable system);
-
 
     /**
      * Resumes an already suspended system in the original execution order.
@@ -108,5 +134,5 @@ public interface Scheduler {
      *
      * @return true if this scheduler terminated and false if the timeout elapsed before termination
      */
-    boolean shutDown() ;
+    boolean shutDown();
 }
