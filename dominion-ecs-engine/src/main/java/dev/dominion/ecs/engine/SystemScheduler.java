@@ -23,7 +23,7 @@ public class SystemScheduler implements Scheduler {
     private final Map<Runnable, Single> taskMap = new HashMap<>();
     private final List<Task> mainTasks = new ArrayList<>();
     private final ExecutorService mainExecutor;
-    private final ExecutorService parallelExecutor;
+    private final ForkJoinPool workStealExecutor;
     private final ScheduledExecutorService tickExecutor;
     private final LoggingSystem.Context loggingContext;
     private final StampedLock scheduleLock = new StampedLock();
@@ -36,21 +36,21 @@ public class SystemScheduler implements Scheduler {
         this.timeoutSeconds = timeoutSeconds;
         this.loggingContext = loggingContext;
         var threadFactory = new ThreadFactory() {
-            private final AtomicInteger counter = new AtomicInteger(0);
 
             @Override
             public Thread newThread(Runnable r) {
-                String threadName = "dominion-scheduler-" + counter.getAndIncrement();
+                SchedulerThread schedulerThread = new SchedulerThread(r);
                 if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                    LOGGER.log(System.Logger.Level.DEBUG, "New thread: " + threadName);
+                    LOGGER.log(System.Logger.Level.DEBUG, "New scheduler-thread: " + schedulerThread.getName());
                 }
-                return new Thread(r, threadName);
+                return schedulerThread;
             }
         };
         mainExecutor = Executors.newSingleThreadExecutor(threadFactory);
         tickExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         int nThreads = Runtime.getRuntime().availableProcessors();
-        parallelExecutor = Executors.newFixedThreadPool(nThreads, threadFactory);
+//        workStealExecutor = ForkJoinPool.commonPool();
+        workStealExecutor = (ForkJoinPool) Executors.newWorkStealingPool(nThreads);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
         }
@@ -91,12 +91,11 @@ public class SystemScheduler implements Scheduler {
                 case 1:
                     schedule(systems[0]);
                 default: {
-                    var cluster = new Cluster(systems, parallelExecutor, timeoutSeconds);
+                    var cluster = new Cluster(systems);
                     mainTasks.add(cluster);
                     taskMap.putAll(cluster.taskMap);
                     if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                        LOGGER.log(System.Logger.Level.DEBUG
-                                , "Schedule {0} parallel-systems in #{1} position", systems.length, mainTasks.size());
+                        LOGGER.log(System.Logger.Level.DEBUG, "Schedule {0} parallel-systems in #{1} position", systems.length, mainTasks.size());
                     }
                 }
             }
@@ -104,6 +103,32 @@ public class SystemScheduler implements Scheduler {
         } finally {
             scheduleLock.unlockWrite(stamp);
         }
+    }
+
+    public void forkAndJoin(Runnable system) {
+        Thread currentThread = Thread.currentThread();
+        if (!(currentThread instanceof SchedulerThread || currentThread instanceof ForkJoinWorkerThread)) {
+            throw new IllegalCallerException("Cannot invoke the forkAndJoin() method from outside other systems.");
+        }
+        workStealExecutor.invoke(new RecursiveAction() {
+            @Override
+            protected void compute() {
+                system.run();
+            }
+        });
+    }
+
+    public void forkAndJoinAll(Runnable... systems) {
+        if (!(Thread.currentThread() instanceof ForkJoinWorkerThread)) {
+            throw new IllegalCallerException("Cannot invoke the forkAndJoinAll() method from outside other systems.");
+        }
+        ForkJoinTask.invokeAll(Arrays.stream(systems).map(system -> new RecursiveAction() {
+
+            @Override
+            protected void compute() {
+                system.run();
+            }
+        }).toArray(ForkJoinTask[]::new));
     }
 
     @Override
@@ -160,8 +185,7 @@ public class SystemScheduler implements Scheduler {
             if (currentTicksPerSecond == 0) {
                 return;
             }
-            scheduledTicks = tickExecutor
-                    .scheduleAtFixedRate(this::tick, 0, 1000 / currentTicksPerSecond, TimeUnit.MILLISECONDS);
+            scheduledTicks = tickExecutor.scheduleAtFixedRate(this::tick, 0, 1000 / currentTicksPerSecond, TimeUnit.MILLISECONDS);
         } finally {
             tickLock.unlock();
         }
@@ -174,14 +198,15 @@ public class SystemScheduler implements Scheduler {
 
 
     @Override
-    public boolean shutDown()  {
+    public boolean shutDown() {
         tickExecutor.shutdown();
         mainExecutor.shutdown();
-        parallelExecutor.shutdown();
+        workStealExecutor.shutdown();
         try {
-            return mainExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)
-                    && parallelExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)
-                    && tickExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
+            return mainExecutor.awaitTermination(
+                    timeoutSeconds, TimeUnit.SECONDS) &&
+                    workStealExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS) &&
+                    tickExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -194,7 +219,15 @@ public class SystemScheduler implements Scheduler {
     record TickTime(long time, long deltaTime) {
     }
 
-    private static class Single implements Task {
+    private static final class SchedulerThread extends Thread {
+        private static final AtomicInteger counter = new AtomicInteger(0);
+
+        public SchedulerThread(Runnable runnable) {
+            super(runnable, "dominion-scheduler-" + counter.getAndIncrement());
+        }
+    }
+
+    private final class Single implements Task {
         private final Runnable system;
         private final AtomicBoolean enabled = new AtomicBoolean(true);
 
@@ -216,35 +249,37 @@ public class SystemScheduler implements Scheduler {
 
         @Override
         public Void call() {
-            if (!isEnabled()) {
-                return null;
+            if (isEnabled()) {
+                forkAndJoin(system);
             }
-            system.run();
             return null;
+        }
+
+        private void directRun() {
+            if (isEnabled()) {
+                system.run();
+            }
         }
     }
 
-    private static class Cluster implements Task {
+    private final class Cluster implements Task {
         private final List<Single> tasks;
         private final Map<Runnable, Single> taskMap;
-        private final ExecutorService parallelExecutor;
-        private final int timeoutSeconds;
 
-        private Cluster(Runnable[] systems, ExecutorService parallelExecutor, int timeoutSeconds) {
+        private Cluster(Runnable[] systems) {
             tasks = Arrays.stream(systems).map(Single::new).toList();
             taskMap = tasks.stream().collect(Collectors.toMap(Single::getSystem, Function.identity()));
-            this.parallelExecutor = parallelExecutor;
-            this.timeoutSeconds = timeoutSeconds;
         }
 
         @Override
-        public Void call() throws Exception {
-            var futures = parallelExecutor.invokeAll(tasks);
-            try {
-                futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                e.printStackTrace();
-            }
+        public Void call() {
+            forkAndJoin(() -> ForkJoinTask.invokeAll(tasks.stream().map(single -> new RecursiveAction() {
+
+                @Override
+                protected void compute() {
+                    single.directRun();
+                }
+            }).toArray(ForkJoinTask[]::new)));
             return null;
         }
     }

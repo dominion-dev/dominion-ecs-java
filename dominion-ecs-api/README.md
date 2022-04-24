@@ -15,7 +15,7 @@ putting all API references into this README to provide seamless navigation withi
 | [Dominion](#class-dominion)   | A **Dominion** is an independent container for all ECS data.                                                         |
 | [Entity](#class-entity)       | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
 | [Results](#class-results)     | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
-| [Scheduler](#class-scheduler) | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
+| [Scheduler](#class-scheduler) | A **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.              |
 
 ## Class Dominion
 
@@ -72,11 +72,13 @@ retrieve found entities in sequence.
 
 ## Class Scheduler
 
-A light **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.
+A **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.
 Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
 guaranteed to run sequentially.
 Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
 Systems, even if running parallel, can be suspended and resumed at any time, maintaining the order of execution.
+A system can fork by creating several subsystems for immediate parallel executions and "join" while waiting for
+all subsystems to execute.
 Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
 A deltaTime method provides the time in seconds between the last tick and the current tick.
 <pre>
@@ -110,6 +112,17 @@ system C -|-*---------|-*----------|-*------
 system D -|---------- |------------|--------
          tickNs  |   tickN+1s     tickN+2s
                 +B
+
+systemA.forkAndJoinAll(subsystemA1, subsystemA2)
+
+system A -|*_*--------|*_*--------|*_*--------|
+ sub A1  -|-*---------|-*---------|-*---------|
+ sub A2  -|-*---------|-*---------|-*---------|
+system B -|---*-------|---*-------|---*-------|
+system C -|---*-------|---*-------|---*-------|
+            |           |           |
+            *A1,A2     *A1,A2      *A1,A2
+
 </pre>
 
 | Method                                                | Description                                                                                                                                                                                         |
@@ -118,6 +131,8 @@ system D -|---------- |------------|--------
 | Runnable[] **parallelSchedule**(Runnable... systems); | Submits systems that become enabled immediately and executed on every tick. Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.              |
 | void **suspend**(Runnable system);                    | Suspends an already scheduled system preserving its execution order.                                                                                                                                |
 | void **resume**(Runnable system);                     | Resumes an already suspended system in the original execution order.                                                                                                                                |
+| void **forkAndJoin**(Runnable subsystem);             | A system can fork by creating a subsystem for immediate execution and "join" while waiting for the subsystem to execute.                                                                            |
+| void **forkAndJoinAll**(Runnable... subsystems);      | A system can fork by creating several subsystems for immediate parallel executions and "join" while waiting for all subsystems to execute.                                                          |
 | void **tick**();                                      | Starts running all scheduled systems sequentially in a guaranteed order. Systems sent in parallel run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.         |
 | void **tickAtFixedRate**(int ticksPerSecond);         | Starts a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.                                                                                                 |
 | double **deltaTime**();                               | DeltaTime is the time in seconds between the last tick and the current tick.                                                                                                                        |

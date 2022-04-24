@@ -79,6 +79,32 @@ class SystemSchedulerTest {
     }
 
     @Test
+    void forkAndJoin() {
+        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        int initialValue = 17, prime = 31;
+        AtomicInteger count = new AtomicInteger(initialValue);
+        scheduler.schedule(() -> count.getAndUpdate(value -> value * prime + 1));
+        scheduler.schedule(() -> {
+            scheduler.forkAndJoin(() -> count.getAndUpdate(value -> value * 2));
+            count.getAndUpdate(value -> value * prime + 5);
+        });
+        scheduler.schedule(() -> {
+            scheduler.forkAndJoinAll(
+                    () -> count.getAndUpdate(value -> value * 7),
+                    () -> count.getAndUpdate(value -> value * 11),
+                    () -> count.getAndUpdate(value -> value * 13)
+            );
+            count.getAndUpdate(value -> value * prime + 17);
+        });
+        scheduler.tick();
+        Assertions.assertEquals(
+                ((((initialValue * prime + 1) * 2) * prime + 5) * 13 * 11 * 7) * prime + 17,
+                count.get()
+        );
+    }
+
+
+    @Test
     void tickAtFixedRate() throws InterruptedException {
         Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         AtomicInteger count = new AtomicInteger(0);
