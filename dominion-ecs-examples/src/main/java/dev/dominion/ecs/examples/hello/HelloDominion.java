@@ -6,6 +6,7 @@
 package dev.dominion.ecs.examples.hello;
 
 import dev.dominion.ecs.api.Dominion;
+import dev.dominion.ecs.api.Scheduler;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -38,9 +39,12 @@ public class HelloDominion {
                     });
         };
 
-        // run the system
-        Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(system, 0, 1, TimeUnit.SECONDS);
+        // create a scheduler
+        Scheduler scheduler = hello.createScheduler();
+        // schedule the system
+        scheduler.schedule(system);
+        // start 3 ticks per second
+        scheduler.tickAtFixedRate(3);
     }
 
     // component types can be both classes and records
