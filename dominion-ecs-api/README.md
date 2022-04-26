@@ -15,7 +15,7 @@ putting all API references into this README to provide seamless navigation withi
 | [Dominion](#class-dominion)   | A **Dominion** is an independent container for all ECS data.                                                         |
 | [Entity](#class-entity)       | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
 | [Results](#class-results)     | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
-| [Scheduler](#class-scheduler) | A **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.              |
+| [Scheduler](#class-scheduler) | A **Scheduler** provides methods to submit/suspend/resume systems that are executed on every tick.                   |
 
 ## Class Dominion
 
@@ -72,7 +72,7 @@ retrieve found entities in sequence.
 
 ## Class Scheduler
 
-A **Scheduler** that provides methods to submit/suspend/resume systems that are executed on every tick.
+A **Scheduler** provides methods to submit/suspend/resume systems that are executed on every tick.
 Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
 guaranteed to run sequentially.
 Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.

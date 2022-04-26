@@ -119,7 +119,6 @@ public final class SparseIntMap<V> {
                 .boxed();
     }
 
-
     @SuppressWarnings({"unchecked", "SuspiciousSystemArraycopy"})
     public V[] values() {
         if (isEmpty()) {

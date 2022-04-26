@@ -110,7 +110,6 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
-
     public Entity addComponents(IntEntity entity, Object... components) {
         if (components.length == 0) {
             return entity;
@@ -369,10 +368,7 @@ public final class CompositionRepository implements AutoCloseable {
                             .map(Class::getSimpleName)
                             .sorted()
                             .collect(Collectors.joining(",")))
-                    + "]"
-//                    + ", links=" + linkedNodes
-                    + "}";
+                    + "]}";
         }
-
     }
 }
