@@ -78,10 +78,13 @@ public class HelloDominion {
                                 result.entity().getName(), velocity, position);
                     });
         };
-
-        // run the system
-        Executors.newScheduledThreadPool(1)
-                .scheduleAtFixedRate(system, 0, 1, TimeUnit.SECONDS);
+        
+        // create a scheduler
+        Scheduler scheduler = hello.createScheduler();
+        // schedule the system
+        scheduler.schedule(system);
+        // start 3 ticks per second
+        scheduler.tickAtFixedRate(3);
     }
 
     // component types can be both classes and records
