@@ -6,7 +6,7 @@
 package dev.dominion.ecs.api;
 
 /**
- * A Scheduler that provides methods to submit/suspend/resume systems that are executed on every tick.
+ * A Scheduler provides methods to submit/suspend/resume systems that are executed on every tick.
  * Systems are defined as a plain old Java Runnable type, so they can be provided as lambda expressions and are
  * guaranteed to run sequentially.
  * Parallel systems run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.

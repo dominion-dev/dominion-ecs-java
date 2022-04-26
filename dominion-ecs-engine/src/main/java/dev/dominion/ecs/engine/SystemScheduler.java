@@ -49,7 +49,6 @@ public class SystemScheduler implements Scheduler {
         mainExecutor = Executors.newSingleThreadExecutor(threadFactory);
         tickExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         int nThreads = Runtime.getRuntime().availableProcessors();
-//        workStealExecutor = ForkJoinPool.commonPool();
         workStealExecutor = (ForkJoinPool) Executors.newWorkStealingPool(nThreads);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
@@ -105,24 +104,30 @@ public class SystemScheduler implements Scheduler {
         }
     }
 
-    public void forkAndJoin(Runnable system) {
+    public void forkAndJoin(Runnable subsystem) {
         Thread currentThread = Thread.currentThread();
         if (!(currentThread instanceof SchedulerThread || currentThread instanceof ForkJoinWorkerThread)) {
             throw new IllegalCallerException("Cannot invoke the forkAndJoin() method from outside other systems.");
         }
-        workStealExecutor.invoke(new RecursiveAction() {
-            @Override
-            protected void compute() {
-                system.run();
+        try {
+            workStealExecutor.invoke(new RecursiveAction() {
+                @Override
+                protected void compute() {
+                    subsystem.run();
+                }
+            });
+        } catch (RuntimeException ex) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+                LOGGER.log(System.Logger.Level.ERROR, "invoke", ex);
             }
-        });
+        }
     }
 
-    public void forkAndJoinAll(Runnable... systems) {
+    public void forkAndJoinAll(Runnable... subsystems) {
         if (!(Thread.currentThread() instanceof ForkJoinWorkerThread)) {
-            throw new IllegalCallerException("Cannot invoke the forkAndJoinAll() method from outside other systems.");
+            throw new IllegalCallerException("Cannot invoke the forkAndJoinAll() method from outside other subsystems.");
         }
-        ForkJoinTask.invokeAll(Arrays.stream(systems).map(system -> new RecursiveAction() {
+        ForkJoinTask.invokeAll(Arrays.stream(subsystems).map(system -> new RecursiveAction() {
 
             @Override
             protected void compute() {
@@ -162,8 +167,10 @@ public class SystemScheduler implements Scheduler {
             tickTime = calcTickTime(tickTime);
             var futures = mainExecutor.invokeAll(mainTasks);
             futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            e.printStackTrace();
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+                LOGGER.log(System.Logger.Level.ERROR, "tick", ex);
+            }
         } finally {
             tickLock.unlock();
         }
@@ -196,7 +203,6 @@ public class SystemScheduler implements Scheduler {
         return tickTime.deltaTime / 1_000_000_000d;
     }
 
-
     @Override
     public boolean shutDown() {
         tickExecutor.shutdown();
@@ -207,8 +213,11 @@ public class SystemScheduler implements Scheduler {
                     timeoutSeconds, TimeUnit.SECONDS) &&
                     workStealExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS) &&
                     tickExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+                LOGGER.log(System.Logger.Level.ERROR, "shutdown", ex);
+            }
+
         }
         return false;
     }

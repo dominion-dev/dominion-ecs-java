@@ -25,6 +25,37 @@ class SystemSchedulerTest {
     }
 
     @Test
+    void scheduleWithException() {
+        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Runnable systemA = scheduler.schedule(() -> {
+            throw new RuntimeException("Test system runtime exception");
+        });
+        scheduler.tick();
+        scheduler.suspend(systemA);
+        scheduler.schedule(() -> {
+            System.out.println("run subsystem");
+            scheduler.forkAndJoin(
+                    () -> {
+                        throw new RuntimeException("Test subsystem runtime exception");
+                    }
+            );
+        });
+        scheduler.schedule(() -> {
+            System.out.println("run subsystem in parallel");
+            scheduler.forkAndJoinAll(
+                    () -> {
+                        throw new RuntimeException("Test subsystem-A runtime exception");
+                    },
+                    () -> {
+                        throw new RuntimeException("Test subsystem-B runtime exception");
+                    }
+            );
+        });
+        scheduler.tick();
+    }
+
+
+    @Test
     void parallelSchedule() {
         Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         int initialValue = 17, prime = 31;
@@ -102,7 +133,6 @@ class SystemSchedulerTest {
                 count.get()
         );
     }
-
 
     @Test
     void tickAtFixedRate() throws InterruptedException {
