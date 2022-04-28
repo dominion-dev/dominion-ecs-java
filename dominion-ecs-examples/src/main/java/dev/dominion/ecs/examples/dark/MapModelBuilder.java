@@ -97,10 +97,40 @@ public final class MapModelBuilder {
     }
 
     public enum Tile {
-        WALL, FLOOR
+        WALL(true),
+        FLOOR(false);
+        public final boolean opaque;
+
+        Tile(boolean opaque) {
+            this.opaque = opaque;
+        }
     }
 
     record MapModel(Tile[][] map, Rect[] rooms, int width, int height) {
+
+        // thanks uncle Bresenham
+        public boolean checkSightLine(int fromX, int fromY, int toX, int toY) {
+            int dx = Math.abs(toX - fromX), dy = Math.abs(toY - fromY);
+            int sx = fromX < toX ? 1 : -1, sy = fromY < toY ? 1 : -1;
+            int err = dx - dy, errDot2;
+            for (; ; ) {
+                if (fromX == toX && fromY == toY) {
+                    return true;
+                }
+                if (map[fromY][fromX].opaque) {
+                    return false;
+                }
+                errDot2 = err << 1;
+                if (errDot2 > -dy) {
+                    err = err - dy;
+                    fromX += sx;
+                }
+                if (errDot2 < dx) {
+                    err += dx;
+                    fromY += sy;
+                }
+            }
+        }
     }
 
     public record Rect(int left, int top, int right, int bottom, Point center) {
@@ -117,7 +147,8 @@ public final class MapModelBuilder {
             return other != null && !(other.left > right || other.right < left || other.top > bottom || other.bottom < top);
         }
 
-        record Point(int x, int y) {
-        }
+    }
+
+    record Point(int x, int y) {
     }
 }
