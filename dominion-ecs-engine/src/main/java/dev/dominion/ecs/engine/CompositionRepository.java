@@ -356,7 +356,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
 
         public Map<IndexKey, Node> copyOfLinkedNodes() {
-            return new HashMap<>(linkedNodes);
+            return new ConcurrentHashMap<>(linkedNodes);
         }
 
         @Override
