@@ -318,21 +318,22 @@ public final class Composition {
     }
 
     public static class StateIterator implements Iterator<IntEntity> {
-        private IntEntity currentEntity;
+        private IntEntity next;
 
         public StateIterator(IntEntity rootEntity) {
-            currentEntity = new IntEntity(IdSchema.DETACHED_BIT, null, null);
-            currentEntity.setPrev(rootEntity);
+            next = rootEntity;
         }
 
         @Override
         public boolean hasNext() {
-            return currentEntity.getPrev() != null;
+            return next != null;
         }
 
         @Override
         public IntEntity next() {
-            return currentEntity = (IntEntity) currentEntity.getPrev();
+            var current = next;
+            next = (IntEntity) next.getPrev();
+            return current;
         }
     }
 
