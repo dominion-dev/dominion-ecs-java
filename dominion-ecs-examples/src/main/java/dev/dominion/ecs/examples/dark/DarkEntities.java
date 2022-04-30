@@ -62,7 +62,7 @@ public final class DarkEntities {
     private static void createEntities(Dominion dark, MapModel mapModel) {
         // creates a camera with a light
         MapModelBuilder.Point firstRoomCenter = mapModel.rooms()[0].center();
-        dark.createEntity(new Camera(), new Light(30), new Position(firstRoomCenter.x(), firstRoomCenter.y()));
+        dark.createEntity(new Camera(), new Light(50), new Position(firstRoomCenter.x(), firstRoomCenter.y()));
         // creates map-view entities
         for (int y = 0; y < mapModel.height(); y++) {
             for (int x = 0; x < mapModel.width(); x++) {
@@ -110,8 +110,10 @@ public final class DarkEntities {
             var visitedMap = map.withState(Visibility.VISITED).iterator();
             Position lightPosition = light.comp2();
             int lightLumen = light.comp1().lumen;
-            setVisibleArea(lightPosition, lightLumen, notVisibleMap, mapModel);
-            setVisibleArea(lightPosition, lightLumen, visitedMap, mapModel);
+            scheduler.forkAndJoinAll(
+                    () -> setVisibleArea(lightPosition, lightLumen, notVisibleMap, mapModel),
+                    () -> setVisibleArea(lightPosition, lightLumen, visitedMap, mapModel)
+            );
         });
         // map-view renderer system
         scheduler.schedule(() -> {
@@ -119,8 +121,12 @@ public final class DarkEntities {
             var map = dark.findEntitiesWith(Map.class, Render.class, Position.class);
             var visibleMap = map.withState(Visibility.VISIBLE).iterator();
             var visitedMap = map.withState(Visibility.VISITED).iterator();
-            renderMap(camera.comp2(), visibleMap, false, screen);
-            renderMap(camera.comp2(), visitedMap, true, screen);
+            scheduler.forkAndJoinAll(
+                    () -> renderMap(camera.comp2(), visibleMap, false, screen),
+                    () -> renderMap(camera.comp2(), visitedMap, true, screen)
+            );
+            // draw the camera position
+            screen.drawGlyph('@', screen.center.x(), screen.center.y());
         });
         return scheduler;
     }
@@ -198,7 +204,7 @@ public final class DarkEntities {
 
     // map visibility state
     enum Visibility {
-        VISIBLE, NOT_VISIBLE, HALF_LIGHT, VISITED
+        VISIBLE, NOT_VISIBLE, VISITED
     }
 
     // entity components
@@ -221,7 +227,7 @@ public final class DarkEntities {
         }
     }
 
-    // render component provides glyph
+    // render component provides glyphs
     record Render(char glyph, char visitedGlyph) {
     }
 
