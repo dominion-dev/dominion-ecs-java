@@ -13,6 +13,13 @@ import dev.dominion.ecs.examples.dark.MapModelBuilder.MapModel;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * DarkEntities is a simple example app that could inspire a turn-based rogue-like game running on a terminal window.
+ * Shows how to create a basic Dominion of entities, components, and systems by creating and moving a camera with a
+ * light to illuminate and explore a random dungeon map.
+ * Implements a wise light system able to fork subsystems and distribute on worker threads to take advantage of multiple
+ * cores.
+ */
 public final class DarkEntities {
 
     // don't print Dominion banner info on startup
@@ -49,8 +56,9 @@ public final class DarkEntities {
         var pressedKey = new AtomicReference<ArrowKey>();
         // creates systems returning the scheduler
         var scheduler = createSystems(dark, pressedKey, mapModel, screen);
-        // executes first tick
+        // clears the UI
         screen.clear();
+        // executes first tick
         scheduler.tick();
         // greets the player
         screen.drawText(String.format("Hello %s, your adventure starts here!", playerName), screen.center.x(), 3, Screen.TextAlignment.CENTER);
@@ -60,12 +68,23 @@ public final class DarkEntities {
 
     // creates all game entities
     private static void createEntities(Dominion dark, MapModel mapModel) {
-        // creates a camera with a light
+        // gets the center of the first room
         MapModelBuilder.Point firstRoomCenter = mapModel.rooms()[0].center();
-        dark.createEntity(new Camera(), new Light(30), new Position(firstRoomCenter.x(), firstRoomCenter.y()));
+        // creates a Camera with a Light entity with:
+        // - a Camera tag: a component without properties just to classify this entity as a camera
+        // - a Light: a component to add a light to the entity with a specific lumen value
+        // - a Position: a component that keep the x and y coordinates of the camera in the map
+        dark.createEntity(new Camera(), new Light(50), new Position(firstRoomCenter.x(), firstRoomCenter.y()));
         // creates map-view entities
         for (int y = 0; y < mapModel.height(); y++) {
             for (int x = 0; x < mapModel.width(); x++) {
+                // for each Tile in the map model you will get a map-tile view entity with:
+                // - a Map tag: a component without properties just to classify this entity as a map-tile view
+                // - a Position: a component that keep the x and y coordinates of the tile view in the map
+                // - a Render: a component with glyphs to represent the Tile, one when the tile is visible and one when is not
+                // visible but already seen (visited)
+                // - a Visibility state: an enum value to keep the visibility state of the map-tile view. The initial value
+                // is NOT_VISIBLE as all entities are in the darkness...
                 dark.createEntity(new Map(), new Position(x, y), switch (mapModel.map()[y][x]) {
                     case WALL -> new Render('#', '.');
                     case FLOOR -> new Render(':', ' ');
@@ -75,14 +94,17 @@ public final class DarkEntities {
     }
 
     // creates all game systems
+    // all the scheduled systems will be executed in sequence at each tick of the scheduler, in the order in which they were added
+    // some systems will fork other subsystems to distribute tasks across multiple worker threads
     private static Scheduler createSystems(Dominion dark, AtomicReference<ArrowKey> pressedKey, MapModel mapModel, Screen screen) {
-        // creates scheduler
+        // creates the scheduler
         var scheduler = dark.createScheduler();
-        // cameras input-controller system
+        // adds the cameras input-controller system
         scheduler.schedule(() -> {
             if (pressedKey.get() == null) {
                 return;
             }
+            // finds the camera and move its position according to the pressed key (no wall collision detection)
             dark.findEntitiesWith(Camera.class, Position.class).stream().forEach(r -> {
                 Position position = r.comp2();
                 switch (pressedKey.get()) {
@@ -93,64 +115,94 @@ public final class DarkEntities {
                 }
             });
         });
-        // system to set visible map tiles as visited
+        // adds a system to reset all visible map tiles as visited
         scheduler.schedule(() -> {
+            // finds all map entities
             var map = dark.findEntitiesWith(Map.class);
+            // selects only the visible map
             var iterator = map.withState(Visibility.VISIBLE).iterator();
+            // resets the visible map as visited map
             while (iterator.hasNext()) {
                 var tile = iterator.next();
                 tile.entity().setState(Visibility.VISITED);
             }
         });
-        // light system
+        // adds the light system
         scheduler.schedule(() -> {
+            // finds the light entity and gets the position and the lumen power
             var light = dark.findEntitiesWith(Light.class, Position.class).iterator().next();
-            var map = dark.findEntitiesWith(Map.class, Position.class);
-            var notVisibleMap = map.withState(Visibility.NOT_VISIBLE).iterator();
-            var visitedMap = map.withState(Visibility.VISITED).iterator();
             Position lightPosition = light.comp2();
             int lightLumen = light.comp1().lumen;
-            setVisibleArea(lightPosition, lightLumen, notVisibleMap, mapModel);
-            setVisibleArea(lightPosition, lightLumen, visitedMap, mapModel);
-        });
-        // map-view renderer system
-        scheduler.schedule(() -> {
-            var camera = dark.findEntitiesWith(Camera.class, Position.class).iterator().next();
-            var map = dark.findEntitiesWith(Map.class, Render.class, Position.class);
-            var visibleMap = map.withState(Visibility.VISIBLE).iterator();
+            // finds all map entities
+            var map = dark.findEntitiesWith(Map.class, Position.class);
+            // selects the not-visible map
+            var notVisibleMap = map.withState(Visibility.NOT_VISIBLE).iterator();
+            // selects the visited map
             var visitedMap = map.withState(Visibility.VISITED).iterator();
-            renderMap(camera.comp2(), visibleMap, false, screen);
-            renderMap(camera.comp2(), visitedMap, true, screen);
+            // forks the system in two subsystems that will run immediately distributed across worker threads:
+            scheduler.forkAndJoinAll(
+                    // sets all not-visible map tiles that are illuminated by light to be visible
+                    () -> setVisibleArea(lightPosition, lightLumen, notVisibleMap, mapModel),
+                    // sets all visited map tiles that are illuminated by light to be visible
+                    () -> setVisibleArea(lightPosition, lightLumen, visitedMap, mapModel)
+            );
+        });
+        // adds the map-view renderer system
+        scheduler.schedule(() -> {
+            // finds the camera
+            var camera = dark.findEntitiesWith(Camera.class, Position.class).iterator().next();
+            // finds all map entities
+            var map = dark.findEntitiesWith(Map.class, Render.class, Position.class);
+            // selects the visible map
+            var visibleMap = map.withState(Visibility.VISIBLE).iterator();
+            // selects the visited map
+            var visitedMap = map.withState(Visibility.VISITED).iterator();
+            // renders both visible and visited map in parallel by forking the system in two subsystems that will run
+            // immediately distributed across worker threads:
+            scheduler.forkAndJoinAll(
+                    // renders the visible map
+                    () -> renderMap(camera.comp2(), visibleMap, false, screen),
+                    // renders the visited map
+                    () -> renderMap(camera.comp2(), visitedMap, true, screen)
+            );
+            // draw the camera position
+            screen.drawGlyph('@', screen.center.x(), screen.center.y());
         });
         return scheduler;
     }
 
-    // set a visible area in the map view by checking the sight-line from the center using the map model
+    // sets a visible area in the map view by checking the sight-line from the center using the map model
     private static void setVisibleArea(Position areaCenter, int area, Iterator<Results.With2<Map, Position>> mapView, MapModel mapModel) {
         while (mapView.hasNext()) {
+            // gets the next tile and the position in the map
             var tile = mapView.next();
             Position mapPosition = tile.comp2();
-            int dx = Math.abs(mapPosition.x - areaCenter.x);
-            int dy = Math.abs(mapPosition.y - areaCenter.y);
+            // checks if the tile is inside the circle area
+            int dx = Math.abs(mapPosition.x - areaCenter.x), dy = Math.abs(mapPosition.y - areaCenter.y);
             boolean isTileInsideArea = area >= dx * dx + dy * dy;
-            if (isTileInsideArea && mapModel.checkSightLine(areaCenter.x, areaCenter.y, mapPosition.x, mapPosition.y)) {
+            // checks if the center is visible from the tile and if the view is free from obstacles
+            boolean checkSightLine = mapModel.checkSightLine(areaCenter.x, areaCenter.y, mapPosition.x, mapPosition.y);
+            if (isTileInsideArea && checkSightLine) {
+                // sets the tile to be visible
                 tile.entity().setState(Visibility.VISIBLE);
             }
         }
     }
 
-    // map rendering function relative to the camera position
+    // the map rendering function relative to the camera position
     private static void renderMap(Position cameraPosition, Iterator<Results.With3<Map, Render, Position>> mapView,
                                   boolean isVisitedView, Screen screen) {
         while (mapView.hasNext()) {
+            // gets the next tile, the position in the map, and the render component to use
             var tile = mapView.next();
             Position position = tile.comp3();
             Render render = tile.comp2();
+            // renders the tile using the visible|visited glyph provided by the render component
             renderTile(position, cameraPosition, isVisitedView ? render.visitedGlyph : render.glyph, screen);
         }
     }
 
-    // tile rendering function relative to the camera position
+    // the tile rendering function relative to the camera position
     private static void renderTile(Position mapPosition, Position cameraPosition, char glyph, Screen screen) {
         screen.drawGlyph(glyph, (mapPosition.x - cameraPosition.x) * 2 + screen.center.x(),// * 2 to fix the char size ratio
                 (mapPosition.y - cameraPosition.y) + screen.center.y());
@@ -158,16 +210,16 @@ public final class DarkEntities {
 
     // the game loop
     private static void loop(Scheduler scheduler, AtomicReference<ArrowKey> pressedKey, Screen screen) {
-        boolean goOn = true;
-        while (goOn) {
+        boolean keepGoingOn = true;
+        while (keepGoingOn) {
             // fetches input
             String input = screen.prompt("Press WASD keys to Move, Q to Quit", "^[wasdqWASDQ]+$").toLowerCase();
             // checks if quit
             if (input.startsWith("q")) {
-                goOn = !confirmQuit(screen);
+                keepGoingOn = !confirmQuit(screen);
                 continue;
             }
-            // translates input in pressedKey
+            // translates raw input in pressed ArrowKey
             pressedKey.set(switch (input.substring(0, 1)) {
                 case "w" -> ArrowKey.UP;
                 case "a" -> ArrowKey.LEFT;
@@ -175,7 +227,7 @@ public final class DarkEntities {
                 case "d" -> ArrowKey.RIGHT;
                 default -> null;
             });
-            // executes periodic tick
+            // clears the screen and executes the periodic tick
             screen.clear();
             scheduler.tick();
         }
@@ -189,21 +241,21 @@ public final class DarkEntities {
         return input.toLowerCase().startsWith("y");
     }
 
-    // enum and entity states
+    // enum and entity states:
 
     // input mapping
     enum ArrowKey {
         LEFT, RIGHT, UP, DOWN
     }
 
-    // map visibility state
+    // the map visibility state
     enum Visibility {
-        VISIBLE, NOT_VISIBLE, HALF_LIGHT, VISITED
+        VISIBLE, NOT_VISIBLE, VISITED
     }
 
-    // entity components
+    // entity components:
 
-    // absolute position in the map
+    // the component the provides the entity absolute position in the map
     static final class Position {
         int x, y;
 
@@ -221,19 +273,19 @@ public final class DarkEntities {
         }
     }
 
-    // render component provides glyph
+    // the render component that provides both visible and visited glyphs
     record Render(char glyph, char visitedGlyph) {
     }
 
-    // light
-    record Light(int lumen) {
+    // the map tag component
+    record Map() {
     }
 
-    // camera tag
+    // the camera tag component
     record Camera() {
     }
 
-    // map tag
-    record Map() {
+    // the light component that provides the lumen value
+    record Light(int lumen) {
     }
 }
