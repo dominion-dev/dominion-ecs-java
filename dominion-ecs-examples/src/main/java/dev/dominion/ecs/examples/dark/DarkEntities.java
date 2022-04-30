@@ -29,17 +29,23 @@ public final class DarkEntities {
 
     // the game entry point
     public static void main(String[] args) {
+        // creates the user interface with a given size in the terminal window
         Screen screen = new Screen(120, 25);
+        // starts the menu flow
         menu(screen);
     }
 
     // the menu flow
     private static void menu(Screen screen) {
+        // draws a frame with the app name in the center
         screen.drawRect(0, 0, screen.width, screen.height);
         screen.drawText("Dark Entities", screen.center.x(), screen.center.y(), Screen.TextAlignment.CENTER);
-        String playerName = screen.prompt("What's your name, Hero?", "^[a-zA-Z0-9-_]+$");
+        // asks for the player name
+        String playerName = screen.prompt("What's your name, Hero?", "^[a-zA-Z0-9-_]+$").toUpperCase();
+        // greets the player and asks if he's ready
         String input = screen.prompt(String.format("Hello %s, are you ready for the darkness? (press Y to confirm)", playerName));
         if (input.toLowerCase().startsWith("y")) {
+            // starts the game flow
             game(playerName, screen);
         }
     }
