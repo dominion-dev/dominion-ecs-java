@@ -10,8 +10,7 @@ import java.util.Comparator;
 import java.util.Random;
 
 /**
- * This map builder is inspired by Herbert Wolverson's awesome Rust tutorial on rogue-like:
- * https://github.com/amethyst/rustrogueliketutorial/blob/master/chapter-04-newmap/src/map.rs
+ * A map builder able to build a dungeon with a given number of random rooms
  */
 public final class MapModelBuilder {
     public final static int ROOM_MIN_SIDE_LENGTH = 4;
@@ -20,6 +19,14 @@ public final class MapModelBuilder {
     private MapModelBuilder() {
     }
 
+    /**
+     * the MapModelBuilder entry-point to build a map
+     *
+     * @param width     the width of the map
+     * @param height    the height of the map
+     * @param roomCount the total number of random rooms to build
+     * @return the map model
+     */
     public static MapModel build(int width, int height, int roomCount) {
         return buildHallways(buildRooms(width, height, roomCount));
     }
@@ -40,6 +47,17 @@ public final class MapModelBuilder {
         }
     }
 
+    /**
+     * Build the dungeon creating random rooms.
+     * <p>
+     * Builder functions inspired by Herbert Wolverson's awesome Rust tutorial on rogue-like:
+     * https://github.com/amethyst/rustrogueliketutorial/blob/master/chapter-04-newmap/src/map.rs
+     *
+     * @param width     the width of the map
+     * @param height    the height of the map
+     * @param roomCount the total number of rooms to build
+     * @return the map model
+     */
     private static MapModel buildRooms(int width, int height, int roomCount) {
         var map = new Tile[height][width];
         var rooms = new Rect[roomCount];
@@ -73,13 +91,18 @@ public final class MapModelBuilder {
         return new MapModel(map, rooms, width, height);
     }
 
+    /**
+     * builds hallways between rooms
+     *
+     * @param mapModel the msp model
+     * @return the map model
+     */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static MapModel buildHallways(MapModel mapModel) {
         var map = mapModel.map;
         var rooms = mapModel.rooms;
         Random rand = new Random();
         Arrays.stream(rooms)
-//                .peek(System.out::println)
                 .reduce((prev, curr) -> {
                     int hY, vX;
                     if (rand.nextBoolean()) {
@@ -106,9 +129,19 @@ public final class MapModelBuilder {
         }
     }
 
+
+    /**
+     * MapModel is a bi-dimensional array of Tile.
+     * It contains an array of rooms represented with a Rect type and having a center Point
+     *
+     * @param map    a bi-dimensional Tile array
+     * @param rooms  an array of Rect
+     * @param width  the width of the map
+     * @param height the height of the map
+     */
     record MapModel(Tile[][] map, Rect[] rooms, int width, int height) {
 
-        // thanks uncle Bresenham
+        // Thanks Uncle Bresenham for your line drawing algorithm
         public boolean checkSightLine(int fromX, int fromY, int toX, int toY) {
             int dx = Math.abs(toX - fromX), dy = Math.abs(toY - fromY);
             int sx = fromX < toX ? 1 : -1, sy = fromY < toY ? 1 : -1;
@@ -143,10 +176,10 @@ public final class MapModelBuilder {
             this(x, y, x + width, y + height);
         }
 
+        // returns true if this intersects the other Rect
         public boolean intersect(Rect other) {
             return other != null && !(other.left > right || other.right < left || other.top > bottom || other.bottom < top);
         }
-
     }
 
     record Point(int x, int y) {
