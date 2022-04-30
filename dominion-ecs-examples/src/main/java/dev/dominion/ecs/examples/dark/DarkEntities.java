@@ -288,5 +288,4 @@ public final class DarkEntities {
     // the light component that provides the lumen value
     record Light(int lumen) {
     }
-
 }
