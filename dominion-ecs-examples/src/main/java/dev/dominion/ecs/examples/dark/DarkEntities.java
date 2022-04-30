@@ -13,6 +13,13 @@ import dev.dominion.ecs.examples.dark.MapModelBuilder.MapModel;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * DarkEntities is a simple example app that could inspire a turn-based rogue-like game running on a terminal window.
+ * Shows how to create a basic Dominion of entities, components, and systems by creating and moving a camera with a
+ * light to illuminate and explore a random dungeon map.
+ * Implements a wise light system able to fork subsystems and distribute on worker threads to take advantage of multiple
+ * cores.
+ */
 public final class DarkEntities {
 
     // don't print Dominion banner info on startup
