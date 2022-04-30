@@ -11,6 +11,9 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+/**
+ * Screen provides basic user interface support on a terminal window.
+ */
 public final class Screen {
     public final int width;
     public final int height;
@@ -99,7 +102,7 @@ public final class Screen {
         System.out.printf("\n> %s %s ", prompt.err, prompt.outMessage);
         try {
             String input = prompt.inPattern == null ? scanner.next() : scanner.next(prompt.inPattern);
-            scanner = newScanner();
+            scanner = newScanner(); // Scanner with a pattern check seems to be buggy and requires a new instance to work properly
             return input;
         } catch (InputMismatchException e) {
             prompt = new Prompt(prompt.outMessage, prompt.inPattern, String.format("'%s' is not good.. ", scanner.next()));
