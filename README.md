@@ -3,22 +3,21 @@
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
 ![CodeQL](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/codeql-analysis.yml/badge.svg)
 
-
 Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
 
 ## Features
 
-- 🚀 **_FAST_** > Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league
-  as ECS for C, C++, and Rust -
+- 🚀 **_FAST_** > Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league as
+  ECS for C, C++, and Rust -
   see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmarks/README.md)
   .
 - 🤏 **_TINY_** > Just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
-- ☕️ **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. A few
-  readme pages will provide complete usage documentation.
-- 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and
-  announce the availability of the new version.
+- ☕️ **_SIMPLE_** > Dominion promotes a clean, minimal and self-explanatory API that is simple by design. A few readme
+  pages will provide complete usage documentation.
+- 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
+  the availability of the new version.
 
 ## About Performance
 
@@ -78,7 +77,7 @@ public class HelloDominion {
                                 result.entity().getName(), velocity, position);
                     });
         };
-        
+
         // create a scheduler
         Scheduler scheduler = hello.createScheduler();
         // schedule the system
@@ -103,9 +102,6 @@ public class HelloDominion {
 }
 ```
 
-You can find the complete source code in
-the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-examples) module.
-
 ## Getting Started
 
 In your local environment you must have already installed a JDK 17 (or newer) and Maven.
@@ -116,7 +112,8 @@ Clone the repository or download the zip from GitHub, then install with the foll
 mvn clean install
 ```
 
-With Dominion already built in your local folder, you can run the example code with the following commands:
+With Dominion already built in your local folder, you can run the **HelloDominion** example code with the following
+commands:
 
 ```
 java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar
@@ -125,6 +122,18 @@ java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar
 Finally, start using the
 [Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
 as a reference to get started implementing your first app.
+
+## Dominion Examples
+
+Dominion comes with some documented sample apps to help adopt the solution, like the **HelloDominion** sample above.
+
+A new **DarkEntities** sample app has been added, it could inspire a turn-based rogue-like game running on a terminal
+window:
+
+<img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
+
+Here the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-examples) page
+with all the documented code.
 
 ## Dominion Release Cycle
 

@@ -4,8 +4,9 @@ Dominion comes with some documented sample apps to help adopt the solution.
 
 ## Hello Dominion
 
-The **HelloDominion** app, already presented in the home, is the example app to break the
-ice. [Here](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/src/main/java/dev/dominion/ecs/examples/hello/HelloDominion.java)
+The **HelloDominion** app, already presented in the home, is the example app to break the ice.
+
+[Here](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/src/main/java/dev/dominion/ecs/examples/hello/HelloDominion.java)
 you find the documented source.
 
 With Dominion already built in your local folder, you can run this example with the following commands:
@@ -25,7 +26,6 @@ to illuminate and explore a random dungeon map. Implements a wise light system a
 worker threads to take advantage of multiple cores.
 
 <img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
-
 
 The [main class](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/src/main/java/dev/dominion/ecs/examples/dark/DarkEntities.java)
 implementation is straightforward and provides a comment on almost every line. It can be read from top to bottom.
