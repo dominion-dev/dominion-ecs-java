@@ -22,7 +22,7 @@ Here things start to get more interesting.
 **DarkEntities** is a simple example app that could inspire a turn-based rogue-like game running on a terminal window.
 
 Shows how to create a basic _dominion_ of entities, components, and systems by creating and moving a camera with a light
-to illuminate and explore a random dungeon map. Implements a wise light system able to fork subsystems and distribute on
+to illuminate and explore a random dungeon map. Implements a wise lighting system able to fork subsystems and distribute on
 worker threads to take advantage of multiple cores.
 
 <img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
