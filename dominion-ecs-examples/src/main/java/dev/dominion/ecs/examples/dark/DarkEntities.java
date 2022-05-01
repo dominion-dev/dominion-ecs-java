@@ -133,7 +133,7 @@ public final class DarkEntities {
                 tile.entity().setState(Visibility.VISITED);
             }
         });
-        // adds the light system
+        // adds the lighting system
         scheduler.schedule(() -> {
             // finds the light entity and gets the position and the lumen power
             var light = dark.findEntitiesWith(Light.class, Position.class).iterator().next();
