@@ -132,8 +132,8 @@ window:
 
 <img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
 
-Here the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-examples) page
-with all the documented code.
+Here the [dominion-ecs-examples](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/README.md) 
+page with all the documented code.
 
 ## Dominion Release Cycle
 
