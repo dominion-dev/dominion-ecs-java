@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100"> Dominion Examples
 
-Dominion comes with some documented sample apps to help adopt the solution.
+Dominion comes with some documented sample apps to help adopt the [solution](https://github.com/dominion-dev/dominion-ecs-java).
 
 ## Hello Dominion
 
