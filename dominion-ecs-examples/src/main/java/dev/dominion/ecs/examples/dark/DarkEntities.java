@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * DarkEntities is a simple example app that could inspire a turn-based rogue-like game running on a terminal window.
- * Shows how to create a basic Dominion of entities, components, and systems by creating and moving a camera with a
- * lighting to illuminate and explore a random dungeon map.
- * Implements a wise lighting system able to fork subsystems and distribute on worker threads to take advantage of multiple
+ * Shows how to create a basic Dominion of entities, components, and systems by adding a camera with a light to illuminate 
+ * and explore a random dungeon map.
+ * Implements a neat lighting system able to fork subsystems and distribute on worker threads to take advantage of multiple
  * cores.
  */
 public final class DarkEntities {
