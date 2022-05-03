@@ -171,7 +171,7 @@ public final class DarkEntities {
                     // renders the visited map
                     () -> renderMap(camera.comp2(), visitedMap, true, screen)
             );
-            // draw the camera position
+            // draws the camera position
             screen.drawGlyph('@', screen.center.x(), screen.center.y());
         });
         return scheduler;
