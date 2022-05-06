@@ -53,19 +53,19 @@ Here is an example:
 public class HelloDominion {
 
     public static void main(String[] args) {
-        // create your world
+        // creates your world
         Dominion hello = Dominion.create();
 
-        // create an entity with components
+        // creates an entity with components
         hello.createEntity(
                 "my-entity",
                 new Position(0, 0),
                 new Velocity(1, 1)
         );
 
-        // create a system
+        // creates a system
         Runnable system = () -> {
-            //find entities
+            //finds entities
             hello.findEntitiesWith(Position.class, Velocity.class)
                     // stream the results
                     .stream().forEach(result -> {
@@ -78,11 +78,11 @@ public class HelloDominion {
                     });
         };
 
-        // create a scheduler
+        // creates a scheduler
         Scheduler scheduler = hello.createScheduler();
-        // schedule the system
+        // schedules the system
         scheduler.schedule(system);
-        // start 3 ticks per second
+        // starts 3 ticks per second
         scheduler.tickAtFixedRate(3);
     }
 
