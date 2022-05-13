@@ -4,15 +4,14 @@
 name: Java CD with Maven
 
 on:
-
   pull_request:
-    branches: [ release/** ]
+    branches: [release/**]
+    types: [closed]
 
 jobs:
-  build:
-
+  if_merged:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 17
@@ -22,4 +21,4 @@ jobs:
         distribution: 'adopt'
         cache: maven
     - name: Build with Maven
-      run: echo $GITHUB_ACTION
+      run: echo $GITHUB_REF_NAME -EA- $GITHUB_RUN_NUMBER
