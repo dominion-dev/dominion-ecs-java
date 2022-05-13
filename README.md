@@ -116,7 +116,7 @@ With Dominion already built in your local folder, you can run the **HelloDominio
 commands:
 
 ```
-java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.6-SNAPSHOT.jar
 ```
 
 Finally, start using the

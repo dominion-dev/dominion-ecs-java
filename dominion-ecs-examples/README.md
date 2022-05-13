@@ -12,7 +12,7 @@ you find the documented source.
 With Dominion already built in your local folder, you can run this example with the following commands:
 
 ```
-java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.6-SNAPSHOT.jar
 ```
 
 ## Dark Entities
@@ -33,7 +33,7 @@ implementation is straightforward and provides a comment on almost every line. I
 With Dominion already built in your local folder, you can run this example with the following commands:
 
 ```
-java -cp dominion-ecs-examples/target/dominion-ecs-examples-0.5-SNAPSHOT.jar dev.dominion.ecs.examples.dark.DarkEntities
+java -cp dominion-ecs-examples/target/dominion-ecs-examples-0.6-SNAPSHOT.jar dev.dominion.ecs.examples.dark.DarkEntities
 ```
 
 ## Support Dominion
