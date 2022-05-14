@@ -22,6 +22,6 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
-        run: >-
-          export REVISION=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')-EA-$GITHUB_RUN_NUMBER &&
+        run: |
+          export REVISION=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')-EA-$GITHUB_RUN_NUMBER
           echo $REVISION
