@@ -23,5 +23,7 @@ jobs:
           cache: maven
       - name: Build with Maven
         run: |
-          export REVISION=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')-EA-$GITHUB_RUN_NUMBER
-          echo $REVISION
+          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
+          export REVISION=$RELEASE-SNAPSHOT
+          export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
+          echo $RELEASE $REVISION $TAG
