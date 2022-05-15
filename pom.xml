@@ -30,7 +30,7 @@
         <maven-resources-plugin>3.0.2</maven-resources-plugin>
         <maven-compiler-plugin>3.8.0</maven-compiler-plugin>
         <maven-surefire-plugin>3.0.0-M5</maven-surefire-plugin>
-        <maven-jar-plugin>3.0.2</maven-jar-plugin>
+        <maven-javadoc-plugin>3.4.0</maven-javadoc-plugin>
         <maven-install-plugin>2.5.2</maven-install-plugin>
         <maven-deploy-plugin>2.8.2</maven-deploy-plugin>
         <maven-gpg-plugin>1.6</maven-gpg-plugin>
@@ -173,18 +173,20 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalOptions>-Xdoclint:all -Xdoclint:-missing</additionalOptions>
+                    <additionalJOptions>
+                        <additionalJOption>-Xdoclint:all</additionalJOption>
+                        <additionalJOption>-Xdoclint:-missing</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>empty-javadoc-jar</id>
-                        <phase>package</phase>
+                        <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <classifier>javadoc</classifier>
-                            <classesDirectory>${basedir}/javadoc</classesDirectory>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -199,10 +201,10 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
+                            <!--                            <gpgArguments>-->
+                            <!--                                <arg>&#45;&#45;pinentry-mode</arg>-->
+                            <!--                                <arg>loopback</arg>-->
+                            <!--                            </gpgArguments>-->
                         </configuration>
                     </execution>
                 </executions>
@@ -241,16 +243,17 @@
                     <version>${maven-surefire-plugin}</version>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${maven-jar-plugin}</version>
-                </plugin>
-                <plugin>
                     <artifactId>maven-install-plugin</artifactId>
                     <version>${maven-install-plugin}</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>${maven-deploy-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
