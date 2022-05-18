@@ -1,7 +1,7 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CD with Maven
+name: Java CD for EA with Maven
 
 on:
   pull_request:
@@ -14,16 +14,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
+      - uses: actions/checkout@v3
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'adopt'
-          cache: maven
-      - name: Build with Maven
+          server-id: ossrh
+          server-username: ${{ secrets.OSSRH_USERNAME }}
+          server-password: ${{ secrets.OSSRH_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Publish EA package
         run: |
           export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
           export REVISION=$RELEASE-SNAPSHOT
           export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
-          echo $RELEASE $REVISION $TAG
+          echo "Maven Deploy $REVISION"
+          mvn --batch-mode -Drevision=$REVISION deploy
