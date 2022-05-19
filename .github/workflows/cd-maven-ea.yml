@@ -40,7 +40,7 @@ jobs:
           script: |
             const release = context.ref.match(/^release\/(.*)$/)[1];
             const tag = release + '-EA-' + context.runNumber;
-            console.log('Git Tag: ' + tag)
+            console.log('Git Tag: ' + tag);
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
