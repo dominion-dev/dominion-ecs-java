@@ -40,5 +40,6 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const tagName = context.ref;
-            console.log(tagName);
+            const release = context.ref.match(/^release\/(.*)$/)[1];
+            const tag = release + '-EA-' + context.runNumber
+            console.log(tag);
