@@ -41,5 +41,5 @@ jobs:
         with:
           script: |
             const release = context.ref.match(/^release\/(.*)$/)[1];
-            const tag = release + '-EA-' + context.runNumber
+            const tag = release + '-EA-' + context.runNumber;
             console.log(tag);
