@@ -30,7 +30,7 @@ jobs:
           export REVISION=$RELEASE-SNAPSHOT
           export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
           echo "Maven Deploy $REVISION"
-          mvn --batch-mode -Drevision=$REVISION deploy
+          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION deploy
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
