@@ -1,4 +1,4 @@
-# This workflow will publish EA releases to maven central
+# This workflow will publish EA releases to maven central and create the tag on git
 
 name: Java CD for EA with Maven
 
@@ -12,7 +12,6 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up Maven Central Repository
@@ -25,23 +24,23 @@ jobs:
           server-password: OSSRH_PASSWORD
           gpg-passphrase: GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-#      - name: Publish EA package
-#        run: |
-#          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
-#          export REVISION=$RELEASE-SNAPSHOT
-#          export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
-#          echo "Maven Deploy $REVISION"
-#          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION deploy
-#        env:
-#          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Publish EA package
+        run: |
+          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
+          export REVISION=$RELEASE-SNAPSHOT
+          echo "Maven Deploy: $REVISION"
+          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION deploy
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Create tag
         uses: actions/github-script@v6
         with:
           script: |
             const release = context.ref.match(/^release\/(.*)$/)[1];
             const tag = release + '-EA-' + context.runNumber;
+            console.log('Git Tag: ' + tag)
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
