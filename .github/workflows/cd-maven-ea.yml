@@ -25,16 +25,20 @@ jobs:
           server-password: OSSRH_PASSWORD
           gpg-passphrase: GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-      - name: Publish EA package
-        run: |
-          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
-          export REVISION=$RELEASE-SNAPSHOT
-          export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
-          echo "Maven Deploy $REVISION"
-          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION deploy
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      - name: Test env
-        run: echo "###### Git tag $TAG"
+#      - name: Publish EA package
+#        run: |
+#          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
+#          export REVISION=$RELEASE-SNAPSHOT
+#          export TAG=$RELEASE-EA-$GITHUB_RUN_NUMBER
+#          echo "Maven Deploy $REVISION"
+#          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION deploy
+#        env:
+#          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Create tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const tagName = context.ref;
+            console.log(tagName);
