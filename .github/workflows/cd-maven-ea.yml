@@ -37,9 +37,14 @@ jobs:
 #          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 #          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Create tag
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const release = context.ref.match(/^release\/(.*)$/)[1];
             const tag = release + '-EA-' + context.runNumber;
-            console.log(tag);
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/' + tag,
+              sha: context.sha
+            });
