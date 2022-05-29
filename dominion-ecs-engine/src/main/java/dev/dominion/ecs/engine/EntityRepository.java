@@ -236,8 +236,14 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        public Results<T> excludeWith(Class<?>... componentTypes) {
-            compositionRepository.removeFrom(nodeMap, componentTypes);
+        public Results<T> without(Class<?>... componentTypes) {
+            compositionRepository.without(nodeMap, componentTypes);
+            return this;
+        }
+
+        @Override
+        public Results<T> withAlso(Class<?>... componentTypes) {
+            compositionRepository.withAlso(nodeMap, componentTypes);
             return this;
         }
     }

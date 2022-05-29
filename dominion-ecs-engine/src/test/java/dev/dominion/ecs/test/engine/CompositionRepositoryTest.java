@@ -139,7 +139,7 @@ class CompositionRepositoryTest {
     }
 
     @Test
-    void removeFrom() {
+    void without() {
         try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
             ClassIndex classIndex = compositionRepository.getClassIndex();
             Composition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
@@ -157,10 +157,48 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.removeFrom(nodeMap, C2.class);
+            compositionRepository.without(nodeMap, C2.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(1, nodeMap.size());
             Assertions.assertEquals(compositionC1, nodeMap.get(compositionC1Key).getComposition());
+        }
+    }
+
+    @Test
+    void withAlso() {
+        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+            ClassIndex classIndex = compositionRepository.getClassIndex();
+            Composition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
+            Composition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
+            Composition compositionC1C2C3 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0), new C3(0)});
+
+            IndexKey compositionC1Key = new IndexKey(classIndex.getIndex(C1.class));
+            IndexKey compositionC1C2Key = classIndex.getIndexKey(new Object[]{new C1(0), new C2(0)});
+            IndexKey compositionC1C2C3Key = classIndex.getIndexKey(new Object[]{new C1(0), new C2(0), new C3(0)});
+
+            Map<IndexKey, CompositionRepository.Node> nodeMap = compositionRepository.findWith(C1.class);
+            Assertions.assertNotNull(nodeMap);
+            Assertions.assertEquals(3, nodeMap.size());
+            Assertions.assertEquals(compositionC1, nodeMap.get(compositionC1Key).getComposition());
+            Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
+            Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
+
+            compositionRepository.withAlso(nodeMap, C2.class);
+            Assertions.assertNotNull(nodeMap);
+            Assertions.assertEquals(2, nodeMap.size());
+            Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
+            Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
+
+            nodeMap = compositionRepository.findWith(C2.class);
+            Assertions.assertNotNull(nodeMap);
+            Assertions.assertEquals(2, nodeMap.size());
+            Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
+            Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
+
+            compositionRepository.withAlso(nodeMap, C1.class, C3.class);
+            Assertions.assertNotNull(nodeMap);
+            Assertions.assertEquals(1, nodeMap.size());
+            Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
         }
     }
 

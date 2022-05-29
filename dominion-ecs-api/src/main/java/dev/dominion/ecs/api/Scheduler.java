@@ -15,7 +15,6 @@ package dev.dominion.ecs.api;
  * all subsystems to execute.
  * Schedulers can start a periodic tick that becomes enabled immediately and subsequently with the given fixed rate.
  * A deltaTime method provides the time in seconds between the last tick and the current tick.
- * <p>
  * <pre>
  * schedule(A)
  * parallelSchedule(B,C)

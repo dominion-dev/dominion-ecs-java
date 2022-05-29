@@ -39,7 +39,15 @@ public interface Results<T> {
      * @param componentTypes one or more component types to exclude
      * @return the Results without excluded component types
      */
-    Results<T> excludeWith(Class<?>... componentTypes);
+    Results<T> without(Class<?>... componentTypes);
+
+    /**
+     * Provides a Results also considering one or more types of components as a filter.
+     *
+     * @param componentTypes one or more types of components used as a filter
+     * @return the Results also considering one or more types of components as a filter.
+     */
+    Results<T> withAlso(Class<?>... componentTypes);
 
     /**
      * Provides a filtered Results with only entities having the required state.

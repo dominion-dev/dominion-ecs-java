@@ -218,7 +218,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void removeFrom(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void without(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -231,6 +231,19 @@ public final class CompositionRepository implements AutoCloseable {
                     nodeMap.remove(linkedNodeKey);
                 }
             }
+        }
+    }
+
+    public void withAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+        if (componentTypes.length == 0) {
+            return;
+        }
+        for (Class<?> componentType : componentTypes) {
+            Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
+            if (node == null) {
+                continue;
+            }
+            intersect(nodeMap, node.linkedNodes);
         }
     }
 
