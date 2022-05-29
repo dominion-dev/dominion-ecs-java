@@ -57,17 +57,18 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 
 ## Class Results
 
-A **Results** is the output of the [Dominion](#class-dominion).**findEntitiesWith** methods and represents a simple 
-container of all entities that match a set of components and, optionally, have a specified state. Results can be further 
-filtered by specifying one or more component types to exclude. Both iterator and stream methods are available to 
+A **Results** instance is the output of the [Dominion](#class-dominion).**findEntitiesWith** methods and represents a 
+simple container of all entities that match a set of components and, optionally, have a specified state. Results can be 
+further filtered by specifying one or more component types to exclude. Both iterator and stream methods are available to 
 retrieve found entities in sequence.
 
-| Method                                                                      | Description                                                                            |
-|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| Iterator\<T> **iterator**();                                                | Provides an iterator to retrieve found entities in sequence.                           |
-| Stream\<T> **stream**();                                                    | Creates a sequential stream to supports functional-style operations on found entities. |
-| [Results\<T>](#class-results) **excludeWith**(Class\<?>... componentTypes); | Provides a filtered Results without one or more component types to exclude.            |
-| [Results\<T>](#class-results) **withState**(S state);                       | Provides a filtered Results with only entities having the required state.              |
+| Method                                                                   | Description                                                                            |
+|--------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Iterator\<T> **iterator**();                                             | Provides an iterator to retrieve found entities in sequence.                           |
+| Stream\<T> **stream**();                                                 | Creates a sequential stream to supports functional-style operations on found entities. |
+| [Results\<T>](#class-results) **without**(Class\<?>... componentTypes);  | Provides a filtered Results without one or more component types to exclude.            |
+| [Results\<T>](#class-results) **withAlso**(Class\<?>... componentTypes); | Provides a Results also considering one or more types of components as a filter.       |
+| [Results\<T>](#class-results) **withState**(S state);                    | Provides a filtered Results with only entities having the required state.              |
 
 
 ## Class Scheduler
