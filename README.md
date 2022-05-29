@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100">|) () |\\/| | |\\| | () |\\|
 
-[![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/cicd-maven.yml)
+[![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/ci-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/ci-maven.yml)
 ![CodeQL](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/codeql-analysis.yml/badge.svg)
 
 Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
