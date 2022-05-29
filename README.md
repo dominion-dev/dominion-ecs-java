@@ -19,6 +19,44 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 - 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
   the availability of the new version.
 
+## Quick Start
+
+In your local environment you must have already installed a JDK 17 (or newer) and Maven.
+
+Add the following dependency declaration in your project pom.xml:
+
+```xml
+
+<project>
+    <!-- ... -->
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.dominion.ecs</groupId>
+            <artifactId>dominion-ecs-engine</artifactId>
+            <version>0.6.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>central-snapshot</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+</project>
+```
+
+Check out the
+[Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
+as a reference to get started implementing your first app.
+
 ## About Performance
 
 Designing a high-performance and high-concurrency Java library is ~~a piece of cake~~ quite a challenge as the execution
@@ -102,49 +140,29 @@ public class HelloDominion {
 }
 ```
 
-## Getting Started
-
-In your local environment you must have already installed a JDK 17 (or newer) and Maven.
-
-Clone the repository or download the zip from GitHub, then install with the following Maven command:
-
-```
-mvn clean install
-```
-
-With Dominion already built in your local folder, you can run the **HelloDominion** example code with the following
-commands:
-
-```
-java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.6-SNAPSHOT.jar
-```
-
-Finally, start using the
-[Dominion API documentation](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-api/README.md)
-as a reference to get started implementing your first app.
-
-## Dominion Examples
+## Dominion Examples Page
 
 Dominion comes with some documented sample apps to help adopt the solution, like the **HelloDominion** sample above.
 
-A new **DarkEntities** sample app has been added, it could inspire a turn-based rogue-like game running on a terminal
+The **DarkEntities** sample app has also been added, it could inspire a turn-based rogue-like game running on a terminal
 window:
 
 <img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
 
-Here the [Dominion Examples](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/README.md) 
+Here
+the [Dominion Examples](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/README.md)
 page with all the documented code.
 
 ## Dominion Release Cycle
 
-| Phase                  | Description                                                                                             | Distribution    |
-|------------------------|---------------------------------------------------------------------------------------------------------|-----------------|
-| Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only |
-| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  |
-| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        |
-| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   |
+| Phase                  | Description                                                                                             | Distribution    | Git tag      |
+|------------------------|---------------------------------------------------------------------------------------------------------|-----------------|--------------|
+| Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only | none         |
+| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  | release-EA-# |
+| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        | release-RC#  |
+| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
 
-Dominion is officially in _**Preview**_.
+Dominion is officially in _**Early Access**_.
 
 [Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
