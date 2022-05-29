@@ -21,7 +21,7 @@ Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_co
 
 ## Quick Start
 
-In your local environment you must have already installed a JDK 17 (or newer) and Maven.
+In your local environment you must have already installed a Java 17 (or newer) and Maven.
 
 Add the following dependency declaration in your project pom.xml:
 
