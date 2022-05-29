@@ -3,9 +3,19 @@
 [![Java CI with Maven](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/ci-maven.yml/badge.svg)](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/ci-maven.yml)
 ![CodeQL](https://github.com/dominion-dev/dominion-ecs-java/actions/workflows/codeql-analysis.yml/badge.svg)
 
-Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java
+Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java.
 
-## Features
+Entity Component System architecture promotes data-oriented programming. It’s all about data (components) and first-class functions (systems) that operate on data. 
+
+This means that, unlike OOP, data and operations are not encapsulated together in objects, which are called entities in ECS. 
+
+Entities model the business objects of the user application, and the entity promotes "composition over inheritance" by grouping a dynamic list of components to define its specific features.
+
+Systems usually operate on components sequentially and can be very fast if data are stored in cache-friendly ways. Systems are decoupled from each other and each system knows only about the data it operates on. This strongly promotes high concurrency, running systems in parallel whenever they can independently operate on the data.
+
+ECS architecture is particularly suitable (but not limited to) if you have to manage many objects in your application. In addition, application code tends to be more reusable and easier to extend with new functionality thanks to the components' composition and subsequent addition of new systems.
+
+## Dominion Features
 
 - 🚀 **_FAST_** > Dominion is not only an insanely fast ECS implemented in Java, it can also be in the same league as
   ECS for C, C++, and Rust -
@@ -75,9 +85,7 @@ actions:
   as much as possible and leveraging the best available lock implementation as the
   fast [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html).
 - **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
-  faster than Java 11. Whenever possible and to further reduce memory footprint, the Dominion
-  uses [record classes](https://docs.oracle.com/en/java/javase/15/language/records.html) instead of standard classes to
-  map more frequent objects.
+  faster than Java 11.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
