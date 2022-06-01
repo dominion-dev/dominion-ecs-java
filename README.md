@@ -5,7 +5,7 @@
 
 Dominion is an [Entity Component System](https://en.wikipedia.org/wiki/Entity_component_system) library for Java.
 
-Entity Component System architecture promotes data-oriented programming. It’s all about data (components) and first-class functions (systems) that operate on data. 
+Entity Component System (ECS) architecture promotes data-oriented programming. It’s all about data (components) and first-class functions (systems) that operate on data. 
 
 This means that, unlike OOP, data and operations are not encapsulated together in objects, which are called entities in ECS. 
 
