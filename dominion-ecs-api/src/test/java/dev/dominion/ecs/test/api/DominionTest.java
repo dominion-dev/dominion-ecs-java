@@ -1,9 +1,6 @@
 package dev.dominion.ecs.test.api;
 
-import dev.dominion.ecs.api.Dominion;
-import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.api.Results;
-import dev.dominion.ecs.api.Scheduler;
+import dev.dominion.ecs.api.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +63,11 @@ public class DominionTest {
 
         @Override
         public Entity createEntity(String name, Object... components) {
+            return null;
+        }
+
+        @Override
+        public Entity createPreparedEntity(String name, Composition.Of with) {
             return null;
         }
 

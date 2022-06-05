@@ -63,7 +63,7 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public Entity createPreparedEntity(String name, Preparation.With with) {
+    public Entity createPreparedEntity(String name, Composition.Of with) {
         return null;
     }
 

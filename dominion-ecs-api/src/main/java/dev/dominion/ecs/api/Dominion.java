@@ -97,6 +97,8 @@ public interface Dominion extends AutoCloseable {
      */
     Entity createEntity(String name, Object... components);
 
+    Entity createPreparedEntity(String name, Composition.Of with);
+
     /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
