@@ -18,10 +18,10 @@ public interface Composition {
     }
 
     non-sealed interface Of1<T> extends Of {
-        Of with(T comp);
+        Of withValue(T comp);
     }
 
     non-sealed interface Of2<T1, T2> extends Of {
-        Of with(T1 comp1, T2 comp2);
+        Of withValue(T1 comp1, T2 comp2);
     }
 }
