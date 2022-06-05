@@ -53,11 +53,11 @@ natively with JDK Azul-17 aarch64:
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
 |-----------------------------------------------|:------------:|:----------------------------------:|
 | **Iterate** entities unpacking **1** comp.    |   0.030 s    |              0.056 s               |
-| **Iterate** entities unpacking **2** comp.    |   0.032 s    |              0.074 s               |
-| **Iterate** entities unpacking **3** comp.    |   0.033 s    |              0.048 s               |
-| **Iterate** entities unpacking **4** comp.    |   0.035 s    |              0.056 s               |
-| **Iterate** entities unpacking **5** comp.    |   0.038 s    |              0.052 s               |
-| **Iterate** entities unpacking **6** comp.    |   0.051 s    |              0.102 s               |
+| **Iterate** entities unpacking **2** comp.    |   0.032 s    |              0.069 s               |
+| **Iterate** entities unpacking **3** comp.    |   0.033 s    |              0.047 s               |
+| **Iterate** entities unpacking **4** comp.    |   0.035 s    |              0.047 s               |
+| **Iterate** entities unpacking **5** comp.    |   0.038 s    |              0.049 s               |
+| **Iterate** entities unpacking **6** comp.    |   0.051 s    |              0.099 s               |
 |                                               |              |                                    |
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
@@ -67,7 +67,7 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **3** comp.             |   0.049 s    |              0.050 s               |
 | **Iterate** entities unpacking **4** comp.             |   0.053 s    |              0.054 s               |
 | **Iterate** entities unpacking **5** comp.             |   0.056 s    |              0.056 s               |
-| **Iterate** entities unpacking **6** comp.             |   0.059 s    |              0.109 s               |
+| **Iterate** entities unpacking **6** comp.             |   0.059 s    |              0.105 s               |
 |                                                        |              |                                    |
 
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
@@ -82,12 +82,12 @@ natively with JDK Azul-17 aarch64:
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
 |--------------------------------------------------------|:------------:|:----------------------------------:|
-| **Stream** entities unpacking **1** comp.              |   0.062 s    |              0.076 s               |
-| **Stream** entities unpacking **2** comp.              |   0.066 s    |              0.081 s               |
-| **Stream** entities unpacking **3** comp.              |   0.075 s    |              0.088 s               |
-| **Stream** entities unpacking **4** comp.              |   0.094 s    |              0.096 s               |
-| **Stream** entities unpacking **5** comp.              |   0.109 s    |              0.102 s               |
-| **Stream** entities unpacking **6** comp.              |   0.124 s    |              0.109 s               |
+| **Stream** entities unpacking **1** comp.              |   0.062 s    |              0.052 s               |
+| **Stream** entities unpacking **2** comp.              |   0.066 s    |              0.070 s               |
+| **Stream** entities unpacking **3** comp.              |   0.075 s    |              0.075 s               |
+| **Stream** entities unpacking **4** comp.              |   0.094 s    |              0.083 s               |
+| **Stream** entities unpacking **5** comp.              |   0.109 s    |              0.092 s               |
+| **Stream** entities unpacking **6** comp.              |   0.124 s    |              0.106 s               |
 |                                                        |              |                                    |
 
 ## Java and benchmarks

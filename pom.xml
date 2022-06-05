@@ -21,7 +21,7 @@
 
     <properties>
         <!-- Project-->
-        <revision>0.6.0-SNAPSHOT</revision>
+        <revision>0.7.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <!-- Plugins-->
@@ -141,7 +141,7 @@
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <header>LICENSE_HEADER</header>
+                    <header>LIC_HEADER</header>
                     <strictCheck>false</strictCheck>
                     <includes>
                         <include>**/*.java</include>
