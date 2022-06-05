@@ -1,7 +1,7 @@
 package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Results;
-import dev.dominion.ecs.engine.Composition;
+import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class CompositionTest {
+class DataCompositionTest {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
             new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
@@ -25,8 +25,8 @@ class CompositionTest {
     void createEntityAtCompositionLevel() {
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition =
-                    new Composition(null, tenant, null, null, ID_SCHEMA, LoggingSystem.Context.TEST);
+            DataComposition composition =
+                    new DataComposition(null, tenant, null, null, ID_SCHEMA, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity(null);
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
@@ -47,7 +47,7 @@ class CompositionTest {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        Composition composition = new Composition(null, null, null, classIndex, null
+        DataComposition composition = new DataComposition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
@@ -79,7 +79,7 @@ class CompositionTest {
         classIndex.addClass(C1.class);
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, classIndex, null
+            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
                     , LoggingSystem.Context.TEST
                     , C1.class);
             for (int i = 0; i < 1_000_000; i++) {
@@ -101,7 +101,7 @@ class CompositionTest {
         classIndex.addClass(C2.class);
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, classIndex, null
+            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
@@ -124,20 +124,20 @@ class CompositionTest {
         ClassIndex classIndex = new ClassIndex();
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition =
-                    new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
+            DataComposition composition =
+                    new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity(null);
             composition.setEntityState(entity, State1.ONE);
-            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.ONE, classIndex)));
+            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
 
             composition.setEntityState(entity, State1.TWO);
-            Assertions.assertFalse(composition.getStates().containsKey(Composition.calcIndexKey(State1.ONE, classIndex)));
-            Assertions.assertTrue(composition.getStates().containsKey(Composition.calcIndexKey(State1.TWO, classIndex)));
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
+            Assertions.assertFalse(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
+            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.TWO, classIndex)));
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
 
             IntEntity entity2 = composition.createEntity(null);
             composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
             Assertions.assertEquals(entity, entity2.getPrev());
             Assertions.assertEquals(entity2, entity.getNext());
             Assertions.assertNull(entity.getData().stateRoot());
@@ -146,20 +146,20 @@ class CompositionTest {
             Assertions.assertNull(entity2.getData().stateRoot());
             Assertions.assertNull(entity2.getPrev());
             Assertions.assertNull(entity2.getNext());
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
 
             composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
             IntEntity entity3 = composition.createEntity(null);
             composition.setEntityState(entity3, State1.TWO);
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
             Assertions.assertNull(entity2.getData().stateRoot());
             Assertions.assertEquals(entity2, entity.getNext());
             Assertions.assertEquals(entity, entity2.getPrev());
             Assertions.assertEquals(entity3, entity2.getNext());
             Assertions.assertEquals(entity2, entity3.getPrev());
             Assertions.assertNull(entity3.getNext());
-            Assertions.assertEquals(Composition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
 
             composition.setEntityState(entity2, null);
             Assertions.assertNull(entity2.getPrev());
@@ -179,8 +179,8 @@ class CompositionTest {
         ClassIndex classIndex = new ClassIndex();
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition =
-                    new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+            DataComposition composition =
+                    new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
             for (int i = 0; i < capacity; i++) {
                 entities[i] = composition.createEntity(null);
             }
@@ -195,9 +195,9 @@ class CompositionTest {
             Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
 
             int count = 1;
-            IntEntity entity = composition.getStates().get(Composition.calcIndexKey(State1.ONE, classIndex));
+            IntEntity entity = composition.getStates().get(DataComposition.calcIndexKey(State1.ONE, classIndex));
             System.out.println(entity);
-            Assertions.assertEquals(Composition.calcIndexKey(State1.ONE, classIndex), entity.getData().stateRoot());
+            Assertions.assertEquals(DataComposition.calcIndexKey(State1.ONE, classIndex), entity.getData().stateRoot());
             IntEntity last = entity;
             while ((entity = (IntEntity) entity.getPrev()) != null) {
                 Assertions.assertNull(entity.getData().stateRoot());
@@ -215,7 +215,7 @@ class CompositionTest {
         classIndex.addClass(C1.class);
         ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
         try (ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant()) {
-            Composition composition = new Composition(null, tenant, null, classIndex, null
+            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class);
             int capacity = 1 << 16;
@@ -223,8 +223,8 @@ class CompositionTest {
                 IntEntity entity = composition.createEntity(null, new C1(i));
                 composition.setEntityState(entity, State1.ONE);
             }
-            IntEntity entity = composition.getStateRootEntity(Composition.calcIndexKey(State1.ONE, classIndex));
-            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, new Composition.StateIterator(entity));
+            IntEntity entity = composition.getStateRootEntity(DataComposition.calcIndexKey(State1.ONE, classIndex));
+            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, new DataComposition.StateIterator(entity));
             int count = 0;
             IntEntity last = null;
             while (iterator.hasNext()) {

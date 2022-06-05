@@ -5,7 +5,7 @@
 
 package dev.dominion.ecs.engine.benchmarks;
 
-import dev.dominion.ecs.engine.Composition;
+import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
@@ -17,25 +17,25 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.concurrent.TimeUnit;
 
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class CompositionBenchmark extends DominionBenchmark {
+public class DataCompositionBenchmark extends DominionBenchmark {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
             new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
 
-    Composition composition2;
+    DataComposition composition2;
     Object[] inputArray2 = new Object[]{
             new C3(0)
             , new C1(0)
     };
 
-    Composition composition4;
+    DataComposition composition4;
     Object[] inputArray4 = new Object[]{
             new C7(0)
             , new C6(0)
             , new C2(0)
             , new C4(0)
     };
-    Composition composition8;
+    DataComposition composition8;
     Object[] inputArray8 = new Object[]{
             new C7(0)
             , new C3(0)
@@ -49,7 +49,7 @@ public class CompositionBenchmark extends DominionBenchmark {
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
-                new String[]{CompositionBenchmark.class.getName()}
+                new String[]{DataCompositionBenchmark.class.getName()}
         );
     }
 
@@ -64,17 +64,17 @@ public class CompositionBenchmark extends DominionBenchmark {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        composition2 = new Composition(null, null, null, classIndex, null
+        composition2 = new DataComposition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C3.class
         );
-        composition4 = new Composition(null, null, null, classIndex, null
+        composition4 = new DataComposition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C2.class
                 , C4.class
                 , C6.class
                 , C7.class
         );
-        composition8 = new Composition(null, null, null, classIndex, null
+        composition8 = new DataComposition(null, null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
@@ -103,7 +103,7 @@ public class CompositionBenchmark extends DominionBenchmark {
 
     public static class CompositionSelect1Comp extends DominionBenchmark {
         ChunkedPool.Tenant<IntEntity> tenant;
-        Composition composition;
+        DataComposition composition;
         ClassIndex classIndex = new ClassIndex();
         @Param(value = {"10000000"})
         int size;
@@ -121,7 +121,7 @@ public class CompositionBenchmark extends DominionBenchmark {
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
-            composition = new Composition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
+            composition = new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
                 composition.createEntity(null, c1);

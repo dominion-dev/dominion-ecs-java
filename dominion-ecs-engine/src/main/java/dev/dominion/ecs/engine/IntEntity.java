@@ -33,7 +33,7 @@ public final class IntEntity implements Entity, Identifiable {
     @SuppressWarnings("unused")
     private volatile StampedLock lock;
 
-    public IntEntity(int id, Composition composition, String name, Object... components) {
+    public IntEntity(int id, DataComposition composition, String name, Object... components) {
         this.id = id;
         data = new Data(composition, components, name, null);
     }
@@ -72,7 +72,7 @@ public final class IntEntity implements Entity, Identifiable {
         return old;
     }
 
-    public Composition getComposition() {
+    public DataComposition getComposition() {
         return data.composition;
     }
 
@@ -231,8 +231,8 @@ public final class IntEntity implements Entity, Identifiable {
                 '}';
     }
 
-    public record Data(Composition composition, Object[] components, String name, IndexKey stateRoot) {
-        public Data(Composition composition, Object[] components, Data other) {
+    public record Data(DataComposition composition, Object[] components, String name, IndexKey stateRoot) {
+        public Data(DataComposition composition, Object[] components, Data other) {
             this(composition, components, other == null ? null : other.name, other == null ? null : other.stateRoot);
         }
     }

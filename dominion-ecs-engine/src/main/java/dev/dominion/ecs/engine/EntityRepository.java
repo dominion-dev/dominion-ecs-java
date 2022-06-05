@@ -5,13 +5,10 @@
 
 package dev.dominion.ecs.engine;
 
-import dev.dominion.ecs.api.Dominion;
-import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.api.*;
 import dev.dominion.ecs.api.Results.*;
-import dev.dominion.ecs.api.Scheduler;
-import dev.dominion.ecs.engine.Composition.StateIterator;
 import dev.dominion.ecs.engine.CompositionRepository.Node;
+import dev.dominion.ecs.engine.DataComposition.StateIterator;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
@@ -54,7 +51,7 @@ public final class EntityRepository implements Dominion {
     @Override
     public Entity createEntity(String name, Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
-        Composition composition = compositions.getOrCreate(componentArray);
+        DataComposition composition = compositions.getOrCreate(componentArray);
         IntEntity entity = composition.createEntity(name, componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -63,6 +60,11 @@ public final class EntityRepository implements Dominion {
             );
         }
         return entity;
+    }
+
+    @Override
+    public Entity createPreparedEntity(String name, Preparation.With with) {
+        return null;
     }
 
     @Override
@@ -202,7 +204,7 @@ public final class EntityRepository implements Dominion {
             this.nodeMap = nodeMap;
         }
 
-        abstract Iterator<T> compositionIterator(Composition composition);
+        abstract Iterator<T> compositionIterator(DataComposition composition);
 
         @Override
         public Iterator<T> iterator() {
@@ -226,7 +228,7 @@ public final class EntityRepository implements Dominion {
 
         @Override
         public <S extends Enum<S>> Results<T> withState(S state) {
-            stateKey = Composition.calcIndexKey(state, compositionRepository.getClassIndex());
+            stateKey = DataComposition.calcIndexKey(state, compositionRepository.getClassIndex());
             return this;
         }
 
@@ -292,7 +294,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With1<T>> compositionIterator(Composition composition) {
+        Iterator<With1<T>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));
@@ -311,7 +313,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With2<T1, T2>> compositionIterator(Composition composition) {
+        Iterator<With2<T1, T2>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));
@@ -332,7 +334,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With3<T1, T2, T3>> compositionIterator(Composition composition) {
+        Iterator<With3<T1, T2, T3>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));
@@ -355,7 +357,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With4<T1, T2, T3, T4>> compositionIterator(Composition composition) {
+        Iterator<With4<T1, T2, T3, T4>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));
@@ -380,7 +382,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With5<T1, T2, T3, T4, T5>> compositionIterator(Composition composition) {
+        Iterator<With5<T1, T2, T3, T4, T5>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));
@@ -407,7 +409,7 @@ public final class EntityRepository implements Dominion {
         }
 
         @Override
-        Iterator<With6<T1, T2, T3, T4, T5, T6>> compositionIterator(Composition composition) {
+        Iterator<With6<T1, T2, T3, T4, T5, T6>> compositionIterator(DataComposition composition) {
             Iterator<IntEntity> iterator = stateKey == null ?
                     composition.getTenant().iterator() :
                     new StateIterator(composition.getStateRootEntity(stateKey));

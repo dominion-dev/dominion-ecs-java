@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 
-public final class Composition {
+public final class DataComposition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final Class<?>[] componentTypes;
@@ -33,7 +33,7 @@ public final class Composition {
     private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
-    public Composition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
+    public DataComposition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
             , ObjectArrayPool arrayPool, ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
@@ -338,7 +338,7 @@ public final class Composition {
     }
 
     record IteratorWith1<T>(int idx, Iterator<IntEntity> iterator,
-                            Composition composition) implements Iterator<Results.With1<T>> {
+                            DataComposition composition) implements Iterator<Results.With1<T>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -358,7 +358,7 @@ public final class Composition {
 
     record IteratorWith2<T1, T2>(int idx1, int idx2,
                                  Iterator<IntEntity> iterator,
-                                 Composition composition) implements Iterator<Results.With2<T1, T2>> {
+                                 DataComposition composition) implements Iterator<Results.With2<T1, T2>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -378,7 +378,7 @@ public final class Composition {
 
     record IteratorWith3<T1, T2, T3>(int idx1, int idx2, int idx3,
                                      Iterator<IntEntity> iterator,
-                                     Composition composition) implements Iterator<Results.With3<T1, T2, T3>> {
+                                     DataComposition composition) implements Iterator<Results.With3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -402,7 +402,7 @@ public final class Composition {
 
     record IteratorWith4<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
                                          Iterator<IntEntity> iterator,
-                                         Composition composition) implements Iterator<Results.With4<T1, T2, T3, T4>> {
+                                         DataComposition composition) implements Iterator<Results.With4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -427,7 +427,7 @@ public final class Composition {
 
     record IteratorWith5<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
                                              Iterator<IntEntity> iterator,
-                                             Composition composition) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
+                                             DataComposition composition) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
@@ -453,7 +453,7 @@ public final class Composition {
 
     record IteratorWith6<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
                                                  Iterator<IntEntity> iterator,
-                                                 Composition composition) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
+                                                 DataComposition composition) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
