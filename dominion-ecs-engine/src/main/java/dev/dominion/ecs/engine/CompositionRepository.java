@@ -71,27 +71,48 @@ public final class CompositionRepository implements AutoCloseable {
             case 0:
                 return root.composition;
             case 1:
-                Class<?> componentType = components[0].getClass();
-                Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
-                if (node == null) {
-                    IndexKey key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
-                    node = nodeCache.getNode(key);
-                    if (node == null) {
-                        node = nodeCache.getOrCreateNode(key, componentType);
-                    }
-                } else {
-                    // node may not yet be connected to itself
-                    node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
-                }
-                return getNodeComposition(node);
+                return getSingleTypeComposition(components[0].getClass());
             default:
                 IndexKey indexKey = classIndex.getIndexKey(components);
-                node = nodeCache.getNode(indexKey);
+                Node node = nodeCache.getNode(indexKey);
                 if (node == null) {
                     node = nodeCache.getOrCreateNode(indexKey, getComponentTypes(components));
                 }
                 return getNodeComposition(node);
         }
+    }
+
+    public DataComposition getOrCreateByType(Class<?>[] componentTypes) {
+        int length = componentTypes == null ? 0 : componentTypes.length;
+        switch (length) {
+            case 0:
+                return root.composition;
+            case 1:
+                return getSingleTypeComposition(componentTypes[0]);
+            default:
+                IndexKey indexKey = classIndex.getIndexKeyByType(componentTypes);
+                Node node = nodeCache.getNode(indexKey);
+                if (node == null) {
+                    node = nodeCache.getOrCreateNode(indexKey, componentTypes);
+                }
+                return getNodeComposition(node);
+        }
+    }
+
+    private DataComposition getSingleTypeComposition(Class<?> componentType) {
+        IndexKey key = new IndexKey(classIndex.getIndex(componentType));
+        Node node = nodeCache.getNode(key);
+        if (node == null) {
+            key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
+            node = nodeCache.getNode(key);
+            if (node == null) {
+                node = nodeCache.getOrCreateNode(key, componentType);
+            }
+        } else {
+            // node may not be yet connected to itself
+            node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
+        }
+        return getNodeComposition(node);
     }
 
     private Class<?>[] getComponentTypes(Object[] components) {
@@ -294,7 +315,6 @@ public final class CompositionRepository implements AutoCloseable {
             } else {
                 node.linkNode(key, node);
             }
-
             return node;
         }
 
