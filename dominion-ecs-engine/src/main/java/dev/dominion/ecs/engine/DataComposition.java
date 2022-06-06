@@ -98,10 +98,10 @@ public final class DataComposition {
         components[i] = temp;
     }
 
-    public IntEntity createEntity(String name, Object... components) {
+    public IntEntity createEntity(String name, boolean prepared, Object... components) {
         int id = tenant.nextId();
         return tenant.register(id, new IntEntity(id, this, name,
-                isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
+                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
     }
 
     public boolean deleteEntity(IntEntity entity) {
@@ -121,7 +121,8 @@ public final class DataComposition {
         entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
             case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData()));
             case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData()));
-            default -> entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData()));
+            default ->
+                    entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData()));
         });
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(

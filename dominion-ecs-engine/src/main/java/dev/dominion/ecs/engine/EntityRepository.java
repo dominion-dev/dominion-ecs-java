@@ -52,7 +52,7 @@ public final class EntityRepository implements Dominion {
     public Entity createEntity(String name, Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
         DataComposition composition = compositions.getOrCreate(componentArray);
-        IntEntity entity = composition.createEntity(name, componentArray);
+        IntEntity entity = composition.createEntity(name, false, componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
