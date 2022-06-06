@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine.benchmarks;
 
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
 import org.openjdk.jmh.annotations.*;
@@ -92,6 +93,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             for (int i = 0; i < size; i++) {
                 entities[i] = entityRepository.createEntity();
             }
+            onSetup();
         }
 
         @Setup(Level.Invocation)
@@ -108,8 +110,25 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             }
         }
 
+        @Benchmark
+        public void createPreparedEntity(Blackhole bh) {
+            if (getPreparedInput() == null) {
+                return;
+            }
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(getPreparedInput()));
+            }
+        }
+
+        public void onSetup() {
+        }
+
         public Object[] getInput() {
             return input;
+        }
+
+        public Composition.OfTypes getPreparedInput() {
+            return null;
         }
 
         @TearDown(Level.Iteration)
@@ -121,6 +140,8 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
     public static class CreateEntityWith01Component extends CreateEntity {
         Object[] input = new Object[]{new C1(0)};
 
+        Composition.Of1<C1> composition;
+
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{fetchBenchmarkName(CreateEntityWith01Component.class)}
@@ -128,13 +149,25 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         }
 
         @Override
+        public void onSetup() {
+            composition = entityRepository.composition().of(C1.class);
+        }
+
+        @Override
         public Object[] getInput() {
             return input;
+        }
+
+        @Override
+        public Composition.OfTypes getPreparedInput() {
+            return composition.withValue(new C1(0));
         }
     }
 
     public static class CreateEntityWith02Component extends CreateEntity {
         Object[] input = new Object[]{new C1(0), new C2(0)};
+
+        Composition.Of2<C1, C2> composition;
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -142,13 +175,25 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             );
         }
 
+        @Override
+        public void onSetup() {
+            composition = entityRepository.composition().of(C1.class, C2.class);
+        }
+
         public Object[] getInput() {
             return input;
+        }
+
+        @Override
+        public Composition.OfTypes getPreparedInput() {
+            return composition.withValue(new C1(0), new C2(0));
         }
     }
 
     public static class CreateEntityWith04Component extends CreateEntity {
         Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+
+        Composition.Of4<C1, C2, C3, C4> composition;
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -156,8 +201,18 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             );
         }
 
+        @Override
+        public void onSetup() {
+            composition = entityRepository.composition().of(C1.class, C2.class, C3.class, C4.class);
+        }
+
         public Object[] getInput() {
             return input;
+        }
+
+        @Override
+        public Composition.OfTypes getPreparedInput() {
+            return composition.withValue(new C1(0), new C2(0), new C3(0), new C4(0));
         }
     }
 
@@ -167,6 +222,8 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                 , new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
+        Composition.Of8<C1, C2, C3, C4, C5, C6, C7, C8> composition;
+
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{fetchBenchmarkName(CreateEntityWith08Component.class)}
@@ -174,8 +231,18 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         }
 
         @Override
+        public void onSetup() {
+            composition = entityRepository.composition().of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class, C7.class, C8.class);
+        }
+
+        @Override
         public Object[] getInput() {
             return input;
+        }
+
+        @Override
+        public Composition.OfTypes getPreparedInput() {
+            return composition.withValue(new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0), new C7(0), new C8(0));
         }
     }
 
