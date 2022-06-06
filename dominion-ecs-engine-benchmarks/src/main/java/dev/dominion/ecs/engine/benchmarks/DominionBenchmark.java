@@ -25,7 +25,7 @@ public class DominionBenchmark {
         return benchmarkClass.getName().replace('$', '.');
     }
 
-    public static final class All {
+    public static final class AllBenchmarks {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{DominionBenchmark.class.getPackageName()}
@@ -33,7 +33,7 @@ public class DominionBenchmark {
         }
     }
 
-    public static final class Functional {
+    public static final class FunctionalBenchmarks {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{
