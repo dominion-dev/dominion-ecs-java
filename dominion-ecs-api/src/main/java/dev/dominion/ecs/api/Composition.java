@@ -11,17 +11,17 @@ public interface Composition {
 
     <T1, T2> Of2<T1, T2> of(Class<T1> compType1, Class<T2> compType2);
 
-    sealed interface Of permits Of1, Of2 {
+    sealed interface OfTypes permits Of1, Of2 {
         Object[] getComponents();
 
         Object getContext();
     }
 
-    non-sealed interface Of1<T> extends Of {
-        Of withValue(T comp);
+    non-sealed interface Of1<T> extends OfTypes {
+        OfTypes withValue(T comp);
     }
 
-    non-sealed interface Of2<T1, T2> extends Of {
-        Of withValue(T1 comp1, T2 comp2);
+    non-sealed interface Of2<T1, T2> extends OfTypes {
+        OfTypes withValue(T1 comp1, T2 comp2);
     }
 }

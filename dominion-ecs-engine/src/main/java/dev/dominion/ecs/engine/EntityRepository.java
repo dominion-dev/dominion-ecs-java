@@ -47,6 +47,11 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
+    public Entity createPreparedEntity(Composition.OfTypes withValues) {
+        return createPreparedEntity(null, withValues);
+    }
+
+    @Override
     public Entity createEntityAs(Entity prefab, Object... components) {
         return createEntityAs(null, prefab, components);
     }
@@ -66,8 +71,9 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public Entity createPreparedEntity(String name, Composition.Of with) {
-        return null;
+    public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
+        DataComposition composition = (DataComposition) withValues.getContext();
+        return composition.createEntity(name, true, withValues.getComponents());
     }
 
     @Override

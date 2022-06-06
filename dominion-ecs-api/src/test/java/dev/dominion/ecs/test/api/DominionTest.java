@@ -58,6 +58,11 @@ public class DominionTest {
         }
 
         @Override
+        public Entity createPreparedEntity(Composition.OfTypes withValues) {
+            return null;
+        }
+
+        @Override
         public Entity createEntityAs(Entity prefab, Object... components) {
             return null;
         }
@@ -68,7 +73,7 @@ public class DominionTest {
         }
 
         @Override
-        public Entity createPreparedEntity(String name, Composition.Of with) {
+        public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
             return null;
         }
 

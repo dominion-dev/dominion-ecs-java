@@ -81,6 +81,14 @@ public interface Dominion extends AutoCloseable {
     Entity createEntity(Object... components);
 
     /**
+     * Creates a new Entity by passing a prepared composition of one or more POJO components.
+     *
+     * @param withValues a prepared composition with the required components
+     * @return a new Entity
+     */
+    Entity createPreparedEntity(Composition.OfTypes withValues);
+
+    /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
      * @param prefab     prefab Entity to start from
@@ -105,7 +113,7 @@ public interface Dominion extends AutoCloseable {
      * @param withValues a prepared composition with the required components
      * @return a new Entity
      */
-    Entity createPreparedEntity(String name, Composition.Of withValues);
+    Entity createPreparedEntity(String name, Composition.OfTypes withValues);
 
     /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.

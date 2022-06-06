@@ -46,7 +46,7 @@ public final class DataComposition {
         if (isMultiComponent()) {
             componentIndex = new int[COMPONENT_INDEX_CAPACITY];
             for (int i = 0; i < length(); i++) {
-                componentIndex[classIndex.getIndex(componentTypes[i])] = i + 1;
+                componentIndex[classIndex.getIndex(componentTypes[i])] = i;
             }
         } else {
             componentIndex = null;
@@ -74,7 +74,7 @@ public final class DataComposition {
     }
 
     public int fetchComponentIndex(Class<?> componentType) {
-        return componentIndex[classIndex.getIndex(componentType)] - 1;
+        return componentIndex[classIndex.getIndex(componentType)];
     }
 
     public Object[] sortComponentsInPlaceByIndex(Object[] components) {
