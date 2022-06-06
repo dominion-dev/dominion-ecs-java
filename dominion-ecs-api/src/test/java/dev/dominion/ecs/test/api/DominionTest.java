@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 
+@SuppressWarnings("resource")
 public class DominionTest {
 
     @Test
@@ -79,6 +80,11 @@ public class DominionTest {
         @Override
         public boolean deleteEntity(Entity entity) {
             return false;
+        }
+
+        @Override
+        public Composition composition() {
+            return null;
         }
 
         @Override

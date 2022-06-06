@@ -23,6 +23,8 @@ public final class EntityRepository implements Dominion {
     private final String name;
     private final LoggingSystem.Context loggingContext;
     private final CompositionRepository compositions;
+
+    private final PreparedComposition preparedComposition;
     private final int systemTimeoutSeconds;
 
     public EntityRepository(String name, int classIndexBit, int chunkBit, int chunkCountBit, int systemTimeoutSeconds,
@@ -31,6 +33,7 @@ public final class EntityRepository implements Dominion {
         this.systemTimeoutSeconds = systemTimeoutSeconds;
         this.loggingContext = loggingContext;
         compositions = new CompositionRepository(classIndexBit, chunkBit, chunkCountBit, loggingContext);
+        preparedComposition = new PreparedComposition(compositions);
     }
 
     @Override
@@ -82,6 +85,11 @@ public final class EntityRepository implements Dominion {
     @Override
     public boolean deleteEntity(Entity entity) {
         return ((IntEntity) entity).delete();
+    }
+
+    @Override
+    public Composition composition() {
+        return preparedComposition;
     }
 
     @Override
@@ -137,7 +145,7 @@ public final class EntityRepository implements Dominion {
 
         private static String normalizeName(String name) {
             name = name == null || name.isEmpty() ? "dominion-" + counter.getAndIncrement() : name;
-            name = name.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-zA-Z0-9-_.]", "");
+            name = name.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-zA-Z\\d-_.]", "");
 
             return name.substring(0, Math.min(NAME_MAX_LENGTH, name.length()));
         }
