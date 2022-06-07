@@ -17,8 +17,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 
-
-public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
+public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
 
     World world;
     Archetype archetype;
@@ -30,7 +29,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
 
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
-                new String[]{ArtemisComponentIterationBenchmark.class.getName()}
+                new String[]{ArtemisIteratingComponentBenchmark.class.getName()}
         );
     }
 
@@ -39,7 +38,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         world.process();
     }
 
-    public static class IterateUnpacking01 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking01 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
@@ -64,7 +63,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking02 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking02 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
@@ -89,7 +88,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking03 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking03 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
@@ -114,7 +113,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking04 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking04 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
@@ -139,7 +138,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking05 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking05 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
@@ -164,7 +163,7 @@ public class ArtemisComponentIterationBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking06 extends ArtemisComponentIterationBenchmark {
+    public static class IterateUnpacking06 extends ArtemisIteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
