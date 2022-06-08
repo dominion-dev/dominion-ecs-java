@@ -149,7 +149,7 @@ public final class CompositionRepository implements AutoCloseable {
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
             DataComposition composition = getOrCreate(components);
-            return composition.attachEntity(prevComposition.detachEntity(entity), components);
+            return composition.attachEntity(prevComposition.detachEntity(entity), false, components);
         }
         Object[] newComponentArray = arrayPool.pop(prevComponentsLength + componentsLength);
         if (prevComponentsLength == 1) {
@@ -168,7 +168,7 @@ public final class CompositionRepository implements AutoCloseable {
             arrayPool.push(entityComponents);
         }
         entity.flagPooledArray();
-        return composition.attachEntity(entity, newComponentArray);
+        return composition.attachEntity(entity, false, newComponentArray);
     }
 
 
@@ -184,36 +184,53 @@ public final class CompositionRepository implements AutoCloseable {
         }
         DataComposition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();
+//        Class<?>[] entityComponentTypes = prevComposition.getComponentTypes();
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
             return null;
         }
         Object[] newComponentArray;
+//        Class<?>[] newComponentTypeArray;
         Object removed;
         if (prevComponentsLength == 1) {
             newComponentArray = null;
+//            newComponentTypeArray = null;
             removed = entityComponents[0];
         } else {
-            newComponentArray = arrayPool.pop(prevComponentsLength - 1);
+            int newArrayLength = prevComponentsLength - 1;
+            newComponentArray = arrayPool.pop(newArrayLength);
+//            newComponentTypeArray = new Class<?>[newArrayLength];
             int removedIndex = prevComposition.fetchComponentIndex(componentType);
             removed = entityComponents[removedIndex];
-            if (removedIndex > 0) {
-                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
+            int prevArrayIndex = 0;
+            for (int i = 0; i < newArrayLength; i++) {
+                prevArrayIndex += removedIndex == i ? 1 : 0;
+                newComponentArray[i] = entityComponents[prevArrayIndex];
+//                newComponentTypeArray[i] = entityComponentTypes[prevArrayIndex];
+                prevArrayIndex++;
             }
-            if (removedIndex < prevComponentsLength - 1) {
-                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, prevComponentsLength - (removedIndex + 1));
-            }
+/*
+//            if (removedIndex > 0) {
+//                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
+////                System.arraycopy(entityComponentTypes, 0, newComponentTypeArray, 0, removedIndex);
+//            }
+//            if (removedIndex < prevComponentsLength - 1) {
+//                int length = prevComponentsLength - (removedIndex + 1);
+//                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, length);
+////                System.arraycopy(entityComponentTypes, removedIndex + 1, newComponentTypeArray, removedIndex, length);
+//            }
+//*/
         }
         DataComposition composition = getOrCreate(newComponentArray);
+//        DataComposition composition = getOrCreateByType(newComponentTypeArray);
         prevComposition.detachEntity(entity);
         if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
         entity.flagPooledArray();
-        composition.attachEntity(entity, newComponentArray);
+        composition.attachEntity(entity, true, newComponentArray);
         return removed;
     }
-
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {

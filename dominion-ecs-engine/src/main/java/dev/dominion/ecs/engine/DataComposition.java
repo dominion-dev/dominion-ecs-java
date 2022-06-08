@@ -117,12 +117,12 @@ public final class DataComposition {
         return true;
     }
 
-    public IntEntity attachEntity(IntEntity entity, Object... components) {
+    public IntEntity attachEntity(IntEntity entity, boolean prepared, Object... components) {
         entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
             case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData()));
             case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData()));
             default ->
-                    entity.setData(new IntEntity.Data(this, sortComponentsInPlaceByIndex(components), entity.getData()));
+                    entity.setData(new IntEntity.Data(this, prepared ? components : sortComponentsInPlaceByIndex(components), entity.getData()));
         });
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
