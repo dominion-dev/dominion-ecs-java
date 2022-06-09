@@ -171,7 +171,6 @@ public final class CompositionRepository implements AutoCloseable {
         return composition.attachEntity(entity, false, newComponentArray);
     }
 
-
     public Object removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
             return null;
@@ -184,45 +183,29 @@ public final class CompositionRepository implements AutoCloseable {
         }
         DataComposition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();
-//        Class<?>[] entityComponentTypes = prevComposition.getComponentTypes();
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
             return null;
         }
         Object[] newComponentArray;
-//        Class<?>[] newComponentTypeArray;
         Object removed;
         if (prevComponentsLength == 1) {
             newComponentArray = null;
-//            newComponentTypeArray = null;
             removed = entityComponents[0];
         } else {
             int newArrayLength = prevComponentsLength - 1;
             newComponentArray = arrayPool.pop(newArrayLength);
-//            newComponentTypeArray = new Class<?>[newArrayLength];
             int removedIndex = prevComposition.fetchComponentIndex(componentType);
             removed = entityComponents[removedIndex];
-            int prevArrayIndex = 0;
+            int offset = 0;
             for (int i = 0; i < newArrayLength; i++) {
-                prevArrayIndex += removedIndex == i ? 1 : 0;
-                newComponentArray[i] = entityComponents[prevArrayIndex];
-//                newComponentTypeArray[i] = entityComponentTypes[prevArrayIndex];
-                prevArrayIndex++;
+                if (removedIndex == i) {
+                    offset = 1;
+                }
+                newComponentArray[i] = entityComponents[i + offset];
             }
-/*
-//            if (removedIndex > 0) {
-//                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
-////                System.arraycopy(entityComponentTypes, 0, newComponentTypeArray, 0, removedIndex);
-//            }
-//            if (removedIndex < prevComponentsLength - 1) {
-//                int length = prevComponentsLength - (removedIndex + 1);
-//                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, length);
-////                System.arraycopy(entityComponentTypes, removedIndex + 1, newComponentTypeArray, removedIndex, length);
-//            }
-//*/
         }
         DataComposition composition = getOrCreate(newComponentArray);
-//        DataComposition composition = getOrCreateByType(newComponentTypeArray);
         prevComposition.detachEntity(entity);
         if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
