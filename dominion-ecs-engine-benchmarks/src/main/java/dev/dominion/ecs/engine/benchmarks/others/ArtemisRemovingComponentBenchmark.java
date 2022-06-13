@@ -22,13 +22,13 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     Archetype archetype2;
     Archetype archetype4;
     Archetype archetype8;
-    Archetype archetype16;
+
 
     int[] entities1;
     int[] entities2;
     int[] entities4;
     int[] entities8;
-    int[] entities16;
+
     @Param(value = {"1000000"})
     int size;
 
@@ -39,26 +39,22 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     }
 
     @Setup(Level.Iteration)
-    public void setup(Blackhole bh) {
-
+    public void setup() {
         WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
         world = new World(worldConfiguration);
         archetype1 = new ArchetypeBuilder().add(C1.class).build(world);
         archetype2 = new ArchetypeBuilder().add(C1.class).add(C2.class).build(world);
         archetype4 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).build(world);
         archetype8 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).build(world);
-        archetype16 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).add(C9.class).add(C10.class).add(C11.class).add(C12.class).add(C13.class).add(C14.class).add(C15.class).add(C16.class).build(world);
         entities1 = new int[size];
         entities2 = new int[size];
         entities4 = new int[size];
         entities8 = new int[size];
-        entities16 = new int[size];
         for (int i = 0; i < size; i++) {
             entities1[i] = world.create(archetype1);
             entities2[i] = world.create(archetype2);
             entities4[i] = world.create(archetype4);
             entities8[i] = world.create(archetype8);
-            entities16[i] = world.create(archetype16);
         }
         world.process();
     }
@@ -70,7 +66,6 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
             world.delete(entities2[i]);
             world.delete(entities4[i]);
             world.delete(entities8[i]);
-            world.delete(entities16[i]);
         }
         world.process();
         for (int i = 0; i < size; i++) {
@@ -78,13 +73,12 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
             entities2[i] = world.create(archetype2);
             entities4[i] = world.create(archetype4);
             entities8[i] = world.create(archetype8);
-            entities16[i] = world.create(archetype16);
         }
         world.process();
     }
 
     @Benchmark
-    public void removeComponentWith01(Blackhole bh) {
+    public void removeComponentFrom01(Blackhole bh) {
         for (int i = 0; i < size; i++) {
             bh.consume(world.edit(entities1[i]).remove(C1.class));
         }
@@ -92,7 +86,7 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     }
 
     @Benchmark
-    public void removeComponentWith02(Blackhole bh) {
+    public void removeComponentFrom02(Blackhole bh) {
         for (int i = 0; i < size; i++) {
             bh.consume(world.edit(entities2[i]).remove(C1.class));
         }
@@ -100,7 +94,7 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     }
 
     @Benchmark
-    public void removeComponentWith04(Blackhole bh) {
+    public void removeComponentFrom04(Blackhole bh) {
         for (int i = 0; i < size; i++) {
             bh.consume(world.edit(entities4[i]).remove(C1.class));
         }
@@ -108,17 +102,9 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     }
 
     @Benchmark
-    public void removeComponentWith08(Blackhole bh) {
+    public void removeComponentFrom08(Blackhole bh) {
         for (int i = 0; i < size; i++) {
             bh.consume(world.edit(entities8[i]).remove(C1.class));
-        }
-        world.process();
-    }
-
-    @Benchmark
-    public void removeComponentWith16(Blackhole bh) {
-        for (int i = 0; i < size; i++) {
-            bh.consume(world.edit(entities16[i]).remove(C1.class));
         }
         world.process();
     }
@@ -145,29 +131,5 @@ public class ArtemisRemovingComponentBenchmark extends DominionBenchmark {
     }
 
     public static class C8 extends Component {
-    }
-
-    public static class C9 extends Component {
-    }
-
-    public static class C10 extends Component {
-    }
-
-    public static class C11 extends Component {
-    }
-
-    public static class C12 extends Component {
-    }
-
-    public static class C13 extends Component {
-    }
-
-    public static class C14 extends Component {
-    }
-
-    public static class C15 extends Component {
-    }
-
-    public static class C16 extends Component {
     }
 }

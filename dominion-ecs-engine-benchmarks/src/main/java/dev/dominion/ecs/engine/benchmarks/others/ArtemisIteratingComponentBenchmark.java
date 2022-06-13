@@ -88,30 +88,6 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking03 extends ArtemisIteratingComponentBenchmark {
-
-        public static void main(String[] args) throws IOException {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking03.class)}
-            );
-        }
-
-        @Setup(Level.Iteration)
-        public void setup(Blackhole bh) {
-            var system = new SystemUnpacking03();
-            system.blackhole = bh;
-            WorldConfiguration worldConfiguration = new WorldConfigurationBuilder()
-                    .with(system)
-                    .build();
-            world = new World(worldConfiguration);
-            archetype = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).build(world);
-            entities = new int[size];
-            for (int i = 0; i < size; i++) {
-                entities[i] = world.create(archetype);
-            }
-            world.process();
-        }
-    }
 
     public static class IterateUnpacking04 extends ArtemisIteratingComponentBenchmark {
 
@@ -138,30 +114,6 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking05 extends ArtemisIteratingComponentBenchmark {
-
-        public static void main(String[] args) throws IOException {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking05.class)}
-            );
-        }
-
-        @Setup(Level.Iteration)
-        public void setup(Blackhole bh) {
-            var system = new SystemUnpacking05();
-            system.blackhole = bh;
-            WorldConfiguration worldConfiguration = new WorldConfigurationBuilder()
-                    .with(system)
-                    .build();
-            world = new World(worldConfiguration);
-            archetype = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).build(world);
-            entities = new int[size];
-            for (int i = 0; i < size; i++) {
-                entities[i] = world.create(archetype);
-            }
-            world.process();
-        }
-    }
 
     public static class IterateUnpacking06 extends ArtemisIteratingComponentBenchmark {
 
@@ -212,21 +164,6 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         }
     }
 
-    @All({C1.class, C2.class, C3.class})
-    public static class SystemUnpacking03 extends IteratingSystem {
-        ComponentMapper<C1> c1Mapper;
-        ComponentMapper<C2> c2Mapper;
-        ComponentMapper<C3> c3Mapper;
-        Blackhole blackhole;
-
-        @Override
-        protected void process(int i) {
-            c1Mapper.get(i);
-            c2Mapper.get(i);
-            blackhole.consume(c3Mapper.get(i));
-        }
-    }
-
     @All({C1.class, C2.class, C3.class, C4.class})
     public static class SystemUnpacking04 extends IteratingSystem {
         ComponentMapper<C1> c1Mapper;
@@ -244,24 +181,6 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         }
     }
 
-    @All({C1.class, C2.class, C3.class, C4.class, C5.class})
-    public static class SystemUnpacking05 extends IteratingSystem {
-        ComponentMapper<C1> c1Mapper;
-        ComponentMapper<C2> c2Mapper;
-        ComponentMapper<C3> c3Mapper;
-        ComponentMapper<C4> c4Mapper;
-        ComponentMapper<C5> c5Mapper;
-        Blackhole blackhole;
-
-        @Override
-        protected void process(int i) {
-            c1Mapper.get(i);
-            c2Mapper.get(i);
-            c3Mapper.get(i);
-            c4Mapper.get(i);
-            blackhole.consume(c5Mapper.get(i));
-        }
-    }
 
     @All({C1.class, C2.class, C3.class, C4.class, C5.class, C6.class})
     public static class SystemUnpacking06 extends IteratingSystem {

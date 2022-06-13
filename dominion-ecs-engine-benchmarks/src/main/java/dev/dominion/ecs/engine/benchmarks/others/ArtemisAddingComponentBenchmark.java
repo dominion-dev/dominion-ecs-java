@@ -18,17 +18,18 @@ import java.io.IOException;
 public class ArtemisAddingComponentBenchmark extends DominionBenchmark {
 
     World world;
+    Archetype archetype0;
     Archetype archetype1;
-    Archetype archetype2;
-    Archetype archetype4;
-    Archetype archetype8;
-    Archetype archetype16;
+    Archetype archetype3;
+    Archetype archetype7;
 
+
+    int[] entities0;
     int[] entities1;
-    int[] entities2;
-    int[] entities4;
-    int[] entities8;
-    int[] entities16;
+    int[] entities3;
+
+    int[] entities7;
+
     @Param(value = {"1000000"})
     int size;
 
@@ -39,26 +40,22 @@ public class ArtemisAddingComponentBenchmark extends DominionBenchmark {
     }
 
     @Setup(Level.Iteration)
-    public void setup(Blackhole bh) {
-
+    public void setup() {
         WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
         world = new World(worldConfiguration);
+        archetype0 = new ArchetypeBuilder().build(world);
         archetype1 = new ArchetypeBuilder().add(C1.class).build(world);
-        archetype2 = new ArchetypeBuilder().add(C1.class).add(C2.class).build(world);
-        archetype4 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).build(world);
-        archetype8 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).build(world);
-        archetype16 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).add(C9.class).add(C10.class).add(C11.class).add(C12.class).add(C13.class).add(C14.class).add(C15.class).add(C16.class).build(world);
+        archetype3 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).build(world);
+        archetype7 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).build(world);
+        entities0 = new int[size];
         entities1 = new int[size];
-        entities2 = new int[size];
-        entities4 = new int[size];
-        entities8 = new int[size];
-        entities16 = new int[size];
+        entities3 = new int[size];
+        entities7 = new int[size];
         for (int i = 0; i < size; i++) {
+            entities0[i] = world.create(archetype0);
             entities1[i] = world.create(archetype1);
-            entities2[i] = world.create(archetype2);
-            entities4[i] = world.create(archetype4);
-            entities8[i] = world.create(archetype8);
-            entities16[i] = world.create(archetype16);
+            entities3[i] = world.create(archetype3);
+            entities7[i] = world.create(archetype7);
         }
         world.process();
     }
@@ -66,25 +63,31 @@ public class ArtemisAddingComponentBenchmark extends DominionBenchmark {
     @Setup(Level.Invocation)
     public void setupInvocation() {
         for (int i = 0; i < size; i++) {
+            world.delete(entities0[i]);
             world.delete(entities1[i]);
-            world.delete(entities2[i]);
-            world.delete(entities4[i]);
-            world.delete(entities8[i]);
-            world.delete(entities16[i]);
+            world.delete(entities3[i]);
+            world.delete(entities7[i]);
         }
         world.process();
         for (int i = 0; i < size; i++) {
+            entities0[i] = world.create(archetype0);
             entities1[i] = world.create(archetype1);
-            entities2[i] = world.create(archetype2);
-            entities4[i] = world.create(archetype4);
-            entities8[i] = world.create(archetype8);
-            entities16[i] = world.create(archetype16);
+            entities3[i] = world.create(archetype3);
+            entities7[i] = world.create(archetype7);
         }
         world.process();
     }
 
     @Benchmark
-    public void addComponentWith01(Blackhole bh) {
+    public void addComponentUpTo01(Blackhole bh) {
+        for (int i = 0; i < size; i++) {
+            bh.consume(world.edit(entities0[i]).add(new C0()));
+        }
+        world.process();
+    }
+
+    @Benchmark
+    public void addComponentUpTo02(Blackhole bh) {
         for (int i = 0; i < size; i++) {
             bh.consume(world.edit(entities1[i]).add(new C0()));
         }
@@ -92,36 +95,21 @@ public class ArtemisAddingComponentBenchmark extends DominionBenchmark {
     }
 
     @Benchmark
-    public void addComponentWith02(Blackhole bh) {
+    public void addComponentUpTo04(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(world.edit(entities2[i]).add(new C0()));
+            bh.consume(world.edit(entities3[i]).add(new C0()));
         }
         world.process();
     }
 
     @Benchmark
-    public void addComponentWith04(Blackhole bh) {
+    public void addComponentUpTo08(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(world.edit(entities4[i]).add(new C0()));
+            bh.consume(world.edit(entities7[i]).add(new C0()));
         }
         world.process();
     }
 
-    @Benchmark
-    public void addComponentWith08(Blackhole bh) {
-        for (int i = 0; i < size; i++) {
-            bh.consume(world.edit(entities8[i]).add(new C0()));
-        }
-        world.process();
-    }
-
-    @Benchmark
-    public void addComponentWith16(Blackhole bh) {
-        for (int i = 0; i < size; i++) {
-            bh.consume(world.edit(entities16[i]).add(new C0()));
-        }
-        world.process();
-    }
 
     public static class C0 extends Component {
     }
@@ -145,32 +133,5 @@ public class ArtemisAddingComponentBenchmark extends DominionBenchmark {
     }
 
     public static class C7 extends Component {
-    }
-
-    public static class C8 extends Component {
-    }
-
-    public static class C9 extends Component {
-    }
-
-    public static class C10 extends Component {
-    }
-
-    public static class C11 extends Component {
-    }
-
-    public static class C12 extends Component {
-    }
-
-    public static class C13 extends Component {
-    }
-
-    public static class C14 extends Component {
-    }
-
-    public static class C15 extends Component {
-    }
-
-    public static class C16 extends Component {
     }
 }
