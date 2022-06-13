@@ -131,44 +131,44 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
-    public Entity addComponents(IntEntity entity, Object... components) {
-        if (components.length == 0) {
-            return entity;
-        }
+    public Entity addComponent(IntEntity entity, Object component) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
-                                    .collect(Collectors.joining(",")) + "] to " + entity)
+                            , "Adding [" + component.getClass().getSimpleName() + "] to " + entity)
 
             );
         }
-        int componentsLength = components.length;
         DataComposition prevComposition = entity.getComposition();
-        Object[] entityComponents = entity.getComponents();
+        Object[] prevComponents = entity.getComponents();
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
-            DataComposition composition = getOrCreate(components);
-            return composition.attachEntity(prevComposition.detachEntity(entity), false, components);
+            DataComposition composition = getOrCreate(new Object[]{component});
+            return composition.attachEntity(prevComposition.detachEntity(entity), false, component);
         }
-        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + componentsLength);
-        if (prevComponentsLength == 1) {
-            newComponentArray[0] = entityComponents[0];
-        } else {
-            System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
+        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + 1);
+        Class<?>[] prevComponentTypeArray = prevComposition.getComponentTypes();
+        int newArrayLength = prevComponentsLength + 1;
+        Class<?>[] newComponentTypeArray = new Class<?>[newArrayLength];
+        System.arraycopy(prevComponentTypeArray, 0, newComponentTypeArray, 0, prevComponentsLength);
+        Class<?> componentType = component.getClass();
+        newComponentTypeArray[prevComponentsLength] = componentType;
+        DataComposition composition = getOrCreateByType(newComponentTypeArray);
+        int addIndex = composition.fetchComponentIndex(componentType);
+        newComponentArray[addIndex] = component;
+        int offset = 0;
+        for (int i = 0; i < prevComponentsLength; i++) {
+            if (addIndex == i) {
+                offset = 1;
+            }
+            newComponentArray[i + offset] = prevComponents[i];
         }
-        if (componentsLength == 1) {
-            newComponentArray[prevComponentsLength] = components[0];
-        } else {
-            System.arraycopy(components, 0, newComponentArray, prevComponentsLength, componentsLength);
-        }
-        DataComposition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
         if (entity.isPooledArray()) {
-            arrayPool.push(entityComponents);
+            arrayPool.push(prevComponents);
         }
         entity.flagPooledArray();
-        return composition.attachEntity(entity, false, newComponentArray);
+        return composition.attachEntity(entity, true, newComponentArray);
     }
 
     public Object removeComponentType(IntEntity entity, Class<?> componentType) {

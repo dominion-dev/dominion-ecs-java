@@ -22,12 +22,12 @@ public interface Entity {
     String getName();
 
     /**
-     * Adds one or more components that are POJOs with no behavior.
+     * Adds one component that is a POJO with no behavior.
      *
-     * @param components one or more components to add
+     * @param component the component to add
      * @return this entity
      */
-    Entity add(Object... components);
+    Entity add(Object component);
 
     /**
      * Removes a component if present.

@@ -22,7 +22,6 @@ class IntEntityTest {
         var c1 = new C1(0);
         var c2 = new C2(0);
         var c3 = new C3(0);
-        var c4 = new C4(0);
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
             IntEntity entityPostAdd = (IntEntity) entity.add(c1);
@@ -39,15 +38,10 @@ class IntEntityTest {
             assert entityPostAdd != null;
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
 
-            entity = (IntEntity) entityRepository.createEntity(c1);
-            entityPostAdd = (IntEntity) entity.add(c2, c3);
+            entity = (IntEntity) entityRepository.createEntity(c2, c3);
+            entityPostAdd = (IntEntity) entity.add(c1);
             assert entityPostAdd != null;
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
-
-            entity = (IntEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (IntEntity) entity.add(c3, c4);
-            assert entityPostAdd != null;
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4}, entityPostAdd.getComponents());
         }
     }
 

@@ -95,14 +95,14 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     @Override
-    public Entity add(Object... components) {
+    public Entity add(Object component) {
         createLock();
         long stamp = lock.writeLock();
         try {
             if (isDetachedId()) {
                 return null;
             }
-            return data.composition.getRepository().addComponents(this, components);
+            return data.composition.getRepository().addComponent(this, component);
         } finally {
             lock.unlockWrite(stamp);
         }
