@@ -58,40 +58,61 @@ public final class CompositionRepository implements AutoCloseable {
         pool = new ChunkedPool<>(idSchema, loggingContext);
         root = new Node();
         arrayPool = new ObjectArrayPool(loggingContext);
-        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
+        root.composition = new DataComposition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
         return idSchema;
     }
 
-    public Composition getOrCreate(Object[] components) {
+    public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
             case 0:
                 return root.composition;
             case 1:
-                Class<?> componentType = components[0].getClass();
-                Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
-                if (node == null) {
-                    IndexKey key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
-                    node = nodeCache.getNode(key);
-                    if (node == null) {
-                        node = nodeCache.getOrCreateNode(key, componentType);
-                    }
-                } else {
-                    // node may not yet be connected to itself
-                    node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
-                }
-                return getNodeComposition(node);
+                return getSingleTypeComposition(components[0].getClass());
             default:
                 IndexKey indexKey = classIndex.getIndexKey(components);
-                node = nodeCache.getNode(indexKey);
+                Node node = nodeCache.getNode(indexKey);
                 if (node == null) {
                     node = nodeCache.getOrCreateNode(indexKey, getComponentTypes(components));
                 }
                 return getNodeComposition(node);
         }
+    }
+
+    public DataComposition getOrCreateByType(Class<?>[] componentTypes) {
+        int length = componentTypes == null ? 0 : componentTypes.length;
+        switch (length) {
+            case 0:
+                return root.composition;
+            case 1:
+                return getSingleTypeComposition(componentTypes[0]);
+            default:
+                IndexKey indexKey = classIndex.getIndexKeyByType(componentTypes);
+                Node node = nodeCache.getNode(indexKey);
+                if (node == null) {
+                    node = nodeCache.getOrCreateNode(indexKey, componentTypes);
+                }
+                return getNodeComposition(node);
+        }
+    }
+
+    private DataComposition getSingleTypeComposition(Class<?> componentType) {
+        IndexKey key = new IndexKey(classIndex.getIndex(componentType));
+        Node node = nodeCache.getNode(key);
+        if (node == null) {
+            key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
+            node = nodeCache.getNode(key);
+            if (node == null) {
+                node = nodeCache.getOrCreateNode(key, componentType);
+            }
+        } else {
+            // node may not be yet connected to itself
+            node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
+        }
+        return getNodeComposition(node);
     }
 
     private Class<?>[] getComponentTypes(Object[] components) {
@@ -102,54 +123,53 @@ public final class CompositionRepository implements AutoCloseable {
         return componentTypes;
     }
 
-    private Composition getNodeComposition(Node link) {
-        Composition composition = link.getComposition();
+    private DataComposition getNodeComposition(Node link) {
+        DataComposition composition = link.getComposition();
         if (composition != null) {
             return composition;
         }
         return link.getOrCreateComposition();
     }
 
-    public Entity addComponents(IntEntity entity, Object... components) {
-        if (components.length == 0) {
-            return entity;
-        }
+    public Entity addComponent(IntEntity entity, Object component) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
-                                    .collect(Collectors.joining(",")) + "] to " + entity)
+                            , "Adding [" + component.getClass().getSimpleName() + "] to " + entity)
 
             );
         }
-        int componentsLength = components.length;
-        Composition prevComposition = entity.getComposition();
-        Object[] entityComponents = entity.getComponents();
+        DataComposition prevComposition = entity.getComposition();
+        Object[] prevComponents = entity.getComponents();
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
-            Composition composition = getOrCreate(components);
-            return composition.attachEntity(prevComposition.detachEntity(entity), components);
+            DataComposition composition = getOrCreate(new Object[]{component});
+            return composition.attachEntity(prevComposition.detachEntity(entity), false, component);
         }
-        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + componentsLength);
-        if (prevComponentsLength == 1) {
-            newComponentArray[0] = entityComponents[0];
-        } else {
-            System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
+        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + 1);
+        Class<?>[] prevComponentTypeArray = prevComposition.getComponentTypes();
+        int newArrayLength = prevComponentsLength + 1;
+        Class<?>[] newComponentTypeArray = new Class<?>[newArrayLength];
+        System.arraycopy(prevComponentTypeArray, 0, newComponentTypeArray, 0, prevComponentsLength);
+        Class<?> componentType = component.getClass();
+        newComponentTypeArray[prevComponentsLength] = componentType;
+        DataComposition composition = getOrCreateByType(newComponentTypeArray);
+        int addIndex = composition.fetchComponentIndex(componentType);
+        newComponentArray[addIndex] = component;
+        int offset = 0;
+        for (int i = 0; i < prevComponentsLength; i++) {
+            if (addIndex == i) {
+                offset = 1;
+            }
+            newComponentArray[i + offset] = prevComponents[i];
         }
-        if (componentsLength == 1) {
-            newComponentArray[prevComponentsLength] = components[0];
-        } else {
-            System.arraycopy(components, 0, newComponentArray, prevComponentsLength, componentsLength);
-        }
-        Composition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
         if (entity.isPooledArray()) {
-            arrayPool.push(entityComponents);
+            arrayPool.push(prevComponents);
         }
         entity.flagPooledArray();
-        return composition.attachEntity(entity, newComponentArray);
+        return composition.attachEntity(entity, true, newComponentArray);
     }
-
 
     public Object removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
@@ -161,7 +181,7 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Removing [" + componentType.getSimpleName() + "] from " + entity)
             );
         }
-        Composition prevComposition = entity.getComposition();
+        DataComposition prevComposition = entity.getComposition();
         Object[] entityComponents = entity.getComponents();
         int prevComponentsLength = prevComposition.length();
         if (prevComponentsLength == 0) {
@@ -173,26 +193,27 @@ public final class CompositionRepository implements AutoCloseable {
             newComponentArray = null;
             removed = entityComponents[0];
         } else {
-            newComponentArray = arrayPool.pop(prevComponentsLength - 1);
+            int newArrayLength = prevComponentsLength - 1;
+            newComponentArray = arrayPool.pop(newArrayLength);
             int removedIndex = prevComposition.fetchComponentIndex(componentType);
             removed = entityComponents[removedIndex];
-            if (removedIndex > 0) {
-                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
-            }
-            if (removedIndex < prevComponentsLength - 1) {
-                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, prevComponentsLength - (removedIndex + 1));
+            int offset = 0;
+            for (int i = 0; i < newArrayLength; i++) {
+                if (removedIndex == i) {
+                    offset = 1;
+                }
+                newComponentArray[i] = entityComponents[i + offset];
             }
         }
-        Composition composition = getOrCreate(newComponentArray);
+        DataComposition composition = getOrCreate(newComponentArray);
         prevComposition.detachEntity(entity);
         if (entity.isPooledArray()) {
             arrayPool.push(entityComponents);
         }
         entity.flagPooledArray();
-        composition.attachEntity(entity, newComponentArray);
+        composition.attachEntity(entity, true, newComponentArray);
         return removed;
     }
-
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
@@ -294,7 +315,6 @@ public final class CompositionRepository implements AutoCloseable {
             } else {
                 node.linkNode(key, node);
             }
-
             return node;
         }
 
@@ -315,7 +335,7 @@ public final class CompositionRepository implements AutoCloseable {
         private final StampedLock lock = new StampedLock();
         private final Map<IndexKey, Node> linkedNodes = new ConcurrentHashMap<>();
         private final Class<?>[] componentTypes;
-        private Composition composition;
+        private DataComposition composition;
 
         public Node(Class<?>... componentTypes) {
             this.componentTypes = componentTypes;
@@ -331,8 +351,8 @@ public final class CompositionRepository implements AutoCloseable {
             linkedNodes.putIfAbsent(key, node);
         }
 
-        public Composition getOrCreateComposition() {
-            Composition value;
+        public DataComposition getOrCreateComposition() {
+            DataComposition value;
             long stamp = lock.tryOptimisticRead();
             try {
                 for (; ; stamp = lock.writeLock()) {
@@ -348,7 +368,7 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(CompositionRepository.this, pool.newTenant()
+                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant()
                             , arrayPool, classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
@@ -360,7 +380,7 @@ public final class CompositionRepository implements AutoCloseable {
             }
         }
 
-        public Composition getComposition() {
+        public DataComposition getComposition() {
             return composition;
         }
 

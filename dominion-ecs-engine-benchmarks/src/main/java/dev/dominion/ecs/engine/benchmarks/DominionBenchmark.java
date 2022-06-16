@@ -25,7 +25,7 @@ public class DominionBenchmark {
         return benchmarkClass.getName().replace('$', '.');
     }
 
-    public static final class All {
+    public static final class AllBenchmarks {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{DominionBenchmark.class.getPackageName()}
@@ -33,16 +33,16 @@ public class DominionBenchmark {
         }
     }
 
-    public static final class Functional {
+    public static final class FunctionalBenchmarks {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
                     new String[]{
                             fetchBenchmarkName(EntityRepositoryBenchmark.CreateEntity.class)
                             , fetchBenchmarkName(EntityRepositoryBenchmark.DeleteEntity.class)
                             , fetchBenchmarkName(EntityRepositoryBenchmark.FindComponents.class)
-                            , fetchBenchmarkName(EntityBenchmark.Add.class)
-                            , fetchBenchmarkName(EntityBenchmark.Remove.class)
-                            , fetchBenchmarkName(EntityBenchmark.SetState.class)
+                            , fetchBenchmarkName(EntityBenchmark.AddUpTo.class)
+                            , fetchBenchmarkName(EntityBenchmark.RemoveFrom.class)
+                            , fetchBenchmarkName(EntityBenchmark.SetStateWith.class)
                             , fetchBenchmarkName(EntityBenchmark.SetEnabled.class)
                             , fetchBenchmarkName(EntityBenchmark.Has.class)
                             , fetchBenchmarkName(EntityBenchmark.Contains.class)

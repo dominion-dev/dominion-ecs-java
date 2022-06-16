@@ -57,7 +57,8 @@ public interface Dominion extends AutoCloseable {
         } catch (NoSuchElementException e) {
             try {
                 return (Factory) Class.forName(implementation).getDeclaredConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException ex) {
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException | ClassNotFoundException ex) {
                 ex.printStackTrace();
                 throw e;
             }
@@ -80,6 +81,14 @@ public interface Dominion extends AutoCloseable {
     Entity createEntity(Object... components);
 
     /**
+     * Creates a new Entity by passing a prepared composition of one or more POJO components.
+     *
+     * @param withValues a prepared composition with the required components
+     * @return a new Entity
+     */
+    Entity createPreparedEntity(Composition.OfTypes withValues);
+
+    /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
      * @param prefab     prefab Entity to start from
@@ -98,6 +107,15 @@ public interface Dominion extends AutoCloseable {
     Entity createEntity(String name, Object... components);
 
     /**
+     * Creates a new Entity by passing a prepared composition of one or more POJO components.
+     *
+     * @param name       entity name
+     * @param withValues a prepared composition with the required components
+     * @return a new Entity
+     */
+    Entity createPreparedEntity(String name, Composition.OfTypes withValues);
+
+    /**
      * Creates a new Entity by using another Entity as prefab and adding zero or more POJO components.
      *
      * @param name       entity name
@@ -114,6 +132,13 @@ public interface Dominion extends AutoCloseable {
      * @return false if the Entity has already been deleted
      */
     boolean deleteEntity(Entity entity);
+
+    /**
+     * Provides the Composition class to support the creation of prepared entities
+     *
+     * @return the Composition instance
+     */
+    Composition composition();
 
     /**
      * Create a new Scheduler to submit/suspend/resume systems that are executed on every tick.

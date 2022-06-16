@@ -22,7 +22,8 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     enum State1 {
-        ONE
+        ONE,
+        TWO
     }
 
     record C0(int id) {
@@ -50,30 +51,6 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     record C8(int id) {
-    }
-
-    record C9(int id) {
-    }
-
-    record C10(int id) {
-    }
-
-    record C11(int id) {
-    }
-
-    record C12(int id) {
-    }
-
-    record C13(int id) {
-    }
-
-    record C14(int id) {
-    }
-
-    record C15(int id) {
-    }
-
-    record C16(int id) {
     }
 
     public static class EntityLayout {
@@ -121,20 +98,20 @@ public class EntityBenchmark extends DominionBenchmark {
 
     // Add
 
-    public static class Add extends EntityMethodBenchmark {
+    public static class AddUpTo extends EntityMethodBenchmark {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add.class)}
+                    new String[]{fetchBenchmarkName(AddUpTo.class)}
             );
         }
     }
 
-    public static class Add01 extends Add {
-        Object[] input = new Object[]{new C1(0)};
+    public static class AddUpTo01 extends AddUpTo {
+        Object[] input = new Object[]{};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add01.class)}
+                    new String[]{fetchBenchmarkName(AddUpTo01.class)}
             );
         }
 
@@ -151,12 +128,12 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Add02 extends Add01 {
-        Object[] input = new Object[]{new C1(0), new C2(0)};
+    public static class AddUpTo02 extends AddUpTo01 {
+        Object[] input = new Object[]{new C1(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add02.class)}
+                    new String[]{fetchBenchmarkName(AddUpTo02.class)}
             );
         }
 
@@ -165,12 +142,12 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Add04 extends Add01 {
-        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+    public static class AddUpTo04 extends AddUpTo01 {
+        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add04.class)}
+                    new String[]{fetchBenchmarkName(AddUpTo04.class)}
             );
         }
 
@@ -179,34 +156,15 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Add08 extends Add01 {
+    public static class AddUpTo08 extends AddUpTo01 {
         Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0)
+                new C5(0), new C6(0), new C7(0)
         };
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add08.class)}
-            );
-        }
-
-        public Object[] getInput() {
-            return input;
-        }
-    }
-
-    public static class Add16 extends Add01 {
-        Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
-        };
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Add16.class)}
+                    new String[]{fetchBenchmarkName(AddUpTo08.class)}
             );
         }
 
@@ -217,27 +175,27 @@ public class EntityBenchmark extends DominionBenchmark {
 
     // Remove
 
-    public static class Remove extends EntityMethodBenchmark {
+    public static class RemoveFrom extends EntityMethodBenchmark {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove.class)}
+                    new String[]{fetchBenchmarkName(RemoveFrom.class)}
             );
         }
     }
 
-    public static class Remove01 extends Remove {
-        Object[] input = new Object[]{new C2(0)};
+    public static class RemoveFrom01 extends RemoveFrom {
+        Object[] input = new Object[]{new C1(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove01.class)}
+                    new String[]{fetchBenchmarkName(RemoveFrom01.class)}
             );
         }
 
         @Benchmark
         public void remove(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities[i].removeType(C2.class));
+                bh.consume(entities[i].removeType(C1.class));
             }
         }
 
@@ -246,12 +204,12 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Remove02 extends Remove01 {
+    public static class RemoveFrom02 extends RemoveFrom01 {
         Object[] input = new Object[]{new C1(0), new C2(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove02.class)}
+                    new String[]{fetchBenchmarkName(RemoveFrom02.class)}
             );
         }
 
@@ -260,12 +218,12 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Remove04 extends Remove01 {
+    public static class RemoveFrom04 extends RemoveFrom01 {
         Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove04.class)}
+                    new String[]{fetchBenchmarkName(RemoveFrom04.class)}
             );
         }
 
@@ -274,7 +232,7 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Remove08 extends Remove01 {
+    public static class RemoveFrom08 extends RemoveFrom01 {
         Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0)
@@ -282,7 +240,7 @@ public class EntityBenchmark extends DominionBenchmark {
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove08.class)}
+                    new String[]{fetchBenchmarkName(RemoveFrom08.class)}
             );
         }
 
@@ -291,17 +249,104 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class Remove16 extends Remove01 {
+    public static class SetStateWith extends DominionBenchmark {
+        EntityRepository entityRepository;
+        Entity[] entities;
+
+        @Param(value = {"1000000"})
+        int size;
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith.class)}
+            );
+        }
+
+        @Setup(Level.Iteration)
+        public void setup() {
+            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            entities = new Entity[size];
+            for (int i = 0; i < size; i++) {
+                entities[i] = entityRepository.createEntity(getInput());
+                entities[i].setState(State1.ONE);
+            }
+        }
+
+        @Setup(Level.Invocation)
+        public void setupInvocation() {
+            for (int i = 0; i < size; i++) {
+                entities[i].setState(State1.ONE);
+            }
+        }
+
+        public Object[] getInput() {
+            return new Object[0];
+        }
+
+        @TearDown(Level.Iteration)
+        public void tearDown() {
+            entityRepository.close();
+        }
+    }
+
+    public static class SetStateWith01 extends SetStateWith {
+        Object[] input = new Object[]{new C1(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith01.class)}
+            );
+        }
+
+        @Benchmark
+        public void setState(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities[i].setState(State1.TWO));
+            }
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith02 extends SetStateWith01 {
+        Object[] input = new Object[]{new C1(0), new C2(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith02.class)}
+            );
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith04 extends SetStateWith01 {
+        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith04.class)}
+            );
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith08 extends SetStateWith01 {
         Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
+                new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Remove16.class)}
+                    new String[]{fetchBenchmarkName(SetStateWith08.class)}
             );
         }
 
@@ -309,29 +354,25 @@ public class EntityBenchmark extends DominionBenchmark {
             return input;
         }
     }
-
 
     // Others
 
     public static class Has extends DominionBenchmark {
         EntityRepository entityRepository;
         Entity[] entities01;
+        Entity[] entities02;
         Entity[] entities04;
         Entity[] entities08;
-        Entity[] entities16;
         Object input01 = new C1(0);
+        Object[] input02 = new Object[]{
+                new C1(0), new C2(0)
+        };
         Object[] input04 = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0)
         };
         Object[] input08 = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0)
-        };
-        Object[] input16 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
         };
 
         @Param(value = {"1000000"})
@@ -347,14 +388,14 @@ public class EntityBenchmark extends DominionBenchmark {
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             entities01 = new Entity[size];
+            entities02 = new Entity[size];
             entities04 = new Entity[size];
             entities08 = new Entity[size];
-            entities16 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities01[i] = entityRepository.createEntity(input01);
+                entities02[i] = entityRepository.createEntity(input02);
                 entities04[i] = entityRepository.createEntity(input04);
                 entities08[i] = entityRepository.createEntity(input08);
-                entities16[i] = entityRepository.createEntity(input16);
             }
         }
 
@@ -362,6 +403,13 @@ public class EntityBenchmark extends DominionBenchmark {
         public void has01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities01[i].has(C1.class));
+            }
+        }
+
+        @Benchmark
+        public void has02(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities02[i].has(C1.class));
             }
         }
 
@@ -379,13 +427,6 @@ public class EntityBenchmark extends DominionBenchmark {
             }
         }
 
-        @Benchmark
-        public void has16(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities16[i].has(C1.class));
-            }
-        }
-
         @TearDown(Level.Iteration)
         public void tearDown() {
             entityRepository.close();
@@ -394,12 +435,10 @@ public class EntityBenchmark extends DominionBenchmark {
 
     public static class SetEnabled extends DominionBenchmark {
         EntityRepository entityRepository;
-        Entity[] entities16;
-        Object[] input16 = new Object[]{
+        Entity[] entities;
+        Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
         };
 
         @Param(value = {"1000000"})
@@ -414,17 +453,17 @@ public class EntityBenchmark extends DominionBenchmark {
         @Setup(Level.Iteration)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            entities16 = new Entity[size];
+            entities = new Entity[size];
             for (int i = 0; i < size; i++) {
-                entities16[i] = entityRepository.createEntity(input16);
+                entities[i] = entityRepository.createEntity(input);
             }
         }
 
         @Benchmark
         public void setEnabled(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                entities16[i].setEnabled(false);
-                bh.consume(entities16[i].isEnabled());
+                entities[i].setEnabled(false);
+                bh.consume(entities[i].isEnabled());
             }
         }
 
@@ -434,104 +473,23 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class SetState extends DominionBenchmark {
-        EntityRepository entityRepository;
-        Entity[] entities01;
-        Entity[] entities04;
-        Entity[] entities08;
-        Entity[] entities16;
-        Object input01 = new C1(0);
-        Object[] input04 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0)
-        };
-        Object[] input08 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0)
-        };
-        Object[] input16 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
-        };
-
-        @Param(value = {"1000000"})
-        int size;
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(SetState.class)}
-            );
-        }
-
-        @Setup(Level.Iteration)
-        public void setup() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            entities01 = new Entity[size];
-            entities04 = new Entity[size];
-            entities08 = new Entity[size];
-            entities16 = new Entity[size];
-            for (int i = 0; i < size; i++) {
-                entities01[i] = entityRepository.createEntity(input01);
-                entities04[i] = entityRepository.createEntity(input04);
-                entities08[i] = entityRepository.createEntity(input08);
-                entities16[i] = entityRepository.createEntity(input16);
-            }
-        }
-
-        @Benchmark
-        public void setStateTo01(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities01[i].setState(State1.ONE));
-            }
-        }
-
-        @Benchmark
-        public void setStateTo04(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities04[i].setState(State1.ONE));
-            }
-        }
-
-        @Benchmark
-        public void setStateTo08(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities08[i].setState(State1.ONE));
-            }
-        }
-
-        @Benchmark
-        public void setStateTo16(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities16[i].setState(State1.ONE));
-            }
-        }
-
-        @TearDown(Level.Iteration)
-        public void tearDown() {
-            entityRepository.close();
-        }
-    }
 
     public static class Contains extends DominionBenchmark {
         EntityRepository entityRepository;
         Entity[] entities01;
+        Entity[] entities02;
         Entity[] entities04;
         Entity[] entities08;
-        Entity[] entities16;
         Object input01 = new C1(0);
+        Object[] input02 = new Object[]{
+                new C1(0), new C2(0)
+        };
         Object[] input04 = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0)
         };
         Object[] input08 = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0)
-        };
-        Object[] input16 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
-                new C9(0), new C10(0), new C11(0), new C12(0),
-                new C13(0), new C14(0), new C15(0), new C16(0)
         };
 
         @Param(value = {"1000000"})
@@ -547,14 +505,14 @@ public class EntityBenchmark extends DominionBenchmark {
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             entities01 = new Entity[size];
+            entities02 = new Entity[size];
             entities04 = new Entity[size];
             entities08 = new Entity[size];
-            entities16 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities01[i] = entityRepository.createEntity(input01);
+                entities02[i] = entityRepository.createEntity(input02);
                 entities04[i] = entityRepository.createEntity(input04);
                 entities08[i] = entityRepository.createEntity(input08);
-                entities16[i] = entityRepository.createEntity(input16);
             }
         }
 
@@ -562,6 +520,13 @@ public class EntityBenchmark extends DominionBenchmark {
         public void contains01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities01[i].contains(input01));
+            }
+        }
+
+        @Benchmark
+        public void contains02(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities02[i].contains(input01));
             }
         }
 
@@ -576,13 +541,6 @@ public class EntityBenchmark extends DominionBenchmark {
         public void contains08(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities08[i].contains(input01));
-            }
-        }
-
-        @Benchmark
-        public void contains16(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities16[i].contains(input16[0]));
             }
         }
 

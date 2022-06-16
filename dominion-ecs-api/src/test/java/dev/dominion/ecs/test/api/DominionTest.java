@@ -1,14 +1,12 @@
 package dev.dominion.ecs.test.api;
 
-import dev.dominion.ecs.api.Dominion;
-import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.api.Results;
-import dev.dominion.ecs.api.Scheduler;
+import dev.dominion.ecs.api.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 
+@SuppressWarnings("resource")
 public class DominionTest {
 
     @Test
@@ -60,12 +58,22 @@ public class DominionTest {
         }
 
         @Override
+        public Entity createPreparedEntity(Composition.OfTypes withValues) {
+            return null;
+        }
+
+        @Override
         public Entity createEntityAs(Entity prefab, Object... components) {
             return null;
         }
 
         @Override
         public Entity createEntity(String name, Object... components) {
+            return null;
+        }
+
+        @Override
+        public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
             return null;
         }
 
@@ -77,6 +85,11 @@ public class DominionTest {
         @Override
         public boolean deleteEntity(Entity entity) {
             return false;
+        }
+
+        @Override
+        public Composition composition() {
+            return null;
         }
 
         @Override

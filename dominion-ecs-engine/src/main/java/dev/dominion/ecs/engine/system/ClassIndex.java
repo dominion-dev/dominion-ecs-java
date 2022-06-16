@@ -144,9 +144,10 @@ public final class ClassIndex implements AutoCloseable {
      */
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public IndexKey getIndexKey(Object[] objects) {
-        boolean[] checkArray = new boolean[index + objects.length + 1];
+        int length = objects.length;
+        boolean[] checkArray = new boolean[index + length + 1];
         int min = Integer.MAX_VALUE, max = 0;
-        for (int i = 0; i < objects.length; i++) {
+        for (int i = 0; i < length; i++) {
             int value = getIndex(objects[i].getClass());
             value = value == 0 ? getIndexOrAddClass(objects[i].getClass()) : value;
             if (checkArray[value]) {
@@ -156,7 +157,25 @@ public final class ClassIndex implements AutoCloseable {
             min = Math.min(value, min);
             max = Math.max(value, max);
         }
-        return new IndexKey(checkArray, min, max, objects.length);
+        return new IndexKey(checkArray, min, max, length);
+    }
+
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    public IndexKey getIndexKeyByType(Class<?>[] classes) {
+        int length = classes.length;
+        boolean[] checkArray = new boolean[index + length + 1];
+        int min = Integer.MAX_VALUE, max = 0;
+        for (int i = 0; i < length; i++) {
+            int value = getIndex(classes[i]);
+            value = value == 0 ? getIndexOrAddClass(classes[i]) : value;
+            if (checkArray[value]) {
+                throw new IllegalArgumentException("Duplicate object types are not allowed");
+            }
+            checkArray[value] = true;
+            min = Math.min(value, min);
+            max = Math.max(value, max);
+        }
+        return new IndexKey(checkArray, min, max, length);
     }
 
     private int capHashCode(int hashCode, int hashBits) {

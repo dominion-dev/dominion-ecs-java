@@ -1,5 +1,6 @@
 package dev.dominion.ecs.test.engine;
 
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class EntityRepositoryTest {
 
+    @SuppressWarnings("resource")
     @Test
     void factoryCreate() {
         Assertions.assertEquals(EntityRepository.class, Dominion.factory().create().getClass());
@@ -38,6 +40,18 @@ class EntityRepositoryTest {
     }
 
     @Test
+    void createPreparedEntityWith1Component() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            C1 c1 = new C1(0);
+            Composition.Of1<C1> ofC1 = entityRepository.composition().of(C1.class);
+            IntEntity entity = (IntEntity) entityRepository.createPreparedEntity(ofC1.withValue(c1));
+            Assertions.assertNotNull(entity.getComposition());
+            Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
+            Assertions.assertEquals(c1, entity.getComponents()[0]);
+        }
+    }
+
+    @Test
     void createEntityWith2Component() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             var c1 = new C1(0);
@@ -47,6 +61,22 @@ class EntityRepositoryTest {
             Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponents());
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c2, c1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponents());
+        }
+    }
+
+    @Test
+    void createPreparedEntityWith2Component() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            Composition.Of2<C1, C2> ofC1C2 = entityRepository.composition().of(C1.class, C2.class);
+            Composition.Of2<C2, C1> ofC2C1 = entityRepository.composition().of(C2.class, C1.class);
+            IntEntity entity1 = (IntEntity) entityRepository.createPreparedEntity(ofC1C2.withValue(c1, c2));
+            Assertions.assertNotNull(entity1.getComposition());
+            Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponents());
+            IntEntity entity2 = (IntEntity) entityRepository.createPreparedEntity(ofC2C1.withValue(c2, c1));
             Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponents());
         }
     }
