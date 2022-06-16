@@ -350,7 +350,7 @@ public final class DataComposition {
         public Results.With1<T> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition) {
             }
             Object[] components = data.components();
             return new Results.With1<>((T) components[idx], intEntity);
