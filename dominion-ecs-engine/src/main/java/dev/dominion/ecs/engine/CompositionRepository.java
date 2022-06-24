@@ -131,6 +131,22 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
+    public void modifyComponents(IntEntity entity, DataComposition newDataComposition, Object[] newComponentArray) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Modifying " + entity)
+
+            );
+        }
+        entity.getComposition().detachEntity(entity);
+        if (entity.isPooledArray()) {
+            arrayPool.push(entity.getComponents());
+        }
+        entity.flagPooledArray();
+        newDataComposition.attachEntity(entity, true, newComponentArray);
+    }
+
     public Entity addComponent(IntEntity entity, Object component) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(

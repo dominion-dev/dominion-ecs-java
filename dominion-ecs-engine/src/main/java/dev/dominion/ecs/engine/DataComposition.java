@@ -13,6 +13,7 @@ import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,6 +46,7 @@ public final class DataComposition {
         this.loggingContext = loggingContext;
         if (isMultiComponent()) {
             componentIndex = new int[COMPONENT_INDEX_CAPACITY];
+            Arrays.fill(componentIndex, -1);
             for (int i = 0; i < length(); i++) {
                 componentIndex[classIndex.getIndex(componentTypes[i])] = i;
             }

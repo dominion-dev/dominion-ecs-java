@@ -94,6 +94,16 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
+    public boolean modifyEntity(Composition.Modifier modifier) {
+        var mod = (PreparedComposition.NewEntityComposition) modifier.getModifier();
+        if (mod == null) {
+            return false;
+        }
+        compositions.modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        return true;
+    }
+
+    @Override
     public Composition composition() {
         return preparedComposition;
     }
