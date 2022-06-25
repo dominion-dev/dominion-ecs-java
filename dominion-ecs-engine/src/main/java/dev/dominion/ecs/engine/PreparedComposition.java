@@ -84,37 +84,37 @@ public class PreparedComposition implements Composition {
 
     @Override
     public <T1, T2> ByAdding2AndRemoving<T1, T2> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding2AndRemoving<>(compositions, new Class<?>[]{compType1, compType2}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3> ByAdding3AndRemoving<T1, T2, T3> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding3AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3, T4> ByAdding4AndRemoving<T1, T2, T3, T4> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding4AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3, T4, T5> ByAdding5AndRemoving<T1, T2, T3, T4, T5> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding5AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6> ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding6AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6, T7> ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding7AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6, compType7}, removedCompTypes);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<T8> compType8, Class<?>... removedCompTypes) {
-        return null;
+        return new ByAdding8AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6, compType7, compType8}, removedCompTypes);
     }
 
     public static class OfTypes {
@@ -170,17 +170,30 @@ public class PreparedComposition implements Composition {
             return this;
         }
 
-        protected NewEntityComposition fetchModifier(Entity entity, Object... components) {
+        protected NewEntityComposition fetchModifier(Entity entity, Object... addedComponents) {
             var intEntity = (IntEntity) entity;
             var composition = intEntity.getComposition();
             TargetComposition targetComposition = fetchTargetComposition(composition);
             return !targetComposition.target.equals(composition) ?
-                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, components)) :
+                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, addedComponents)) :
                     null;
         }
 
-        private Object[] fetchComponentArray(IntEntity entity, TargetComposition targetComposition, Object... components) {
-            return null;
+        private Object[] fetchComponentArray(IntEntity entity, TargetComposition targetComposition, Object... addedComponents) {
+            Object[] componentArray = compositions.getArrayPool().pop(targetComposition.target.getComponentTypes().length);
+            populateComponentArray(componentArray, entity.getComponents(), targetComposition.indexMapping);
+            if (addedComponents.length > 0) {
+                populateComponentArray(componentArray, addedComponents, targetComposition.addedIndexMapping);
+            }
+            return componentArray;
+        }
+
+        private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int[] indexMapping) {
+            for (int i = 0; i < otherComponentArray.length; i++) {
+                int index = indexMapping[i];
+                if (index < 0) continue;
+                componentArray[index] = otherComponentArray[i];
+            }
         }
 
         @Override
@@ -190,21 +203,21 @@ public class PreparedComposition implements Composition {
 
         private TargetComposition fetchTargetComposition(DataComposition composition) {
             return cache.computeIfAbsent(composition, prevComposition -> {
-                Class<?>[] componentTypes = prevComposition.getComponentTypes();
-                List<Class<?>> typeList = new ArrayList<>(componentTypes.length + addedComponentTypes.length);
-                populateTypeList(componentTypes, typeList);
-                populateTypeList(addedComponentTypes, typeList);
+                Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
+                List<Class<?>> typeList = new ArrayList<>(prevComponentTypes.length + addedComponentTypes.length);
+                populateTypeList(typeList, prevComponentTypes);
+                populateTypeList(typeList, addedComponentTypes);
                 Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
                 DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
-                int[] indexMapping = new int[componentTypes.length];
+                int[] indexMapping = new int[prevComponentTypes.length];
                 int[] addedIndexMapping = new int[addedComponentTypes.length];
-                populateIndexMapping(componentTypes, indexMapping, newComposition);
+                populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
                 populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
                 return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
             });
         }
 
-        private void populateTypeList(Class<?>[] componentTypes, List<Class<?>> typeList) {
+        private void populateTypeList(List<Class<?>> typeList, Class<?>[] componentTypes) {
             for (Class<?> type : componentTypes) {
                 if (!removedComponentTypes.contains(type)) {
                     typeList.add(type);
@@ -226,6 +239,96 @@ public class PreparedComposition implements Composition {
         }
     }
 
+    public final static class ByAdding2AndRemoving<T1, T2> extends PreparedModifier implements Composition.ByAdding2AndRemoving<T1, T2> {
+
+        public ByAdding2AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2) {
+            modifier = fetchModifier(entity, comp1, comp2);
+            return this;
+        }
+    }
+
+    public final static class ByAdding3AndRemoving<T1, T2, T3> extends PreparedModifier implements Composition.ByAdding3AndRemoving<T1, T2, T3> {
+
+        public ByAdding3AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3);
+            return this;
+        }
+    }
+
+    public final static class ByAdding4AndRemoving<T1, T2, T3, T4> extends PreparedModifier implements Composition.ByAdding4AndRemoving<T1, T2, T3, T4> {
+
+        public ByAdding4AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4);
+            return this;
+        }
+    }
+
+    public final static class ByAdding5AndRemoving<T1, T2, T3, T4, T5> extends PreparedModifier implements Composition.ByAdding5AndRemoving<T1, T2, T3, T4, T5> {
+
+        public ByAdding5AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5);
+            return this;
+        }
+    }
+
+    public final static class ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> extends PreparedModifier implements Composition.ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> {
+
+        public ByAdding6AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6);
+            return this;
+        }
+    }
+
+    public final static class ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> extends PreparedModifier implements Composition.ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> {
+
+        public ByAdding7AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7);
+            return this;
+        }
+    }
+
+    public final static class ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> extends PreparedModifier implements Composition.ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> {
+
+        public ByAdding8AndRemoving(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
+            super(compositions, addedComponentTypes, componentTypes);
+        }
+
+        @Override
+        public ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8) {
+            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7, comp8);
+            return this;
+        }
+    }
 
     public final static class Of1<T> extends OfTypes implements Composition.Of1<T> {
 

@@ -65,6 +65,10 @@ public final class CompositionRepository implements AutoCloseable {
         return idSchema;
     }
 
+    public ObjectArrayPool getArrayPool() {
+        return arrayPool;
+    }
+
     public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
