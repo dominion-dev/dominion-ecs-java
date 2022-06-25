@@ -78,42 +78,42 @@ public class PreparedComposition implements Composition {
     }
 
     @Override
-    public <T> ByAdding1AndRemoving<T> byAddingAndRemoving(Class<T> compType, Class<?>... removedCompTypes) {
+    public <T> ByAdding1AndRemoving<T> byAdding1AndRemoving(Class<T> compType, Class<?>... removedCompTypes) {
         return new ByAdding1AndRemoving<>(compositions, new Class<?>[]{compType}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2> ByAdding2AndRemoving<T1, T2> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<?>... removedCompTypes) {
+    public <T1, T2> ByAdding2AndRemoving<T1, T2> byAdding2AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<?>... removedCompTypes) {
         return new ByAdding2AndRemoving<>(compositions, new Class<?>[]{compType1, compType2}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3> ByAdding3AndRemoving<T1, T2, T3> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<?>... removedCompTypes) {
+    public <T1, T2, T3> ByAdding3AndRemoving<T1, T2, T3> byAdding3AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<?>... removedCompTypes) {
         return new ByAdding3AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3, T4> ByAdding4AndRemoving<T1, T2, T3, T4> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<?>... removedCompTypes) {
+    public <T1, T2, T3, T4> ByAdding4AndRemoving<T1, T2, T3, T4> byAdding4AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<?>... removedCompTypes) {
         return new ByAdding4AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3, T4, T5> ByAdding5AndRemoving<T1, T2, T3, T4, T5> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<?>... removedCompTypes) {
+    public <T1, T2, T3, T4, T5> ByAdding5AndRemoving<T1, T2, T3, T4, T5> byAdding5AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<?>... removedCompTypes) {
         return new ByAdding5AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3, T4, T5, T6> ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<?>... removedCompTypes) {
+    public <T1, T2, T3, T4, T5, T6> ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> byAdding6AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<?>... removedCompTypes) {
         return new ByAdding6AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3, T4, T5, T6, T7> ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<?>... removedCompTypes) {
+    public <T1, T2, T3, T4, T5, T6, T7> ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> byAdding7AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<?>... removedCompTypes) {
         return new ByAdding7AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6, compType7}, removedCompTypes);
     }
 
     @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAddingAndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<T8> compType8, Class<?>... removedCompTypes) {
+    public <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAdding8AndRemoving(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<T8> compType8, Class<?>... removedCompTypes) {
         return new ByAdding8AndRemoving<>(compositions, new Class<?>[]{compType1, compType2, compType3, compType4, compType5, compType6, compType7, compType8}, removedCompTypes);
     }
 
@@ -180,8 +180,15 @@ public class PreparedComposition implements Composition {
         }
 
         private Object[] fetchComponentArray(IntEntity entity, TargetComposition targetComposition, Object... addedComponents) {
-            Object[] componentArray = compositions.getArrayPool().pop(targetComposition.target.getComponentTypes().length);
-            populateComponentArray(componentArray, entity.getComponents(), targetComposition.indexMapping);
+            int length = targetComposition.target.getComponentTypes().length;
+            if (length == 0) {
+                return new Object[0];
+            }
+            Object[] componentArray = compositions.getArrayPool().pop(length);
+            Object[] prevComponentArray = entity.getComponents();
+            if (prevComponentArray != null && prevComponentArray.length > 0) {
+                populateComponentArray(componentArray, prevComponentArray, targetComposition.indexMapping);
+            }
             if (addedComponents.length > 0) {
                 populateComponentArray(componentArray, addedComponents, targetComposition.addedIndexMapping);
             }
@@ -189,10 +196,14 @@ public class PreparedComposition implements Composition {
         }
 
         private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int[] indexMapping) {
-            for (int i = 0; i < otherComponentArray.length; i++) {
-                int index = indexMapping[i];
-                if (index < 0) continue;
-                componentArray[index] = otherComponentArray[i];
+            if (indexMapping == null) {
+                componentArray[0] = otherComponentArray[0];
+            } else {
+                for (int i = 0; i < otherComponentArray.length; i++) {
+                    int index = indexMapping[i];
+                    if (index < 0) continue;
+                    componentArray[index] = otherComponentArray[i];
+                }
             }
         }
 
@@ -204,15 +215,24 @@ public class PreparedComposition implements Composition {
         private TargetComposition fetchTargetComposition(DataComposition composition) {
             return cache.computeIfAbsent(composition, prevComposition -> {
                 Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
-                List<Class<?>> typeList = new ArrayList<>(prevComponentTypes.length + addedComponentTypes.length);
+                int newLength = prevComponentTypes.length + (addedComponentTypes == null ? 0 : addedComponentTypes.length);
+                List<Class<?>> typeList = new ArrayList<>(newLength);
                 populateTypeList(typeList, prevComponentTypes);
-                populateTypeList(typeList, addedComponentTypes);
+                if (addedComponentTypes != null) {
+                    populateTypeList(typeList, addedComponentTypes);
+                }
                 Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
                 DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
-                int[] indexMapping = new int[prevComponentTypes.length];
-                int[] addedIndexMapping = new int[addedComponentTypes.length];
-                populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
-                populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
+                int[] indexMapping = null;
+                if (newComposition.isMultiComponent()) {
+                    indexMapping = new int[prevComponentTypes.length];
+                    populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
+                }
+                int[] addedIndexMapping = null;
+                if (newComposition.isMultiComponent() && addedComponentTypes != null) {
+                    addedIndexMapping = new int[addedComponentTypes.length];
+                    populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
+                }
                 return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
             });
         }

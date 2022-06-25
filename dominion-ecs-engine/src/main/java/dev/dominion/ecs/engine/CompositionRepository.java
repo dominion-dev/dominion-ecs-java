@@ -139,13 +139,14 @@ public final class CompositionRepository implements AutoCloseable {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Modifying " + entity)
+                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + newDataComposition)
 
             );
         }
         entity.getComposition().detachEntity(entity);
-        if (entity.isPooledArray()) {
-            arrayPool.push(entity.getComponents());
+        var prevComponentArray = entity.getComponents();
+        if (prevComponentArray != null && entity.isPooledArray()) {
+            arrayPool.push(prevComponentArray);
         }
         entity.flagPooledArray();
         newDataComposition.attachEntity(entity, true, newComponentArray);

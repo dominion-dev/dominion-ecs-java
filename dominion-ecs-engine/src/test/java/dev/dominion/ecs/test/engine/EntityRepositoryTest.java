@@ -108,6 +108,41 @@ class EntityRepositoryTest {
     }
 
     @Test
+    void modifyEntity() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            var c1 = new C1(0);
+            var c2 = new C2(0);
+            var c3 = new C3(0);
+            IntEntity entity = (IntEntity) entityRepository.createEntity(c1);
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponents());
+            Composition composition = entityRepository.composition();
+
+            Composition.Modifier modifier = composition.byRemoving(C1.class).withValue(entity);
+            Assertions.assertTrue(entityRepository.modifyEntity(modifier));
+            Assertions.assertNull(entity.getComponents());
+
+            modifier = composition.byAdding1AndRemoving(C1.class).withValue(entity, c1);
+            Assertions.assertTrue(entityRepository.modifyEntity(modifier));
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponents());
+
+            modifier = composition.byAdding1AndRemoving(C2.class, C1.class).withValue(entity, c2);
+            Assertions.assertTrue(entityRepository.modifyEntity(modifier));
+            Assertions.assertArrayEquals(new Object[]{c2}, entity.getComponents());
+
+            modifier = composition.byAdding2AndRemoving(C1.class, C2.class, C2.class).withValue(entity, c1, c2);
+            Assertions.assertTrue(entityRepository.modifyEntity(modifier));
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponents());
+
+            Assertions.assertThrows(IllegalArgumentException.class,
+                    () -> composition.byAdding1AndRemoving(C1.class).withValue(entity, c1));
+
+            modifier = composition.byAdding2AndRemoving(C2.class, C3.class).withValue(entity, c2, c3);
+            Assertions.assertTrue(entityRepository.modifyEntity(modifier));
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponents());
+        }
+    }
+
+    @Test
     void avoidEmptyPositionOnDestroyEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity();

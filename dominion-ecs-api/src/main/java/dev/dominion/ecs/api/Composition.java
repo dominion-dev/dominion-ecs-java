@@ -26,21 +26,21 @@ public interface Composition {
 
     ByRemoving byRemoving(Class<?>... removedCompTypes);
 
-    <T> ByAdding1AndRemoving<T> byAddingAndRemoving(Class<T> addedCompType, Class<?>... removedCompTypes);
+    <T> ByAdding1AndRemoving<T> byAdding1AndRemoving(Class<T> addedCompType, Class<?>... removedCompTypes);
 
-    <T1, T2> ByAdding2AndRemoving<T1, T2> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<?>... removedCompTypes);
+    <T1, T2> ByAdding2AndRemoving<T1, T2> byAdding2AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<?>... removedCompTypes);
 
-    <T1, T2, T3> ByAdding3AndRemoving<T1, T2, T3> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<?>... removedCompTypes);
+    <T1, T2, T3> ByAdding3AndRemoving<T1, T2, T3> byAdding3AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<?>... removedCompTypes);
 
-    <T1, T2, T3, T4> ByAdding4AndRemoving<T1, T2, T3, T4> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<?>... removedCompTypes);
+    <T1, T2, T3, T4> ByAdding4AndRemoving<T1, T2, T3, T4> byAdding4AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<?>... removedCompTypes);
 
-    <T1, T2, T3, T4, T5> ByAdding5AndRemoving<T1, T2, T3, T4, T5> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<?>... removedCompTypes);
+    <T1, T2, T3, T4, T5> ByAdding5AndRemoving<T1, T2, T3, T4, T5> byAdding5AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<?>... removedCompTypes);
 
-    <T1, T2, T3, T4, T5, T6> ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<?>... removedCompTypes);
+    <T1, T2, T3, T4, T5, T6> ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> byAdding6AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<?>... removedCompTypes);
 
-    <T1, T2, T3, T4, T5, T6, T7> ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<T7> addedCompType7, Class<?>... removedCompTypes);
+    <T1, T2, T3, T4, T5, T6, T7> ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> byAdding7AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<T7> addedCompType7, Class<?>... removedCompTypes);
 
-    <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAddingAndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<T7> addedCompType7, Class<T8> addedCompType8, Class<?>... removedCompTypes);
+    <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAdding8AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<T7> addedCompType7, Class<T8> addedCompType8, Class<?>... removedCompTypes);
 
 
     sealed interface OfTypes permits Of1, Of2, Of3, Of4, Of5, Of6, Of7, Of8 {
