@@ -65,6 +65,10 @@ public final class CompositionRepository implements AutoCloseable {
         return idSchema;
     }
 
+    public ObjectArrayPool getArrayPool() {
+        return arrayPool;
+    }
+
     public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
@@ -129,6 +133,23 @@ public final class CompositionRepository implements AutoCloseable {
             return composition;
         }
         return link.getOrCreateComposition();
+    }
+
+    public void modifyComponents(IntEntity entity, DataComposition newDataComposition, Object[] newComponentArray) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + newDataComposition)
+
+            );
+        }
+        entity.getComposition().detachEntity(entity);
+        var prevComponentArray = entity.getComponents();
+//        if (prevComponentArray != null && entity.isPooledArray()) {
+//            arrayPool.push(prevComponentArray);
+//        }
+//        entity.flagPooledArray();
+        newDataComposition.attachEntity(entity, true, newComponentArray);
     }
 
     public Entity addComponent(IntEntity entity, Object component) {

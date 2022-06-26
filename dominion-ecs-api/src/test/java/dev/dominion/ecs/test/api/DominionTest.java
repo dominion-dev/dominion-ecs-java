@@ -88,6 +88,11 @@ public class DominionTest {
         }
 
         @Override
+        public boolean modifyEntity(Composition.Modifier modifier) {
+            return false;
+        }
+
+        @Override
         public Composition composition() {
             return null;
         }

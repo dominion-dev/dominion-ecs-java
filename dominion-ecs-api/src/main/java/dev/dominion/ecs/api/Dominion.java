@@ -134,6 +134,14 @@ public interface Dominion extends AutoCloseable {
     boolean deleteEntity(Entity entity);
 
     /**
+     * Modifies the entity composition by adding components and/or removing component types
+     *
+     * @param modifier the modifier that has been prepared to modify the entity composition
+     * @return true if the entity composition has been modified
+     */
+    boolean modifyEntity(Composition.Modifier modifier);
+
+    /**
      * Provides the Composition class to support the creation of prepared entities
      *
      * @return the Composition instance
