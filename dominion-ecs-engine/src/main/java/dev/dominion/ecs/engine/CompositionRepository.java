@@ -145,10 +145,10 @@ public final class CompositionRepository implements AutoCloseable {
         }
         entity.getComposition().detachEntity(entity);
         var prevComponentArray = entity.getComponents();
-        if (prevComponentArray != null && entity.isPooledArray()) {
-            arrayPool.push(prevComponentArray);
-        }
-        entity.flagPooledArray();
+//        if (prevComponentArray != null && entity.isPooledArray()) {
+//            arrayPool.push(prevComponentArray);
+//        }
+//        entity.flagPooledArray();
         newDataComposition.attachEntity(entity, true, newComponentArray);
     }
 

@@ -184,7 +184,8 @@ public class PreparedComposition implements Composition {
             if (length == 0) {
                 return new Object[0];
             }
-            Object[] componentArray = compositions.getArrayPool().pop(length);
+            Object[] componentArray = new Object[length];
+//            Object[] componentArray = compositions.getArrayPool().pop(length);
             Object[] prevComponentArray = entity.getComponents();
             if (prevComponentArray != null && prevComponentArray.length > 0) {
                 populateComponentArray(componentArray, prevComponentArray, targetComposition.indexMapping);
