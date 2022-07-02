@@ -122,6 +122,20 @@ public final class IntEntity implements Entity, Identifiable {
         }
     }
 
+    public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
+        createLock();
+        long stamp = lock.writeLock();
+        try {
+            if (isDetachedId()) {
+                return false;
+            }
+            compositions.modifyComponents(this, newDataComposition, newComponentArray);
+            return true;
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
     @Override
     public boolean removeType(Class<?> componentType) {
         createLock();
