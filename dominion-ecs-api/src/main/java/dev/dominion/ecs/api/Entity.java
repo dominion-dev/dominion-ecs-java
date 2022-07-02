@@ -33,17 +33,17 @@ public interface Entity {
      * Removes a component if present.
      *
      * @param component the component to be removed
-     * @return the removed component or null if not present
+     * @return true if the component has been removed
      */
-    Object remove(Object component);
+    boolean remove(Object component);
 
     /**
      * Removes a component if there is a component of the specified type.
      *
      * @param componentType the component type to be removed
-     * @return the removed component or null if no component of the specified type is present
+     * @return true if the component type has been removed
      */
-    Object removeType(Class<?> componentType);
+    boolean removeType(Class<?> componentType);
 
     /**
      * Checks if there is a component of the specified type.

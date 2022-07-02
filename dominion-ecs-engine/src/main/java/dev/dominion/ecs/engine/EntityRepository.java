@@ -105,7 +105,7 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public Composition composition() {
-        return preparedComposition;
+        return compositions.getPreparedComposition();
     }
 
     @Override
