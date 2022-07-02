@@ -79,8 +79,15 @@ public class EntityBenchmark extends DominionBenchmark {
             customSetup();
         }
 
+        public void customSetup() {
+        }
+
         @Setup(Level.Invocation)
         public void setupInvocation() {
+            customSetupInvocation();
+        }
+
+        public void customSetupInvocation() {
             for (int i = 0; i < size; i++) {
                 entityRepository.deleteEntity(entities[i]);
                 entities[i] = entityRepository.createEntity(getInput());
@@ -91,8 +98,6 @@ public class EntityBenchmark extends DominionBenchmark {
             return null;
         }
 
-        public void customSetup() {
-        }
 
         @TearDown(Level.Iteration)
         public void tearDown() {
@@ -107,6 +112,12 @@ public class EntityBenchmark extends DominionBenchmark {
             org.openjdk.jmh.Main.main(
                     new String[]{fetchBenchmarkName(AddUpTo.class)}
             );
+        }
+
+        public void customSetupInvocation() {
+            for (int i = 0; i < size; i++) {
+                entities[i].removeType(C0.class);
+            }
         }
     }
 
@@ -185,10 +196,16 @@ public class EntityBenchmark extends DominionBenchmark {
                     new String[]{fetchBenchmarkName(RemoveFrom.class)}
             );
         }
+
+        public void customSetupInvocation() {
+            for (int i = 0; i < size; i++) {
+                entities[i].add(new C1(0));
+            }
+        }
     }
 
     public static class RemoveFrom01 extends RemoveFrom {
-        Object[] input = new Object[]{new C1(0)};
+        Object[] input = new Object[0];
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -209,7 +226,7 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class RemoveFrom02 extends RemoveFrom01 {
-        Object[] input = new Object[]{new C1(0), new C2(0)};
+        Object[] input = new Object[]{new C2(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -223,7 +240,7 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class RemoveFrom04 extends RemoveFrom01 {
-        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+        Object[] input = new Object[]{new C2(0), new C3(0), new C4(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -238,7 +255,7 @@ public class EntityBenchmark extends DominionBenchmark {
 
     public static class RemoveFrom08 extends RemoveFrom01 {
         Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
@@ -271,17 +288,23 @@ public class EntityBenchmark extends DominionBenchmark {
             modifier = entityRepository.composition().byAdding1AndRemoving(C0.class, C1.class);
         }
 
+        public void customSetupInvocation() {
+            for (int i = 0; i < size; i++) {
+                entities[i].add(new C1(0));
+                entities[i].removeType(C0.class);
+            }
+        }
+
         @Benchmark
         public void modify(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entityRepository.modifyEntity(modifier.withValue(entities[i], new C0(0))));
-//                System.out.println(entities[i]);
             }
         }
     }
 
     public static class ModifyEntityWith01 extends ModifyEntity {
-        Object[] input = new Object[]{new C1(0)};
+        Object[] input = new Object[]{};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -295,7 +318,7 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class ModifyEntityWith02 extends ModifyEntity {
-        Object[] input = new Object[]{new C1(0), new C2(0)};
+        Object[] input = new Object[]{new C2(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -309,7 +332,7 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class ModifyEntityWith04 extends ModifyEntity {
-        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+        Object[] input = new Object[]{new C2(0), new C3(0), new C4(0)};
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -324,7 +347,7 @@ public class EntityBenchmark extends DominionBenchmark {
 
     public static class ModifyEntityWith08 extends ModifyEntity {
         Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C2(0), new C3(0), new C4(0),
                 new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
