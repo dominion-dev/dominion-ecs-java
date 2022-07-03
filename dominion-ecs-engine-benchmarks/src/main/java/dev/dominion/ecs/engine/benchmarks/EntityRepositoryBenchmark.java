@@ -47,30 +47,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
     record C8(int id) {
     }
 
-    record C9(int id) {
-    }
-
-    record C10(int id) {
-    }
-
-    record C11(int id) {
-    }
-
-    record C12(int id) {
-    }
-
-    record C13(int id) {
-    }
-
-    record C14(int id) {
-    }
-
-    record C15(int id) {
-    }
-
-    record C16(int id) {
-    }
-
     public static class CreateEntity extends DominionBenchmark {
         Object[] input = new Object[0];
 
@@ -246,32 +222,11 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class CreateEntityWith16Component extends CreateEntity {
-        private final Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0)
-                , new C5(0), new C6(0), new C7(0), new C8(0)
-                , new C9(0), new C10(0), new C11(0), new C12(0)
-                , new C13(0), new C14(0), new C15(0), new C16(0)
-        };
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(CreateEntityWith16Component.class)}
-            );
-        }
-
-        @Override
-        public Object[] getInput() {
-            return input;
-        }
-    }
 
     public static class DeleteEntity extends DominionBenchmark {
         private final Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0)
                 , new C5(0), new C6(0), new C7(0), new C8(0)
-                , new C9(0), new C10(0), new C11(0), new C12(0)
-                , new C13(0), new C14(0), new C15(0), new C16(0)
         };
         EntityRepository entityRepository;
         Entity[] entities;

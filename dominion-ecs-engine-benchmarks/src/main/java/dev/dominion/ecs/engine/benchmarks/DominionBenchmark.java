@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine.benchmarks;
 
+import dev.dominion.ecs.engine.benchmarks.others.ArtemisCreatingEntityBenchmark;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
@@ -42,11 +43,20 @@ public class DominionBenchmark {
                             , fetchBenchmarkName(EntityRepositoryBenchmark.FindComponents.class)
                             , fetchBenchmarkName(EntityBenchmark.AddUpTo.class)
                             , fetchBenchmarkName(EntityBenchmark.RemoveFrom.class)
+                            , fetchBenchmarkName(EntityBenchmark.ModifyEntity.class)
                             , fetchBenchmarkName(EntityBenchmark.SetStateWith.class)
                             , fetchBenchmarkName(EntityBenchmark.SetEnabled.class)
                             , fetchBenchmarkName(EntityBenchmark.Has.class)
                             , fetchBenchmarkName(EntityBenchmark.Contains.class)
                     }
+            );
+        }
+    }
+
+    public static final class OthersBenchmarks {
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{ArtemisCreatingEntityBenchmark.class.getPackageName()}
             );
         }
     }
