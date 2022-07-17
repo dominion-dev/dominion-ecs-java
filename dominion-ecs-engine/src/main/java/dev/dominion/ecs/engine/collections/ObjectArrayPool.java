@@ -40,7 +40,7 @@ public final class ObjectArrayPool {
     }
 
     public Object[] pop(int arrayLength) {
-        assert arrayLength > 0;
+//        assert arrayLength > 0;
         var stack = arraysByLengthMap.get(arrayLength);
         Object[] objectArray = stack != null ? stack.pop() : null;
         return objectArray == null ? new Object[arrayLength] : objectArray;

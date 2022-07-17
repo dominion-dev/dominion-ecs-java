@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine;
 
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
@@ -26,6 +27,9 @@ public final class CompositionRepository implements AutoCloseable {
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
     private final IdSchema idSchema;
+    private final PreparedComposition preparedComposition;
+    private final Map<Class<?>, Composition.ByAdding1AndRemoving<?>> addingTypeModifiers = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Composition.ByRemoving> removingTypeModifiers = new ConcurrentHashMap<>();
     private final Node root;
     private final LoggingSystem.Context loggingContext;
 
@@ -56,42 +60,79 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         pool = new ChunkedPool<>(idSchema, loggingContext);
+        preparedComposition = new PreparedComposition(this);
         root = new Node();
         arrayPool = new ObjectArrayPool(loggingContext);
-        root.composition = new Composition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
+        root.composition = new DataComposition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
         return idSchema;
     }
 
-    public Composition getOrCreate(Object[] components) {
+    public PreparedComposition getPreparedComposition() {
+        return preparedComposition;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Composition.ByAdding1AndRemoving<Object> fetchAddingTypeModifier(Class<?> compType) {
+        return (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
+                , k -> preparedComposition.byAdding1AndRemoving(compType));
+    }
+
+    public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
+        return removingTypeModifiers.computeIfAbsent(compType
+                , k -> preparedComposition.byRemoving(compType));
+    }
+
+    public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
             case 0:
                 return root.composition;
             case 1:
-                Class<?> componentType = components[0].getClass();
-                Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
-                if (node == null) {
-                    IndexKey key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
-                    node = nodeCache.getNode(key);
-                    if (node == null) {
-                        node = nodeCache.getOrCreateNode(key, componentType);
-                    }
-                } else {
-                    // node may not yet be connected to itself
-                    node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
-                }
-                return getNodeComposition(node);
+                return getSingleTypeComposition(components[0].getClass());
             default:
                 IndexKey indexKey = classIndex.getIndexKey(components);
-                node = nodeCache.getNode(indexKey);
+                Node node = nodeCache.getNode(indexKey);
                 if (node == null) {
                     node = nodeCache.getOrCreateNode(indexKey, getComponentTypes(components));
                 }
                 return getNodeComposition(node);
         }
+    }
+
+    public DataComposition getOrCreateByType(Class<?>[] componentTypes) {
+        int length = componentTypes == null ? 0 : componentTypes.length;
+        switch (length) {
+            case 0:
+                return root.composition;
+            case 1:
+                return getSingleTypeComposition(componentTypes[0]);
+            default:
+                IndexKey indexKey = classIndex.getIndexKeyByType(componentTypes);
+                Node node = nodeCache.getNode(indexKey);
+                if (node == null) {
+                    node = nodeCache.getOrCreateNode(indexKey, componentTypes);
+                }
+                return getNodeComposition(node);
+        }
+    }
+
+    private DataComposition getSingleTypeComposition(Class<?> componentType) {
+        IndexKey key = new IndexKey(classIndex.getIndex(componentType));
+        Node node = nodeCache.getNode(key);
+        if (node == null) {
+            key = new IndexKey(classIndex.getIndexOrAddClass(componentType));
+            node = nodeCache.getNode(key);
+            if (node == null) {
+                node = nodeCache.getOrCreateNode(key, componentType);
+            }
+        } else {
+            // node may not be yet connected to itself
+            node.linkNode(new IndexKey(classIndex.getIndex(componentType)), node);
+        }
+        return getNodeComposition(node);
     }
 
     private Class<?>[] getComponentTypes(Object[] components) {
@@ -102,58 +143,43 @@ public final class CompositionRepository implements AutoCloseable {
         return componentTypes;
     }
 
-    private Composition getNodeComposition(Node link) {
-        Composition composition = link.getComposition();
+    private DataComposition getNodeComposition(Node link) {
+        DataComposition composition = link.getComposition();
         if (composition != null) {
             return composition;
         }
         return link.getOrCreateComposition();
     }
 
-    public Entity addComponents(IntEntity entity, Object... components) {
-        if (components.length == 0) {
-            return entity;
-        }
+    public void modifyComponents(IntEntity entity, DataComposition newDataComposition, Object[] newComponentArray) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Adding [" + Arrays.stream(components).map(o -> o.getClass().getSimpleName())
-                                    .collect(Collectors.joining(",")) + "] to " + entity)
+                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + newDataComposition)
 
             );
         }
-        int componentsLength = components.length;
-        Composition prevComposition = entity.getComposition();
-        Object[] entityComponents = entity.getComponents();
-        int prevComponentsLength = prevComposition.length();
-        if (prevComponentsLength == 0) {
-            Composition composition = getOrCreate(components);
-            return composition.attachEntity(prevComposition.detachEntity(entity), components);
-        }
-        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + componentsLength);
-        if (prevComponentsLength == 1) {
-            newComponentArray[0] = entityComponents[0];
-        } else {
-            System.arraycopy(entityComponents, 0, newComponentArray, 0, prevComponentsLength);
-        }
-        if (componentsLength == 1) {
-            newComponentArray[prevComponentsLength] = components[0];
-        } else {
-            System.arraycopy(components, 0, newComponentArray, prevComponentsLength, componentsLength);
-        }
-        Composition composition = getOrCreate(newComponentArray);
-        prevComposition.detachEntity(entity);
-        if (entity.isPooledArray()) {
-            arrayPool.push(entityComponents);
-        }
-        entity.flagPooledArray();
-        return composition.attachEntity(entity, newComponentArray);
+        entity.getComposition().detachEntity(entity);
+        newDataComposition.attachEntity(entity, true, newComponentArray);
     }
 
+    public Entity addComponent(IntEntity entity, Object component) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Adding [" + component.getClass().getSimpleName() + "] to " + entity)
 
-    public Object removeComponentType(IntEntity entity, Class<?> componentType) {
+            );
+        }
+        var modifier = fetchAddingTypeModifier(component.getClass());
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component).getModifier();
+        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        return entity;
+    }
+
+    public boolean removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
-            return null;
+            return false;
         }
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -161,38 +187,14 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Removing [" + componentType.getSimpleName() + "] from " + entity)
             );
         }
-        Composition prevComposition = entity.getComposition();
-        Object[] entityComponents = entity.getComponents();
-        int prevComponentsLength = prevComposition.length();
-        if (prevComponentsLength == 0) {
-            return null;
+        var modifier = fetchRemovingTypeModifier(componentType);
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity).getModifier();
+        if(mod == null) {
+            return false;
         }
-        Object[] newComponentArray;
-        Object removed;
-        if (prevComponentsLength == 1) {
-            newComponentArray = null;
-            removed = entityComponents[0];
-        } else {
-            newComponentArray = arrayPool.pop(prevComponentsLength - 1);
-            int removedIndex = prevComposition.fetchComponentIndex(componentType);
-            removed = entityComponents[removedIndex];
-            if (removedIndex > 0) {
-                System.arraycopy(entityComponents, 0, newComponentArray, 0, removedIndex);
-            }
-            if (removedIndex < prevComponentsLength - 1) {
-                System.arraycopy(entityComponents, removedIndex + 1, newComponentArray, removedIndex, prevComponentsLength - (removedIndex + 1));
-            }
-        }
-        Composition composition = getOrCreate(newComponentArray);
-        prevComposition.detachEntity(entity);
-        if (entity.isPooledArray()) {
-            arrayPool.push(entityComponents);
-        }
-        entity.flagPooledArray();
-        composition.attachEntity(entity, newComponentArray);
-        return removed;
+        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        return true;
     }
-
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
@@ -294,7 +296,6 @@ public final class CompositionRepository implements AutoCloseable {
             } else {
                 node.linkNode(key, node);
             }
-
             return node;
         }
 
@@ -315,7 +316,7 @@ public final class CompositionRepository implements AutoCloseable {
         private final StampedLock lock = new StampedLock();
         private final Map<IndexKey, Node> linkedNodes = new ConcurrentHashMap<>();
         private final Class<?>[] componentTypes;
-        private Composition composition;
+        private DataComposition composition;
 
         public Node(Class<?>... componentTypes) {
             this.componentTypes = componentTypes;
@@ -331,8 +332,8 @@ public final class CompositionRepository implements AutoCloseable {
             linkedNodes.putIfAbsent(key, node);
         }
 
-        public Composition getOrCreateComposition() {
-            Composition value;
+        public DataComposition getOrCreateComposition() {
+            DataComposition value;
             long stamp = lock.tryOptimisticRead();
             try {
                 for (; ; stamp = lock.writeLock()) {
@@ -348,7 +349,7 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new Composition(CompositionRepository.this, pool.newTenant()
+                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant()
                             , arrayPool, classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
@@ -360,7 +361,7 @@ public final class CompositionRepository implements AutoCloseable {
             }
         }
 
-        public Composition getComposition() {
+        public DataComposition getComposition() {
             return composition;
         }
 
