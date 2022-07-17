@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- * Results is the output of the Dominion::findComponents method list and represents a simple container of all entities
+ * A Results instance is the output of the Dominion::findComponents method list and represents a simple container of all entities
  * that match a set of components and, optionally, have a specified state. Results can be further filtered by specifying
  * one or more component types to exclude. Both iterator and stream methods are available to retrieve found entities in
  * sequence.
