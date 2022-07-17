@@ -125,11 +125,11 @@ class IntEntityTest {
             var c2 = new C2(0);
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
-            Assertions.assertEquals(c2, entity.remove(c2));
+            Assertions.assertTrue(entity.remove(c2));
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
-            Assertions.assertEquals(c1, entity.remove(c1));
+            Assertions.assertTrue(entity.remove(c1));
             Assertions.assertEquals(c3, entity.getComponents()[0]);
-            Assertions.assertEquals(c3, entity.remove(c3));
+            Assertions.assertTrue(entity.remove(c3));
             Assertions.assertNull(entity.getComponents());
         }
     }
@@ -142,9 +142,7 @@ class IntEntityTest {
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             DataComposition compositionV3 = entity.getComposition();
-            Assertions.assertFalse(entity.isPooledArray());
             entity.remove(c2);
-            Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
             DataComposition compositionV2 = entity.getComposition();
             entity.remove(c1);
@@ -153,7 +151,6 @@ class IntEntityTest {
             entity.remove(c3);
             Assertions.assertNull(entity.getComponents());
             entity.add(c3);
-            Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertEquals(c3, entity.getComponents()[0]);
             Assertions.assertEquals(compositionV1, entity.getComposition());
             entity.add(c2);
@@ -175,20 +172,17 @@ class IntEntityTest {
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Assertions.assertTrue(entity.isEnabled());
-            Assertions.assertEquals(c3, entity.remove(c3));
-            Assertions.assertTrue(entity.isPooledArray());
+            Assertions.assertTrue(entity.remove(c3));
             Assertions.assertTrue(entity.isEnabled());
-            Assertions.assertNull(entity.remove(c3));
+            Assertions.assertFalse(entity.remove(c3));
             Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertNotNull(entity.setEnabled(false));
             Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
-            Assertions.assertTrue(entity.isPooledArray());
             Assertions.assertFalse(entity.isEnabled());
-            Assertions.assertNull(entity.remove(c2));
+            Assertions.assertFalse(entity.remove(c2));
             entity.setEnabled(true);
             Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
-            Assertions.assertTrue(entity.isPooledArray());
-            Assertions.assertEquals(c2, entity.remove(c2));
+            Assertions.assertTrue(entity.remove(c2));
             entity.setEnabled(false);
             Assertions.assertNull(entity.add(c2));
             Assertions.assertFalse(entityRepository.deleteEntity(entity));

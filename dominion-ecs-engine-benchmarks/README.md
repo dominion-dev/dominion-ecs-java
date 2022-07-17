@@ -6,49 +6,56 @@ will come as new API methods are implemented in the Dominion Engine.
 These single-threaded benchmarks were run on a notebook, a MacBook Pro 2021 with M1 Pro 10 core, compiled and executed
 natively with JDK Azul-17 aarch64:
 
-| 1,000,000 Entities                                  | Average Time |
-|:----------------------------------------------------|:------------:|
-| **Create** entities with **no** component           |   0.018 s    |
-| **Create** entities with **1** component            |   0.039 s    |
-| **Create** entities with **2** components           |   0.051 s    |
-| **Create** entities with **4** components           |   0.064 s    |
-| **Create** entities with **8** components           |   0.085 s    |
-| **Create** entities with **16** components          |   0.124 s    |
-|                                                     |              |
-| **Delete** entities with **any** comp.count         |   0.030 s    |
-|                                                     |              |
-| **Enable/Disable** entities with **any** comp.count |   0.009 s    |
-|                                                     |              |
+| 1,000,000 Entities                                       | Average Time |
+|:---------------------------------------------------------|:------------:|
+| **Create** entities with **no** component                |   0.018 s    |
+| **Create** entities with **1** component                 |   0.039 s    |
+| **Create** entities with **2** components                |   0.051 s    |
+| **Create** entities with **4** components                |   0.064 s    |
+| **Create** entities with **8** components                |   0.085 s    |
+|                                                          |              |
+| **Create** prepared entities with **1** component        |   0.020 s    |
+| **Create** prepared entities with **2** components       |   0.022 s    |
+| **Create** prepared entities with **4** components       |   0.029 s    |
+| **Create** prepared entities with **8** components       |   0.039 s    |
+|                                                          |              |
+| **Delete** entities with **any** component count         |   0.030 s    |
+|                                                          |              |
+| **Enable/Disable** entities with **any** component count |   0.009 s    |
+|                                                          |              |
 
-| 1,000,000 Entities                  | Average Time |
-|-------------------------------------|:------------:|
-| **Add** to **1** component          |   0.096 s    |
-| **Add** to **2** components         |   0.102 s    |
-| **Add** to **4** components         |   0.112 s    |
-| **Add** to **8** components         |   0.150 s    |
-| **Add** to **16** components        |   0.220 s    |
-|                                     |              |
-| **Remove** from **1** component     |   0.046 s    |
-| **Remove** from **2** components    |   0.085 s    |
-| **Remove** from **4** components    |   0.113 s    |
-| **Remove** from **8** components    |   0.140 s    |
-| **Remove** from **16** components   |   0.216 s    |
-|                                     |              ||                                        |              |
-| **SetState** with **1** component   |   0.050 s    |
-| **SetState** with **4** components  |   0.050 s    |
-| **SetState** with **8** components  |   0.050 s    |
-| **SetState** with **16** components |   0.050 s    |
-|                                     |              |
-| **Has** with **1** component type   |   0.009 s    |
-| **Has** with **4** component types  |   0.016 s    |
-| **Has** with **8** component types  |   0.016 s    |
-| **Has** with **16** component types |   0.016 s    |
-|                                     |              |
-| **Contains** with **1** component   |   0.009 s    |
-| **Contains** with **4** components  |   0.019 s    |
-| **Contains** with **8** components  |   0.019 s    |
-| **Contains** with **16** components |   0.019 s    |
-|                                     |              |
+| 1,000,000 Entities                 | Average Time |
+|------------------------------------|:------------:|
+| **Add** up to **1** component      |   0.075 s    |
+| **Add** up to **2** components     |   0.076 s    |
+| **Add** up to **4** components     |   0.074 s    |
+| **Add** up to **8** components     |   0.074 s    |
+|                                    |              |
+| **Remove** from **1** component    |   0.076 s    |
+| **Remove** from **2** components   |   0.070 s    |
+| **Remove** from **4** components   |   0.070 s    |
+| **Remove** from **8** components   |   0.077 s    |
+|                                    |              |
+| **Modify** with **1** component    |   0.073 s    |
+| **Modify** with **2** components   |   0.069 s    |
+| **Modify** with **4** components   |   0.075 s    |
+| **Modify** with **8** components   |   0.079 s    |
+|                                    |              |
+| **SetState** with **1** component  |   0.049 s    |
+| **SetState** with **2** component  |   0.048 s    |
+| **SetState** with **4** components |   0.047 s    |
+| **SetState** with **8** components |   0.048 s    |
+|                                    |              |
+| **Has** with **1** component type  |   0.011 s    |
+| **Has** with **2** component types |   0.019 s    |
+| **Has** with **4** component types |   0.019 s    |
+| **Has** with **8** component types |   0.019 s    |
+|                                    |              |
+| **Contains** with **1** component  |   0.011 s    |
+| **Contains** with **2** components |   0.020 s    |
+| **Contains** with **4** components |   0.025 s    |
+| **Contains** with **8** components |   0.025 s    |
+|                                    |              |
 
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
 |-----------------------------------------------|:------------:|:----------------------------------:|
@@ -57,7 +64,7 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **3** comp.    |   0.033 s    |              0.047 s               |
 | **Iterate** entities unpacking **4** comp.    |   0.035 s    |              0.047 s               |
 | **Iterate** entities unpacking **5** comp.    |   0.038 s    |              0.049 s               |
-| **Iterate** entities unpacking **6** comp.    |   0.051 s    |              0.099 s               |
+| **Iterate** entities unpacking **6** comp.    |   0.040 s    |              0.099 s               |
 |                                               |              |                                    |
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |
@@ -72,12 +79,12 @@ natively with JDK Azul-17 aarch64:
 
 | 10,000,000 Entities from <br/>1 _Composition_ | Average Time | Selecting _State_<br/>Average Time |
 |-----------------------------------------------|:------------:|:----------------------------------:|
-| **Stream** entities unpacking **1** comp.     |   0.051 s    |              0.049 s               |
-| **Stream** entities unpacking **2** comp.     |   0.057 s    |              0.053 s               |
-| **Stream** entities unpacking **3** comp.     |   0.065 s    |              0.063 s               |
-| **Stream** entities unpacking **4** comp.     |   0.074 s    |              0.069 s               |
-| **Stream** entities unpacking **5** comp.     |   0.084 s    |              0.078 s               |
-| **Stream** entities unpacking **6** comp.     |   0.108 s    |              0.103 s               |
+| **Stream** entities unpacking **1** comp.     |   0.051 s    |              0.048 s               |
+| **Stream** entities unpacking **2** comp.     |   0.057 s    |              0.052 s               |
+| **Stream** entities unpacking **3** comp.     |   0.065 s    |              0.061 s               |
+| **Stream** entities unpacking **4** comp.     |   0.074 s    |              0.066 s               |
+| **Stream** entities unpacking **5** comp.     |   0.084 s    |              0.075 s               |
+| **Stream** entities unpacking **6** comp.     |   0.108 s    |              0.099 s               |
 |                                               |              |                                    |
 
 | 10,000,000 Entities from <br/>MORE _Compositions_<br/> | Average Time | Selecting _State_<br/>Average Time |

@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine;
 
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
@@ -26,6 +27,9 @@ public final class CompositionRepository implements AutoCloseable {
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
     private final IdSchema idSchema;
+    private final PreparedComposition preparedComposition;
+    private final Map<Class<?>, Composition.ByAdding1AndRemoving<?>> addingTypeModifiers = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Composition.ByRemoving> removingTypeModifiers = new ConcurrentHashMap<>();
     private final Node root;
     private final LoggingSystem.Context loggingContext;
 
@@ -56,6 +60,7 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         pool = new ChunkedPool<>(idSchema, loggingContext);
+        preparedComposition = new PreparedComposition(this);
         root = new Node();
         arrayPool = new ObjectArrayPool(loggingContext);
         root.composition = new DataComposition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
@@ -65,8 +70,19 @@ public final class CompositionRepository implements AutoCloseable {
         return idSchema;
     }
 
-    public ObjectArrayPool getArrayPool() {
-        return arrayPool;
+    public PreparedComposition getPreparedComposition() {
+        return preparedComposition;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Composition.ByAdding1AndRemoving<Object> fetchAddingTypeModifier(Class<?> compType) {
+        return (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
+                , k -> preparedComposition.byAdding1AndRemoving(compType));
+    }
+
+    public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
+        return removingTypeModifiers.computeIfAbsent(compType
+                , k -> preparedComposition.byRemoving(compType));
     }
 
     public DataComposition getOrCreate(Object[] components) {
@@ -144,11 +160,6 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         entity.getComposition().detachEntity(entity);
-        var prevComponentArray = entity.getComponents();
-//        if (prevComponentArray != null && entity.isPooledArray()) {
-//            arrayPool.push(prevComponentArray);
-//        }
-//        entity.flagPooledArray();
         newDataComposition.attachEntity(entity, true, newComponentArray);
     }
 
@@ -160,41 +171,15 @@ public final class CompositionRepository implements AutoCloseable {
 
             );
         }
-        DataComposition prevComposition = entity.getComposition();
-        Object[] prevComponents = entity.getComponents();
-        int prevComponentsLength = prevComposition.length();
-        if (prevComponentsLength == 0) {
-            DataComposition composition = getOrCreate(new Object[]{component});
-            return composition.attachEntity(prevComposition.detachEntity(entity), false, component);
-        }
-        Object[] newComponentArray = arrayPool.pop(prevComponentsLength + 1);
-        Class<?>[] prevComponentTypeArray = prevComposition.getComponentTypes();
-        int newArrayLength = prevComponentsLength + 1;
-        Class<?>[] newComponentTypeArray = new Class<?>[newArrayLength];
-        System.arraycopy(prevComponentTypeArray, 0, newComponentTypeArray, 0, prevComponentsLength);
-        Class<?> componentType = component.getClass();
-        newComponentTypeArray[prevComponentsLength] = componentType;
-        DataComposition composition = getOrCreateByType(newComponentTypeArray);
-        int addIndex = composition.fetchComponentIndex(componentType);
-        newComponentArray[addIndex] = component;
-        int offset = 0;
-        for (int i = 0; i < prevComponentsLength; i++) {
-            if (addIndex == i) {
-                offset = 1;
-            }
-            newComponentArray[i + offset] = prevComponents[i];
-        }
-        prevComposition.detachEntity(entity);
-        if (entity.isPooledArray()) {
-            arrayPool.push(prevComponents);
-        }
-        entity.flagPooledArray();
-        return composition.attachEntity(entity, true, newComponentArray);
+        var modifier = fetchAddingTypeModifier(component.getClass());
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component).getModifier();
+        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        return entity;
     }
 
-    public Object removeComponentType(IntEntity entity, Class<?> componentType) {
+    public boolean removeComponentType(IntEntity entity, Class<?> componentType) {
         if (componentType == null) {
-            return null;
+            return false;
         }
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -202,38 +187,13 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Removing [" + componentType.getSimpleName() + "] from " + entity)
             );
         }
-        DataComposition prevComposition = entity.getComposition();
-        Object[] entityComponents = entity.getComponents();
-        int prevComponentsLength = prevComposition.length();
-        if (prevComponentsLength == 0) {
-            return null;
+        var modifier = fetchRemovingTypeModifier(componentType);
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity).getModifier();
+        if(mod == null) {
+            return false;
         }
-        Object[] newComponentArray;
-        Object removed;
-        if (prevComponentsLength == 1) {
-            newComponentArray = null;
-            removed = entityComponents[0];
-        } else {
-            int newArrayLength = prevComponentsLength - 1;
-            newComponentArray = arrayPool.pop(newArrayLength);
-            int removedIndex = prevComposition.fetchComponentIndex(componentType);
-            removed = entityComponents[removedIndex];
-            int offset = 0;
-            for (int i = 0; i < newArrayLength; i++) {
-                if (removedIndex == i) {
-                    offset = 1;
-                }
-                newComponentArray[i] = entityComponents[i + offset];
-            }
-        }
-        DataComposition composition = getOrCreate(newComponentArray);
-        prevComposition.detachEntity(entity);
-        if (entity.isPooledArray()) {
-            arrayPool.push(entityComponents);
-        }
-        entity.flagPooledArray();
-        composition.attachEntity(entity, true, newComponentArray);
-        return removed;
+        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        return true;
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")

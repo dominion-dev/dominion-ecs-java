@@ -23,8 +23,6 @@ public final class EntityRepository implements Dominion {
     private final String name;
     private final LoggingSystem.Context loggingContext;
     private final CompositionRepository compositions;
-
-    private final PreparedComposition preparedComposition;
     private final int systemTimeoutSeconds;
 
     public EntityRepository(String name, int classIndexBit, int chunkBit, int chunkCountBit, int systemTimeoutSeconds,
@@ -33,7 +31,6 @@ public final class EntityRepository implements Dominion {
         this.systemTimeoutSeconds = systemTimeoutSeconds;
         this.loggingContext = loggingContext;
         compositions = new CompositionRepository(classIndexBit, chunkBit, chunkCountBit, loggingContext);
-        preparedComposition = new PreparedComposition(compositions);
     }
 
     @Override
@@ -99,13 +96,12 @@ public final class EntityRepository implements Dominion {
         if (mod == null) {
             return false;
         }
-        compositions.modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
-        return true;
+        return mod.entity().modify(compositions, mod.newDataComposition(), mod.newComponentArray());
     }
 
     @Override
     public Composition composition() {
-        return preparedComposition;
+        return compositions.getPreparedComposition();
     }
 
     @Override

@@ -20,8 +20,16 @@ public class PreparedComposition implements Composition {
     }
 
     private static void populateIndexMapping(Class<?>[] componentTypes, int[] indexMapping, DataComposition context) {
-        for (int i = 0; i < componentTypes.length; i++) {
-            indexMapping[i] = context.fetchComponentIndex(componentTypes[i]);
+        if (context.isMultiComponent()) {
+            for (int i = 0; i < componentTypes.length; i++) {
+                indexMapping[i] = context.fetchComponentIndex(componentTypes[i]);
+            }
+        } else {
+            Class<?>[] newComponentTypes = context.getComponentTypes();
+            Class<?> componentType = newComponentTypes.length > 0 ? newComponentTypes[0] : null;
+            for (int i = 0; i < componentTypes.length; i++) {
+                indexMapping[i] = componentTypes[i].equals(componentType) ? 0 : -1;
+            }
         }
     }
 
@@ -197,14 +205,10 @@ public class PreparedComposition implements Composition {
         }
 
         private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int[] indexMapping) {
-            if (indexMapping == null) {
-                componentArray[0] = otherComponentArray[0];
-            } else {
-                for (int i = 0; i < otherComponentArray.length; i++) {
-                    int index = indexMapping[i];
-                    if (index < 0) continue;
-                    componentArray[index] = otherComponentArray[i];
-                }
+            for (int i = 0; i < otherComponentArray.length; i++) {
+                int index = indexMapping[i];
+                if (index < 0) continue;
+                componentArray[index] = otherComponentArray[i];
             }
         }
 
@@ -224,13 +228,10 @@ public class PreparedComposition implements Composition {
                 }
                 Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
                 DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
-                int[] indexMapping = null;
-                if (newComposition.isMultiComponent()) {
-                    indexMapping = new int[prevComponentTypes.length];
-                    populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
-                }
+                int[] indexMapping = new int[prevComponentTypes.length];
+                populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
                 int[] addedIndexMapping = null;
-                if (newComposition.isMultiComponent() && addedComponentTypes != null) {
+                if (addedComponentTypes != null) {
                     addedIndexMapping = new int[addedComponentTypes.length];
                     populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
                 }

@@ -109,12 +109,12 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     @Override
-    public Object remove(Object component) {
+    public boolean remove(Object component) {
         createLock();
         long stamp = lock.writeLock();
         try {
-            if (isDetachedId() || !contains(component)) {
-                return null;
+            if (isDetachedId()) {
+                return false;
             }
             return data.composition.getRepository().removeComponentType(this, component.getClass());
         } finally {
@@ -122,13 +122,27 @@ public final class IntEntity implements Entity, Identifiable {
         }
     }
 
-    @Override
-    public Object removeType(Class<?> componentType) {
+    public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
         createLock();
         long stamp = lock.writeLock();
         try {
-            if (isDetachedId() || !has(componentType)) {
-                return null;
+            if (isDetachedId()) {
+                return false;
+            }
+            compositions.modifyComponents(this, newDataComposition, newComponentArray);
+            return true;
+        } finally {
+            lock.unlockWrite(stamp);
+        }
+    }
+
+    @Override
+    public boolean removeType(Class<?> componentType) {
+        createLock();
+        long stamp = lock.writeLock();
+        try {
+            if (isDetachedId()) {
+                return false;
             }
             return data.composition.getRepository().removeComponentType(this, componentType);
         } finally {

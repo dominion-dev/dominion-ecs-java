@@ -46,8 +46,8 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 |---------------------------------------------------------|---------------------------------------------------------------------------------|
 | String **getName**()                                    | Returns the entity name.                                                        |
 | [Entity](#class-entity) **add**(Object component)       | Adds one component that is a POJO  with no behavior.                            |
-| Object **remove**(Object component)                     | Removes a component if present.                                                 |
-| Object **removeType**(Class\<?> componentType)          | Removes a component if there is a component of the specified type.              |
+| boolean **remove**(Object component)                    | Removes a component if present.                                                 |
+| boolean **removeType**(Class\<?> componentType)         | Removes a component if there is a component of the specified type.              |
 | boolean **has**(Class\<?> componentType)                | Checks if there is a component of the specified type.                           |
 | boolean **contains**(Object component)                  | Checks if the specified component is present.                                   |
 | <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value. |
