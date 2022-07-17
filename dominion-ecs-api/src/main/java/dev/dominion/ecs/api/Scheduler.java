@@ -57,6 +57,8 @@ package dev.dominion.ecs.api;
  *             |           |           |
  *             *A1,A2     *A1,A2      *A1,A2
  * </pre>
+ *
+ * @author Enrico Stara
  */
 public interface Scheduler {
 

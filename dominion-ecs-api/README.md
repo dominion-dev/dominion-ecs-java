@@ -10,12 +10,13 @@ putting all API references into this README to provide seamless navigation withi
 
 ## Package dev.dominion.ecs.api
 
-| Class                         | Description                                                                                                          |
-|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [Dominion](#class-dominion)   | A **Dominion** is an independent container for all ECS data.                                                         |
-| [Entity](#class-entity)       | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
-| [Results](#class-results)     | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
-| [Scheduler](#class-scheduler) | A **Scheduler** provides methods to submit/suspend/resume systems that are executed on every tick.                   |
+| Class                             | Description                                                                                                          |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [Dominion](#class-dominion)       | A **Dominion** is an independent container for all ECS data.                                                         |
+| [Composition](#class-composition) | A **Composition** is the aggregation of components of which an entity can be made of.                                |
+| [Entity](#class-entity)           | An **Entity** identifies a single item and is represented as a unique integer value within a Dominion.               |
+| [Results](#class-results)         | A **Results** is a container of all entities that match a set of components and, optionally, have a specified state. |
+| [Scheduler](#class-scheduler)     | A **Scheduler** provides methods to submit/suspend/resume systems that are executed on every tick.                   |
 
 ## Class Dominion
 
@@ -35,6 +36,36 @@ items required by the user application.
 | boolean **deleteEntity**([Entity](#class-entity) entity);                                                      | Delete the  entity by freeing the id and canceling the reference to all components, if any        |
 | [Results](#class-results)<With1> **findEntitiesWith**(Class\<T> type);                                         | Finds all entities with a component of the specified type.                                        |
 | [Results](#class-results)<WithN> **findEntitiesWith**(Class\<T1> type1,..)                                     | Finds all entities with components of the specified types.                                        |
+
+## Class Composition
+
+A Composition is the aggregation of components of which an entity can be made of.
+Provides methods to prepare for entity creation with a certain component type composition or to prepare for entity
+change by specifying which component type is to be added and / or removed.
+
+<pre>
+    Dominion dominion = Dominion.create();
+    Composition composition = dominion.composition();
+
+    // prepared entity creations
+    var compositionOf1 = composition.of(Comp.class);
+    Entity entity1 = dominion.createPreparedEntity(compositionOf1.withValue(new Comp(0)));
+    Entity entity2 = dominion.createPreparedEntity(compositionOf1.withValue(new Comp(1)));
+
+    // prepared entity changes
+    var modifyAdding1 = composition.byAdding1AndRemoving(Comp2.class);
+    dominion.modifyEntity(modifyAdding1.withValue(entity1, new Comp2()));
+    dominion.modifyEntity(modifyAdding1.withValue(entity2, new Comp2()));
+</pre>
+
+| Method                                                                                                                                          | Description                                                                                               |
+|-------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Of1\<T> **of**(Class\<T> type);                                                                                                                 | Provides a prepared composition of a single component type.                                               |
+| OfN\<T1,..,TN> **ofN**(Class\<T1> type1, .., Class\<TN> typeN);                                                                                 | Provides a prepared composition of N component types.                                                     |
+| ByRemoving **byRemoving**(Class<?>... removedCompTypes);                                                                                        | Provides a prepared modifier to remove one or more component types.                                       |
+| ByAdding1AndRemoving\<T> **byAdding1AndRemoving**(Class<T> addedCompType, Class<?>... removedCompTypes);                                        | Provides a prepared modifier to add one component type and optionally remove one or more component types. |
+| ByAddingNAndRemoving\<T1,..,TN> **byAddingNAndRemoving**(Class<T1> addedCompType1, .., Class<TN> addedCompTypeN, Class<?>... removedCompTypes); | Provides a prepared modifier to add N component types and optionally remove one or more component types.  |
+
 
 ## Class Entity
 
