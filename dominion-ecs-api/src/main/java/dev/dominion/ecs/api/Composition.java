@@ -30,7 +30,7 @@ package dev.dominion.ecs.api;
 public interface Composition {
 
     /**
-     * Provides a prepared composition of a single component type
+     * Provides a prepared composition of a single component type.
      *
      * @param compType the component class
      * @param <T>      the component type
@@ -39,7 +39,7 @@ public interface Composition {
     <T> Of1<T> of(Class<T> compType);
 
     /**
-     * Provides a prepared composition of two component types
+     * Provides a prepared composition of two component types.
      *
      * @param compType1 the 1st component class
      * @param compType2 the 2nd component class
@@ -62,7 +62,7 @@ public interface Composition {
     <T1, T2, T3, T4, T5, T6, T7, T8> Of8<T1, T2, T3, T4, T5, T6, T7, T8> of(Class<T1> compType1, Class<T2> compType2, Class<T3> compType3, Class<T4> compType4, Class<T5> compType5, Class<T6> compType6, Class<T7> compType7, Class<T8> compType8);
 
     /**
-     * Provides a prepared modifier to remove one or more component types
+     * Provides a prepared modifier to remove one or more component types.
      *
      * @param removedCompTypes the component class list to be removed
      * @return the prepared modifier
@@ -70,7 +70,7 @@ public interface Composition {
     ByRemoving byRemoving(Class<?>... removedCompTypes);
 
     /**
-     * Provides a prepared modifier to add one component type and optionally remove one or more component types
+     * Provides a prepared modifier to add one component type and optionally remove one or more component types.
      *
      * @param addedCompType    the component class to be added
      * @param removedCompTypes the component type list to be removed (might be empty)
@@ -80,7 +80,7 @@ public interface Composition {
     <T> ByAdding1AndRemoving<T> byAdding1AndRemoving(Class<T> addedCompType, Class<?>... removedCompTypes);
 
     /**
-     * Provides a prepared modifier to add two component types and optionally remove one or more component types
+     * Provides a prepared modifier to add two component types and optionally remove one or more component types.
      *
      * @param addedCompType1   the 1st component class to be added
      * @param addedCompType2   the 2nd component class to be added
@@ -104,7 +104,7 @@ public interface Composition {
     <T1, T2, T3, T4, T5, T6, T7, T8> ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> byAdding8AndRemoving(Class<T1> addedCompType1, Class<T2> addedCompType2, Class<T3> addedCompType3, Class<T4> addedCompType4, Class<T5> addedCompType5, Class<T6> addedCompType6, Class<T7> addedCompType7, Class<T8> addedCompType8, Class<?>... removedCompTypes);
 
     /**
-     * The prepared composition abstraction
+     * The prepared composition abstraction.
      */
     sealed interface OfTypes permits Of1, Of2, Of3, Of4, Of5, Of6, Of7, Of8 {
         Object[] getComponents();
@@ -113,7 +113,7 @@ public interface Composition {
     }
 
     /**
-     * The prepared composition of a single component type
+     * The prepared composition of a single component type.
      *
      * @param <T> the component type
      */
@@ -122,7 +122,7 @@ public interface Composition {
     }
 
     /**
-     * The prepared composition of two component types
+     * The prepared composition of two component types.
      *
      * @param <T1> the 1st component type
      * @param <T2> the 2nd component type
@@ -156,21 +156,21 @@ public interface Composition {
     }
 
     /**
-     * The prepared modifier abstraction
+     * The prepared modifier abstraction.
      */
     sealed interface Modifier permits ByRemoving, ByAdding1AndRemoving, ByAdding2AndRemoving, ByAdding3AndRemoving, ByAdding4AndRemoving, ByAdding5AndRemoving, ByAdding6AndRemoving, ByAdding7AndRemoving, ByAdding8AndRemoving {
         Object getModifier();
     }
 
     /**
-     * The prepared modifier to remove one or more component types
+     * The prepared modifier to remove one or more component types.
      */
     non-sealed interface ByRemoving extends Modifier {
         Modifier withValue(Entity entity);
     }
 
     /**
-     * The prepared modifier to add one component type and optionally remove one or more component types
+     * The prepared modifier to add one component type and optionally remove one or more component types.
      *
      * @param <T> the component type to be added
      */
@@ -179,7 +179,7 @@ public interface Composition {
     }
 
     /**
-     * The prepared modifier to add two component types and optionally remove one or more component types
+     * The prepared modifier to add two component types and optionally remove one or more component types.
      *
      * @param <T1> the 1st component type to be added
      * @param <T2> the 2nd component type to be added
