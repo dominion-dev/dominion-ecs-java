@@ -17,7 +17,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 
-public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
+public class IteratingComponentBenchmark extends OthersBenchmark {
 
     World world;
     Archetype archetype;
@@ -29,7 +29,7 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
 
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
-                new String[]{ArtemisIteratingComponentBenchmark.class.getName()}
+                new String[]{IteratingComponentBenchmark.class.getName()}
         );
     }
 
@@ -38,11 +38,11 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         world.process();
     }
 
-    public static class IterateUnpacking01 extends ArtemisIteratingComponentBenchmark {
+    public static class IterateUnpacking01 extends IteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking01.class)}
+                    new String[]{DominionBenchmark.fetchBenchmarkName(IterateUnpacking01.class)}
             );
         }
 
@@ -63,11 +63,11 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class IterateUnpacking02 extends ArtemisIteratingComponentBenchmark {
+    public static class IterateUnpacking02 extends IteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking02.class)}
+                    new String[]{DominionBenchmark.fetchBenchmarkName(IterateUnpacking02.class)}
             );
         }
 
@@ -89,11 +89,11 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
     }
 
 
-    public static class IterateUnpacking04 extends ArtemisIteratingComponentBenchmark {
+    public static class IterateUnpacking04 extends IteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking04.class)}
+                    new String[]{DominionBenchmark.fetchBenchmarkName(IterateUnpacking04.class)}
             );
         }
 
@@ -115,11 +115,11 @@ public class ArtemisIteratingComponentBenchmark extends DominionBenchmark {
     }
 
 
-    public static class IterateUnpacking06 extends ArtemisIteratingComponentBenchmark {
+    public static class IterateUnpacking06 extends IteratingComponentBenchmark {
 
         public static void main(String[] args) throws IOException {
             org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(IterateUnpacking06.class)}
+                    new String[]{DominionBenchmark.fetchBenchmarkName(IterateUnpacking06.class)}
             );
         }
 
