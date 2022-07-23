@@ -36,10 +36,8 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         Composition.Of2<C1, C2> composition2;
         Composition.Of4<C1, C2, C3, C4> composition4;
         Composition.Of8<C1, C2, C3, C4, C5, C6, C7, C8> composition8;
-        Entity[] dEntities1;
-        Entity[] dEntities2;
-        Entity[] dEntities4;
-        Entity[] dEntities8;
+        Entity[] entities;
+
         @Param(value = {"1000000"})
         int size;
 
@@ -51,53 +49,44 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
             composition2 = composition.of(C1.class, C2.class);
             composition4 = composition.of(C1.class, C2.class, C3.class, C4.class);
             composition8 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class, C7.class, C8.class);
-            dEntities1 = new Entity[size];
-            dEntities2 = new Entity[size];
-            dEntities4 = new Entity[size];
-            dEntities8 = new Entity[size];
+            entities = new Entity[size];
             for (int i = 0; i < size; i++) {
-                dEntities1[i] = entityRepository.createEntity();
-                dEntities2[i] = entityRepository.createEntity();
-                dEntities4[i] = entityRepository.createEntity();
-                dEntities8[i] = entityRepository.createEntity();
+                entities[i] = entityRepository.createEntity();
             }
         }
 
         @Setup(Level.Invocation)
         public void setupInvocation() {
             for (int i = 0; i < size; i++) {
-                entityRepository.deleteEntity(dEntities1[i]);
-                entityRepository.deleteEntity(dEntities2[i]);
-                entityRepository.deleteEntity(dEntities4[i]);
-                entityRepository.deleteEntity(dEntities8[i]);
+                entityRepository.deleteEntity(entities[i]);
             }
         }
 
         @Benchmark
         public void createEntityWith01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(dEntities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1())));
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1())));
             }
         }
 
         @Benchmark
         public void createEntityWith02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(dEntities2[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2())));
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2())));
             }
         }
 
         @Benchmark
         public void createEntityWith04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(dEntities4[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4())));
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4())));
             }
         }
 
         @Benchmark
         public void createEntityWith08(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(dEntities8[i] = entityRepository.createPreparedEntity(composition8.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6(), new C7(), new C8())));
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(composition8.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6(), new C7(), new C8())));
             }
         }
     }
@@ -108,10 +97,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         Archetype archetype2;
         Archetype archetype4;
         Archetype archetype8;
-        int[] aEntities1;
-        int[] aEntities2;
-        int[] aEntities4;
-        int[] aEntities8;
+        int[] entities;
         @Param(value = {"1000000"})
         int size;
 
@@ -123,15 +109,9 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
             archetype2 = new ArchetypeBuilder().add(C1.class).add(C2.class).build(world);
             archetype4 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).build(world);
             archetype8 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).build(world);
-            aEntities1 = new int[size];
-            aEntities2 = new int[size];
-            aEntities4 = new int[size];
-            aEntities8 = new int[size];
+            entities = new int[size];
             for (int i = 0; i < size; i++) {
-                aEntities1[i] = world.create(archetype1);
-                aEntities2[i] = world.create(archetype2);
-                aEntities4[i] = world.create(archetype4);
-                aEntities8[i] = world.create(archetype8);
+                entities[i] = world.create(archetype1);
             }
             world.process();
         }
@@ -139,10 +119,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         @Setup(Level.Invocation)
         public void setupInvocation() {
             for (int i = 0; i < size; i++) {
-                world.delete(aEntities1[i]);
-                world.delete(aEntities2[i]);
-                world.delete(aEntities4[i]);
-                world.delete(aEntities8[i]);
+                world.delete(entities[i]);
             }
             world.process();
         }
@@ -150,7 +127,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         @Benchmark
         public void createEntityWith01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(aEntities1[i] = world.create(archetype1));
+                bh.consume(entities[i] = world.create(archetype1));
             }
             world.process();
         }
@@ -158,7 +135,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         @Benchmark
         public void createEntityWith02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(aEntities2[i] = world.create(archetype2));
+                bh.consume(entities[i] = world.create(archetype2));
             }
             world.process();
         }
@@ -166,7 +143,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         @Benchmark
         public void createEntityWith04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(aEntities4[i] = world.create(archetype4));
+                bh.consume(entities[i] = world.create(archetype4));
             }
             world.process();
         }
@@ -174,7 +151,7 @@ public class CreatingEntityBenchmark extends OthersBenchmark {
         @Benchmark
         public void createEntityWith08(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(aEntities8[i] = world.create(archetype8));
+                bh.consume(entities[i] = world.create(archetype8));
             }
             world.process();
         }
