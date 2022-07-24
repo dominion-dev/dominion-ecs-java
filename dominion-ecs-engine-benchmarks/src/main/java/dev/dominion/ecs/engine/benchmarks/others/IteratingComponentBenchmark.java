@@ -42,9 +42,9 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                C1 comp = new C1();
+                Object[] comps = {new C1()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comp);
+                    entityRepository.createEntity(comps);
                 }
             }
 
@@ -77,7 +77,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking03 extends Dominion {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
                 Object[] comps = {new C1(), new C2(), new C3()};
@@ -96,7 +96,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking04 extends Dominion {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
                 Object[] comps = {new C1(), new C2(), new C3(), new C4()};
@@ -115,7 +115,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking05 extends Dominion {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
                 Object[] comps = {new C1(), new C2(), new C3(), new C4(), new C5()};
@@ -134,7 +134,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking06 extends Dominion {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
                 Object[] comps = {new C1(), new C2(), new C3(), new C4(), new C5(), new C6()};
@@ -163,7 +163,7 @@ public class IteratingComponentBenchmark {
         int size;
 
         public static class IterateUnpacking01 extends Artemis {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup(Blackhole bh) {
                 var system = new SystemUnpacking01();
                 system.blackhole = bh;
@@ -186,7 +186,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking02 extends Artemis {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup(Blackhole bh) {
                 var system = new SystemUnpacking02();
                 system.blackhole = bh;
@@ -209,7 +209,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking03 extends Artemis {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup(Blackhole bh) {
                 var system = new SystemUnpacking03();
                 system.blackhole = bh;
@@ -232,7 +232,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking04 extends Artemis {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup(Blackhole bh) {
                 var system = new SystemUnpacking04();
                 system.blackhole = bh;
@@ -255,7 +255,7 @@ public class IteratingComponentBenchmark {
         }
 
         public static class IterateUnpacking05 extends Artemis {
-            @Setup(Level.Iteration)
+            @Setup(Level.Trial)
             public void setup(Blackhole bh) {
                 var system = new SystemUnpacking05();
                 system.blackhole = bh;
