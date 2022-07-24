@@ -6,7 +6,6 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
-import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
@@ -15,8 +14,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 
-
-public class ArtemisCreatingEntityBenchmark extends DominionBenchmark {
+public class RemovingComponentBenchmark extends OthersBenchmark {
 
     World world;
     Archetype archetype1;
@@ -24,16 +22,18 @@ public class ArtemisCreatingEntityBenchmark extends DominionBenchmark {
     Archetype archetype4;
     Archetype archetype8;
 
+
     int[] entities1;
     int[] entities2;
     int[] entities4;
     int[] entities8;
+
     @Param(value = {"1000000"})
     int size;
 
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
-                new String[]{ArtemisCreatingEntityBenchmark.class.getName()}
+                new String[]{RemovingComponentBenchmark.class.getName()}
         );
     }
 
@@ -67,36 +67,43 @@ public class ArtemisCreatingEntityBenchmark extends DominionBenchmark {
             world.delete(entities8[i]);
         }
         world.process();
-    }
-
-    @Benchmark
-    public void createEntityWith01(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(entities1[i] = world.create(archetype1));
+            entities1[i] = world.create(archetype1);
+            entities2[i] = world.create(archetype2);
+            entities4[i] = world.create(archetype4);
+            entities8[i] = world.create(archetype8);
         }
         world.process();
     }
 
     @Benchmark
-    public void createEntityWith02(Blackhole bh) {
+    public void removeComponentFrom01(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(entities2[i] = world.create(archetype2));
+            bh.consume(world.edit(entities1[i]).remove(C1.class));
         }
         world.process();
     }
 
     @Benchmark
-    public void createEntityWith04(Blackhole bh) {
+    public void removeComponentFrom02(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(entities4[i] = world.create(archetype4));
+            bh.consume(world.edit(entities2[i]).remove(C1.class));
         }
         world.process();
     }
 
     @Benchmark
-    public void createEntityWith08(Blackhole bh) {
+    public void removeComponentFrom04(Blackhole bh) {
         for (int i = 0; i < size; i++) {
-            bh.consume(entities8[i] = world.create(archetype8));
+            bh.consume(world.edit(entities4[i]).remove(C1.class));
+        }
+        world.process();
+    }
+
+    @Benchmark
+    public void removeComponentFrom08(Blackhole bh) {
+        for (int i = 0; i < size; i++) {
+            bh.consume(world.edit(entities8[i]).remove(C1.class));
         }
         world.process();
     }
