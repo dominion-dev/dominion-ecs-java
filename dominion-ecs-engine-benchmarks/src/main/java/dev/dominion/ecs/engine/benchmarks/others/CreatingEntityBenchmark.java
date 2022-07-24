@@ -18,7 +18,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 
-public class CreatingEntityBenchmark extends OthersBenchmark {
+public class CreatingEntityBenchmark {
 
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
