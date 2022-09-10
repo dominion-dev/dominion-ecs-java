@@ -8,7 +8,6 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
@@ -26,7 +25,6 @@ public final class DataComposition {
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ChunkedPool.Tenant<IntEntity> tenant;
-    private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
@@ -35,11 +33,10 @@ public final class DataComposition {
     private final LoggingSystem.Context loggingContext;
 
     public DataComposition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
-            , ObjectArrayPool arrayPool, ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
+            , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
         this.tenant = tenant;
-        this.arrayPool = arrayPool;
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
@@ -102,53 +99,50 @@ public final class DataComposition {
 
     public IntEntity createEntity(String name, boolean prepared, Object... components) {
         int id = tenant.nextId();
-        return tenant.register(id, new IntEntity(id, this, name,
-                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
+        return tenant.register(id, new IntEntity(id, this, name),
+                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
-    public boolean deleteEntity(IntEntity entity) {
+    public void detachEntityAndState(IntEntity entity) {
         detachEntity(entity);
-        Object[] components = entity.getComponents();
-        if (components != null && entity.isPooledArray()) {
-            arrayPool.push(components);
-        }
         if (entity.getPrev() != null || entity.getNext() != null) {
             detachEntityState(entity);
         }
-        entity.setData(null);
-        return true;
     }
 
-    public IntEntity attachEntity(IntEntity entity, boolean prepared, Object... components) {
-        entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
-            case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData()));
-            case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData()));
-            default ->
-                    entity.setData(new IntEntity.Data(this, prepared ? components : sortComponentsInPlaceByIndex(components), entity.getData()));
+    public void attachEntity(IntEntity entity, boolean prepared, Object... components) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Start Attaching " + entity + " to " + this + " and  " + tenant)
+            );
+        }
+        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
+            case 0 -> null;
+            case 1 -> components;
+            default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
         });
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attaching " + entity)
+                            , "Attached " + entity)
             );
         }
-        return entity;
     }
 
-    public void reattachEntity(IntEntity entity) {
-        tenant.register(entity.setId(tenant.nextId()), entity);
+    public void reEnableEntity(IntEntity entity) {
+        tenant.register(entity.getId(), entity, null);
     }
 
-    public IntEntity detachEntity(IntEntity entity) {
+    public void detachEntity(IntEntity entity) {
         tenant.freeId(entity.getId());
         entity.flagDetachedId();
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Detaching " + entity)
+                            , "Detached: " + entity)
             );
         }
-        return entity;
     }
 
     public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
@@ -166,29 +160,37 @@ public final class DataComposition {
     }
 
     private boolean detachEntityState(IntEntity entity) {
-        IndexKey key = entity.getData().stateRoot();
+        IndexKey key = entity.getStateRoot();
         // if entity is root
         if (key != null) {
-            // if alone
+            // if alone: root
             if (entity.getPrev() == null) {
                 if (states.remove(key) != null) {
-                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
+                    entity.setStateRoot(null);
+//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
                 }
-            } else {
+            } else
+            // root -> prev
+            {
                 IntEntity prev = (IntEntity) entity.getPrev();
                 if (states.replace(key, entity, prev)) {
-                    prev.setNext(null);
-                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
+                    entity.setStateRoot(null);
                     entity.setPrev(null);
-                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
+                    prev.setNext(null);
+                    prev.setStateRoot(key);
+//                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
+//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
                 }
             }
-        } else if (entity.getNext() != null) {
+        } else
+        // next -> entity -> ?prev
+        {
             long stamp = stateLock.writeLock();
             try {
                 IntEntity prev, next;
+                // recheck after lock
                 if ((next = (IntEntity) entity.getNext()) != null) {
                     if ((prev = (IntEntity) entity.getPrev()) != null) {
                         prev.setNext(next);
@@ -211,14 +213,17 @@ public final class DataComposition {
         IndexKey indexKey = calcIndexKey(state, classIndex);
         IntEntity.Data entityData = entity.getData();
         IntEntity prev = states.computeIfAbsent(indexKey
-                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k)));
+                , entity::setStateRoot);
+//                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset())));
         if (prev != entity) {
             states.computeIfPresent(indexKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
-                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k));
+                entity.setStateRoot(k);
+//                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset()));
                 oldEntity.setNext(entity);
-                IntEntity.Data oldEntityData = oldEntity.getData();
-                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null));
+                oldEntity.setStateRoot(null);
+//                IntEntity.Data oldEntityData = oldEntity.getData();
+//                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null, oldEntityData.offset()));
                 return entity;
             });
         }
@@ -271,7 +276,7 @@ public final class DataComposition {
     }
 
     public <T> Iterator<Results.With1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
-        int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
+        int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
         return new IteratorWith1<>(idx, iterator, this);
     }
 
@@ -347,15 +352,21 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With1<T> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
-            return new Results.With1<>((T) components[idx], intEntity);
+            int offset = data.offset();
+            return new Results.With1<>(
+                    (T) components[offset + idx],
+                    intEntity);
         }
     }
 
@@ -367,15 +378,22 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With2<T1, T2> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
-            return new Results.With2<>((T1) components[idx1], (T2) components[idx2], intEntity);
+            int offset = data.offset();
+            return new Results.With2<>(
+                    (T1) components[offset + idx1],
+                    (T2) components[offset + idx2],
+                    intEntity);
         }
     }
 
@@ -387,18 +405,22 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With3<T1, T2, T3> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
+            int offset = data.offset();
             return new Results.With3<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
+                    (T1) components[offset + idx1],
+                    (T2) components[offset + idx2],
+                    (T3) components[offset + idx3],
                     intEntity);
         }
     }
@@ -411,19 +433,23 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With4<T1, T2, T3, T4> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
+            int offset = data.offset();
             return new Results.With4<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
+                    (T1) components[offset + idx1],
+                    (T2) components[offset + idx2],
+                    (T3) components[offset + idx3],
+                    (T4) components[offset + idx4],
                     intEntity);
         }
     }
@@ -436,20 +462,24 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With5<T1, T2, T3, T4, T5> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
+            int offset = data.offset();
             return new Results.With5<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
+                    (T1) components[offset + idx1],
+                    (T2) components[offset + idx2],
+                    (T3) components[offset + idx3],
+                    (T4) components[offset + idx4],
+                    (T5) components[offset + idx5],
                     intEntity);
         }
     }
@@ -462,21 +492,25 @@ public final class DataComposition {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
         @Override
         public Results.With6<T1, T2, T3, T4, T5, T6> next() {
             IntEntity intEntity;
             IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
+            while (
+                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
+                            && iterator.hasNext()
+            ) {
             }
             Object[] components = data.components();
+            int offset = data.offset();
             return new Results.With6<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
-                    (T6) components[idx6],
+                    (T1) components[offset + idx1],
+                    (T2) components[offset + idx2],
+                    (T3) components[offset + idx3],
+                    (T4) components[offset + idx4],
+                    (T5) components[offset + idx5],
+                    (T6) components[offset + idx6],
                     intEntity);
         }
     }

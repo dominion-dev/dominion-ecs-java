@@ -158,14 +158,13 @@ public interface Composition {
     /**
      * The prepared modifier abstraction.
      */
-    sealed interface Modifier permits ByRemoving, ByAdding1AndRemoving, ByAdding2AndRemoving, ByAdding3AndRemoving, ByAdding4AndRemoving, ByAdding5AndRemoving, ByAdding6AndRemoving, ByAdding7AndRemoving, ByAdding8AndRemoving {
-        Object getModifier();
+    interface Modifier {
     }
 
     /**
      * The prepared modifier to remove one or more component types.
      */
-    non-sealed interface ByRemoving extends Modifier {
+    interface ByRemoving extends Modifier {
         Modifier withValue(Entity entity);
     }
 
@@ -174,7 +173,7 @@ public interface Composition {
      *
      * @param <T> the component type to be added
      */
-    non-sealed interface ByAdding1AndRemoving<T> extends Modifier {
+    interface ByAdding1AndRemoving<T> extends Modifier {
         Modifier withValue(Entity entity, T comp);
     }
 
@@ -184,31 +183,31 @@ public interface Composition {
      * @param <T1> the 1st component type to be added
      * @param <T2> the 2nd component type to be added
      */
-    non-sealed interface ByAdding2AndRemoving<T1, T2> extends Modifier {
+    interface ByAdding2AndRemoving<T1, T2> extends Modifier {
         Modifier withValue(Entity entity, T1 comp1, T2 comp2);
     }
 
-    non-sealed interface ByAdding3AndRemoving<T1, T2, T3> extends Modifier {
+    interface ByAdding3AndRemoving<T1, T2, T3> extends Modifier {
         Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3);
     }
 
-    non-sealed interface ByAdding4AndRemoving<T1, T2, T3, T4> extends Modifier {
+    interface ByAdding4AndRemoving<T1, T2, T3, T4> extends Modifier {
         Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4);
     }
 
-    non-sealed interface ByAdding5AndRemoving<T1, T2, T3, T4, T5> extends Modifier {
+    interface ByAdding5AndRemoving<T1, T2, T3, T4, T5> extends Modifier {
         Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5);
     }
 
-    non-sealed interface ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> extends Modifier {
+    interface ByAdding6AndRemoving<T1, T2, T3, T4, T5, T6> extends Modifier {
         Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6);
     }
 
-    non-sealed interface ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> extends Modifier {
-        ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7);
+    interface ByAdding7AndRemoving<T1, T2, T3, T4, T5, T6, T7> extends Modifier {
+        Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7);
     }
 
-    non-sealed interface ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> extends Modifier {
-        ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8);
+    interface ByAdding8AndRemoving<T1, T2, T3, T4, T5, T6, T7, T8> extends Modifier {
+        Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8);
     }
 }
