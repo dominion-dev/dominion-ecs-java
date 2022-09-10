@@ -21,7 +21,14 @@ public class IteratingComponentBenchmark {
         org.openjdk.jmh.Main.main(
                 new String[]{
                         DominionBenchmark.fetchBenchmarkName(Dominion.class),
-                        DominionBenchmark.fetchBenchmarkName(Artemis.class)
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking01.class),
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking02.class),
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking03.class),
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking04.class),
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking05.class),
+//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking06.class),
+//                        DominionBenchmark.fetchBenchmarkName(Artemis.class)
+//                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking06.class),
                 }
         );
     }
@@ -42,9 +49,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1());
                 }
             }
 
@@ -61,9 +67,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1(), new C2()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1(), new C2());
                 }
             }
 
@@ -80,9 +85,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1(), new C2(), new C3()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1(), new C2(), new C3());
                 }
             }
 
@@ -99,9 +103,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1(), new C2(), new C3(), new C4()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1(), new C2(), new C3(), new C4());
                 }
             }
 
@@ -118,9 +121,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1(), new C2(), new C3(), new C4(), new C5()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5());
                 }
             }
 
@@ -128,7 +130,7 @@ public class IteratingComponentBenchmark {
             public void iterate(Blackhole bh) {
                 var iterator = entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator();
                 while (iterator.hasNext()) {
-                    bh.consume(iterator.next().comp5());
+                    bh.consume(iterator.next().comp4());
                 }
             }
         }
@@ -137,9 +139,8 @@ public class IteratingComponentBenchmark {
             @Setup(Level.Trial)
             public void setup() {
                 entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-                Object[] comps = {new C1(), new C2(), new C3(), new C4(), new C5(), new C6()};
                 for (int i = 0; i < size; i++) {
-                    entityRepository.createEntity(comps);
+                    entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5(), new C6());
                 }
             }
 
