@@ -72,7 +72,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     public Tenant<T> newTenant(int dataLength) {
-        Tenant<T> newTenant = new Tenant<>(this,/* chunks, chunkIndex,*/ idSchema, dataLength, loggingContext);
+        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
