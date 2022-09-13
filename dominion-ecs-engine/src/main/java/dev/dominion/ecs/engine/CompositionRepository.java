@@ -9,7 +9,6 @@ import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.IndexKey;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    private final ObjectArrayPool arrayPool;
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
@@ -62,8 +60,7 @@ public final class CompositionRepository implements AutoCloseable {
         pool = new ChunkedPool<>(idSchema, loggingContext);
         preparedComposition = new PreparedComposition(this);
         root = new Node();
-        arrayPool = new ObjectArrayPool(loggingContext);
-        root.composition = new DataComposition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
+        root.composition = new DataComposition(this, pool.newTenant(), classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
@@ -159,7 +156,7 @@ public final class CompositionRepository implements AutoCloseable {
 
             );
         }
-        entity.getComposition().detachEntity(entity);
+        entity.getComposition().detachEntityAndState(entity);
         newDataComposition.attachEntity(entity, true, newComponentArray);
     }
 
@@ -172,7 +169,7 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         var modifier = fetchAddingTypeModifier(component.getClass());
-        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component).getModifier();
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component);
         modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
         return entity;
     }
@@ -188,8 +185,8 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         var modifier = fetchRemovingTypeModifier(componentType);
-        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity).getModifier();
-        if(mod == null) {
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity);
+        if (mod == null) {
             return false;
         }
         modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
@@ -349,8 +346,8 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant()
-                            , arrayPool, classIndex, idSchema, loggingContext, componentTypes);
+                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant(componentTypes.length)
+                            , classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
                 return value;

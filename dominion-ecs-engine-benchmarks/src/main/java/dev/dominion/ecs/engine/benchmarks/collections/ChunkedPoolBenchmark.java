@@ -6,10 +6,10 @@
 package dev.dominion.ecs.engine.benchmarks.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
+import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
-import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -43,6 +43,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
@@ -76,6 +77,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
@@ -115,6 +117,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
@@ -153,11 +156,12 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setupInvocation() {
             tenant = new ChunkedPool<Id>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
-                tenant.register(tenant.nextId(), new Id(i, null, null));
+                tenant.register(tenant.nextId(), new Id(i, null, null), null);
             }
         }
 
@@ -203,6 +207,20 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             @Override
             public Identifiable setNext(Identifiable next) {
                 return next;
+            }
+
+            @Override
+            public void setArray(Object[] array, int offset) {
+            }
+
+            @Override
+            public int getOffset() {
+                return 0;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
             }
         }
     }

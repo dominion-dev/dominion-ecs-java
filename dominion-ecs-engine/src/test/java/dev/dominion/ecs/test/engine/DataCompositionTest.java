@@ -26,7 +26,7 @@ class DataCompositionTest {
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
             ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
             DataComposition composition =
-                    new DataComposition(null, tenant, null, null, ID_SCHEMA, LoggingSystem.Context.TEST);
+                    new DataComposition(null, tenant, null, ID_SCHEMA, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity(null, false);
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
@@ -47,7 +47,7 @@ class DataCompositionTest {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        DataComposition composition = new DataComposition(null, null, null, classIndex, null
+        DataComposition composition = new DataComposition(null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
@@ -78,8 +78,8 @@ class DataCompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
-            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
+            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant(1);
+            DataComposition composition = new DataComposition(null, tenant, classIndex, ID_SCHEMA
                     , LoggingSystem.Context.TEST
                     , C1.class);
             for (int i = 0; i < 1_000_000; i++) {
@@ -100,8 +100,8 @@ class DataCompositionTest {
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
-            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
+            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant(2);
+            DataComposition composition = new DataComposition(null, tenant, classIndex, ID_SCHEMA
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
@@ -125,7 +125,7 @@ class DataCompositionTest {
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
             ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
             DataComposition composition =
-                    new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
+                    new DataComposition(null, tenant, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
             IntEntity entity = composition.createEntity(null, false);
             composition.setEntityState(entity, State1.ONE);
             Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
@@ -180,7 +180,7 @@ class DataCompositionTest {
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
             ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
             DataComposition composition =
-                    new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+                    new DataComposition(null, tenant, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
             for (int i = 0; i < capacity; i++) {
                 entities[i] = composition.createEntity(null, false);
             }
@@ -214,11 +214,11 @@ class DataCompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
-            DataComposition composition = new DataComposition(null, tenant, null, classIndex, null
+            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant(1);
+            DataComposition composition = new DataComposition(null, tenant, classIndex, null
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class);
-            int capacity = 1 << 16;
+            int capacity = 1 << 2;
             for (int i = 0; i < capacity; i++) {
                 IntEntity entity = composition.createEntity(null, false, new C1(i));
                 composition.setEntityState(entity, State1.ONE);

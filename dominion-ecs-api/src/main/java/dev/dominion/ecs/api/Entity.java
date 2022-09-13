@@ -84,4 +84,11 @@ public interface Entity {
      * @return this entity
      */
     Entity setEnabled(boolean enabled);
+
+    /**
+     * Checks if the entity has been deleted.
+     *
+     * @return true if deleted
+     */
+    boolean isDeleted();
 }
