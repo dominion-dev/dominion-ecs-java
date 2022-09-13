@@ -100,10 +100,19 @@ class EntityRepositoryTest {
     @Test
     void deleteEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            IntEntity entity = (IntEntity) entityRepository.createEntity();
-            Assertions.assertTrue(entityRepository.deleteEntity(entity));
-            Assertions.assertTrue(entity.isDeleted());
-            Assertions.assertFalse(entity.isEnabled());
+            C1 c10 = new C1(0);
+            C1 c11 = new C1(1);
+            C1 c12 = new C1(2);
+            IntEntity entity1 = (IntEntity) entityRepository.createEntity(c10);
+            IntEntity entity2 = (IntEntity) entityRepository.createEntity(c11);
+//            ChunkedPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
+            Assertions.assertTrue(entityRepository.deleteEntity(entity1));
+            IntEntity entity3 = (IntEntity) entityRepository.createEntity(c12);
+            Assertions.assertTrue(entity1.isDeleted());
+            Assertions.assertFalse(entity1.isEnabled());
+            Assertions.assertArrayEquals(null, entity1.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c11}, entity2.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c12}, entity3.cloneComponentArray());
         }
     }
 

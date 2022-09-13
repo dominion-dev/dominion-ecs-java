@@ -93,6 +93,14 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
     public interface Identifiable {
 
+        static int lockedId(int id) {
+            return id | ChunkedPool.IdSchema.LOCK_BIT;
+        }
+
+        static int unlockedId(int id) {
+            return id ^ ChunkedPool.IdSchema.LOCK_BIT;
+        }
+
         int getId();
 
         int setId(int id);
@@ -106,6 +114,8 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         Identifiable setNext(Identifiable next);
 
         void setArray(Object[] array, int offset);
+
+        int getOffset();
 
         boolean isEnabled();
     }
@@ -386,7 +396,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
         public int remove(int id, boolean doNotUpdateIndex) {
             int capacity = idSchema.chunkCapacity;
-            int objectIdToBeReused = idSchema.fetchObjectId(id);
+            int removedIndex = idSchema.fetchObjectId(id);
             boolean recheck = false;
             for (; ; ) {
                 int lastIndex = doNotUpdateIndex || recheck ? index.get() : index.decrementAndGet();
@@ -399,15 +409,37 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                     return 0;
                 }
                 Identifiable last = idArray[lastIndex];
-                idArray[lastIndex] = null;
-                if (last != null) {
-                    if (last.setId(objectIdToBeReused) != objectIdToBeReused) {
-                        recheck = true;
-                        continue;
+                Identifiable removed = idArray[removedIndex];
+                if (last != null && last != removed) {
+//                    last.lock();
+//                    try {
+                    synchronized (idArray[lastIndex]) {
+                        if (last.setId(id) != id) {
+                            recheck = true;
+                            continue;
+                        }
+                        int removedOffset = removed.getOffset();
+                        if (dataLength > 0) {
+                            System.arraycopy(dataArray, last.getOffset(), dataArray, removedOffset, dataLength);
+                        }
+                        last.setArray(dataArray, removedOffset);
+                        idArray[removedIndex] = last;
+                        removed.setArray(null, -1);
+                        idArray[lastIndex] = null;
                     }
-                    idArray[objectIdToBeReused] = last;
+//                    } finally {
+//                        last.unlock();
+//                    }
+                } else {
+                    idArray[removedIndex] = null;
+                    if (removed != null) {
+                        int offset = removed.getOffset();
+                        for (int i = offset; i < offset + dataLength; i++) {
+                            dataArray[i] = null;
+                        }
+                    }
                 }
-                return idSchema.mergeId(id, lastIndex);
+                return Identifiable.unlockedId(idSchema.mergeId(id, lastIndex));
             }
         }
 

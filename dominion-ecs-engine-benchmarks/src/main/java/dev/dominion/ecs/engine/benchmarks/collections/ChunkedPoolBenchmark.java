@@ -214,6 +214,11 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
+            public int getOffset() {
+                return 0;
+            }
+
+            @Override
             public boolean isEnabled() {
                 return false;
             }

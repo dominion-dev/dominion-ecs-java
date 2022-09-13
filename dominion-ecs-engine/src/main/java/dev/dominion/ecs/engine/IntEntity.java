@@ -51,8 +51,7 @@ public final class IntEntity implements Entity, Identifiable {
     @Override
     public int setId(int id) {
         int prev = this.id;
-        int next = id | (prev & ChunkedPool.IdSchema.LOCK_BIT);
-        return idUpdater.compareAndSet(this, prev, next) ? next : prev;
+        return idUpdater.compareAndSet(this, prev, id) ? id : prev;
     }
 
     @Override
@@ -83,6 +82,11 @@ public final class IntEntity implements Entity, Identifiable {
     public void setArray(Object[] components, int offset) {
         data.components = components;
         data.offset = offset;
+    }
+
+    @Override
+    public int getOffset() {
+        return data.offset;
     }
 
     public DataComposition getComposition() {
@@ -136,65 +140,65 @@ public final class IntEntity implements Entity, Identifiable {
 
     @Override
     public Entity add(Object component) {
-        lock();
-        try {
-//        synchronized (this) {
+//        lock();
+//        try {
+        synchronized (this) {
             if (!isEnabled()) {
                 return this;
             }
             return data.composition.getRepository().addComponent(this, component);
-//        }
-        } finally {
-            unlock();
         }
+//        } finally {
+//            unlock();
+//        }
     }
 
     @Override
     public boolean remove(Object component) {
-        lock();
-        try {
-//        synchronized (this) {
+//        lock();
+//        try {
+        synchronized (this) {
 
             if (!isEnabled()) {
                 return false;
             }
             return data.composition.getRepository().removeComponentType(this, component.getClass());
-//        }
-        } finally {
-            unlock();
         }
+//        } finally {
+//            unlock();
+//        }
     }
 
     public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
-        lock();
-        try {
-//        synchronized (this) {
+//        lock();
+//        try {
+        synchronized (this) {
 
             if (!isEnabled()) {
                 return false;
             }
             compositions.modifyComponents(this, newDataComposition, newComponentArray);
             return true;
-//        }
-        } finally {
-            unlock();
         }
+//        } finally {
+//            unlock();
+//        }
     }
 
     @Override
     public boolean removeType(Class<?> componentType) {
-        lock();
-        try {
-//        synchronized (this) {
+//        lock();
+//        try {
+        synchronized (this) {
 
             if (!isEnabled()) {
                 return false;
             }
             return data.composition.getRepository().removeComponentType(this, componentType);
-//        }
-        } finally {
-            unlock();
         }
+//        } finally {
+//            unlock();
+//        }
     }
 
     @Override
@@ -242,19 +246,19 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     boolean delete() {
-        lock();
-        try {
-//        synchronized (this) {
+//        lock();
+//        try {
+        synchronized (this) {
 
             if (!isEnabled()) {
                 return false;
             }
             data.composition.detachEntityAndState(this);
             return true;
-//        }
-        } finally {
-            unlock();
         }
+//        } finally {
+//            unlock();
+//        }
     }
 
     @Override
@@ -264,7 +268,6 @@ public final class IntEntity implements Entity, Identifiable {
 
     void flagDetachedId() {
         setId(id | ChunkedPool.IdSchema.DETACHED_BIT);
-//        id |= ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

@@ -117,7 +117,7 @@ public final class DataComposition {
                             , "Start Attaching " + entity + " to " + this + " and  " + tenant)
             );
         }
-        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
+        entity = tenant.register(entity.setId(ChunkedPool.Identifiable.lockedId(tenant.nextId())), entity.setComposition(this), switch (length()) {
             case 0 -> null;
             case 1 -> components;
             default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
@@ -211,7 +211,7 @@ public final class DataComposition {
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
         IndexKey indexKey = calcIndexKey(state, classIndex);
-        IntEntity.Data entityData = entity.getData();
+//        IntEntity.Data entityData = entity.getData();
         IntEntity prev = states.computeIfAbsent(indexKey
                 , entity::setStateRoot);
 //                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset())));
