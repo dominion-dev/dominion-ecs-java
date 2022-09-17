@@ -8,9 +8,6 @@ package dev.dominion.ecs.examples.hello;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Scheduler;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 public class HelloDominion {
 
     public static void main(String[] args) {

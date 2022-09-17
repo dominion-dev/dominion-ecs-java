@@ -117,7 +117,7 @@ public final class DataComposition {
                             , "Start Attaching " + entity + " to " + this + " and  " + tenant)
             );
         }
-        entity = tenant.register(entity.setId(ChunkedPool.Identifiable.lockedId(tenant.nextId())), entity.setComposition(this), switch (length()) {
+        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
             case 0 -> null;
             case 1 -> components;
             default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
@@ -167,7 +167,6 @@ public final class DataComposition {
             if (entity.getPrev() == null) {
                 if (states.remove(key) != null) {
                     entity.setStateRoot(null);
-//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
                 }
             } else
@@ -179,8 +178,6 @@ public final class DataComposition {
                     entity.setPrev(null);
                     prev.setNext(null);
                     prev.setStateRoot(key);
-//                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
-//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
                     return true;
                 }
             }
@@ -211,19 +208,14 @@ public final class DataComposition {
 
     private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
         IndexKey indexKey = calcIndexKey(state, classIndex);
-//        IntEntity.Data entityData = entity.getData();
         IntEntity prev = states.computeIfAbsent(indexKey
                 , entity::setStateRoot);
-//                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset())));
         if (prev != entity) {
             states.computeIfPresent(indexKey, (k, oldEntity) -> {
                 entity.setPrev(oldEntity);
                 entity.setStateRoot(k);
-//                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset()));
                 oldEntity.setNext(entity);
                 oldEntity.setStateRoot(null);
-//                IntEntity.Data oldEntityData = oldEntity.getData();
-//                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null, oldEntityData.offset()));
                 return entity;
             });
         }

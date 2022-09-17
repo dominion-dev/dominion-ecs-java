@@ -22,7 +22,6 @@ public class RemovingComponentBenchmark extends OthersBenchmark {
     Archetype archetype4;
     Archetype archetype8;
 
-
     int[] entities1;
     int[] entities2;
     int[] entities4;

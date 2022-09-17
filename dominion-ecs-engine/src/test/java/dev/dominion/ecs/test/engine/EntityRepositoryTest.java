@@ -105,7 +105,6 @@ class EntityRepositoryTest {
             C1 c12 = new C1(2);
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(c10);
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c11);
-//            ChunkedPool<IntEntity> pool = entity1.getComposition().getTenant().getPool();
             Assertions.assertTrue(entityRepository.deleteEntity(entity1));
             IntEntity entity3 = (IntEntity) entityRepository.createEntity(c12);
             Assertions.assertTrue(entity1.isDeleted());

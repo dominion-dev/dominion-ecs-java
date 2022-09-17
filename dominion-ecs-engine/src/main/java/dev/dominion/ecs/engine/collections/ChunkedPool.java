@@ -93,14 +93,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
     public interface Identifiable {
 
-        static int lockedId(int id) {
-            return id | ChunkedPool.IdSchema.LOCK_BIT;
-        }
-
-        static int unlockedId(int id) {
-            return id ^ ChunkedPool.IdSchema.LOCK_BIT;
-        }
-
         int getId();
 
         int setId(int id);
@@ -233,7 +225,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 LinkedChunk<T> chunk = currentChunk;
                 int currentChunkIndex = pool.chunkIndex.get();
 
-//                if (chunk.index.get() < idSchema.chunkCapacity - 1) {
                 // try to get a newId from the current chunk
                 if (chunk == null) {
                     continue;
@@ -241,12 +232,10 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 while ((objectId = chunk.index.get()) < idSchema.chunkCapacity - 1) {
                     if (chunk.index.compareAndSet(objectId, objectId + 1)) {
                         newId = idSchema.createId(chunk.id, ++objectId);
-//                        System.out.println("[" + Thread.currentThread().getName() + "] chunk.id = " + chunk.id + ", objectId = " + objectId + ", newId = " + newId);
                         return returnValue;
                     }
                 }
 
-//                } else {
                 // current chunk is over
                 currentChunk = null;
                 while (currentChunk == null) {
@@ -255,7 +244,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         currentChunk = chunk;
                         objectId = chunk.incrementIndex();
                         newId = idSchema.createId(chunk.id, objectId);
-//                        System.out.println("[" + Thread.currentThread().getName() + "] new chunk.id = " + chunk.id + ", objectId = " + objectId + ", newId = " + newId);
                         return returnValue;
 
                     }
@@ -268,7 +256,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         currentChunk = chunk;
                     }
                 }
-//                }
             }
         }
 
@@ -366,7 +353,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         private final Tenant<T> tenant;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
-        //        private final LoggingSystem.Context loggingContext;
         private final int dataLength;
 
         private LinkedChunk<T> next;
@@ -380,7 +366,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             this.previous = previous;
             this.tenant = tenant;
             this.id = id;
-//            this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -411,8 +396,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 Identifiable last = idArray[lastIndex];
                 Identifiable removed = idArray[removedIndex];
                 if (last != null && last != removed) {
-//                    last.lock();
-//                    try {
                     synchronized (idArray[lastIndex]) {
                         if (last.setId(id) != id) {
                             recheck = true;
@@ -427,9 +410,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         removed.setArray(null, -1);
                         idArray[lastIndex] = null;
                     }
-//                    } finally {
-//                        last.unlock();
-//                    }
                 } else {
                     idArray[removedIndex] = null;
                     if (removed != null) {
@@ -439,7 +419,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         }
                     }
                 }
-                return Identifiable.unlockedId(idSchema.mergeId(id, lastIndex));
+                return idSchema.mergeId(id, lastIndex);
             }
         }
 

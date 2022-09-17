@@ -20,6 +20,4 @@ public class OthersBenchmark {
     static {
         System.setProperty("dominion.show-banner", "false");
     }
-
-
 }

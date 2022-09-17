@@ -22,7 +22,6 @@ public class AddingComponentBenchmark extends OthersBenchmark {
     Archetype archetype3;
     Archetype archetype7;
 
-
     int[] entities0;
     int[] entities1;
     int[] entities3;

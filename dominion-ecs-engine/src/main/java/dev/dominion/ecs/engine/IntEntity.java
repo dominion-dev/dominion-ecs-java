@@ -26,21 +26,15 @@ public final class IntEntity implements Entity, Identifiable {
 
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
-    //    private final int id;
     private IntEntity prev = null;
     private IntEntity next = null;
 
     @SuppressWarnings("FieldMayBeFinal")
     private volatile Data data;
-//    private final Data data;
 
     public IntEntity(int id, DataComposition composition, String name) {
         this.id = id;
         data = new Data(composition, name);
-    }
-
-    public static boolean isLocked(int id) {
-        return (id & ChunkedPool.IdSchema.LOCK_BIT) == ChunkedPool.IdSchema.LOCK_BIT;
     }
 
     @Override
@@ -140,23 +134,16 @@ public final class IntEntity implements Entity, Identifiable {
 
     @Override
     public Entity add(Object component) {
-//        lock();
-//        try {
         synchronized (this) {
             if (!isEnabled()) {
                 return this;
             }
             return data.composition.getRepository().addComponent(this, component);
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
     public boolean remove(Object component) {
-//        lock();
-//        try {
         synchronized (this) {
 
             if (!isEnabled()) {
@@ -164,31 +151,20 @@ public final class IntEntity implements Entity, Identifiable {
             }
             return data.composition.getRepository().removeComponentType(this, component.getClass());
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
-//        lock();
-//        try {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
             compositions.modifyComponents(this, newDataComposition, newComponentArray);
             return true;
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
     public boolean removeType(Class<?> componentType) {
-//        lock();
-//        try {
         synchronized (this) {
 
             if (!isEnabled()) {
@@ -196,9 +172,6 @@ public final class IntEntity implements Entity, Identifiable {
             }
             return data.composition.getRepository().removeComponentType(this, componentType);
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
@@ -246,19 +219,13 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     boolean delete() {
-//        lock();
-//        try {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
             data.composition.detachEntityAndState(this);
             return true;
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
@@ -268,26 +235,6 @@ public final class IntEntity implements Entity, Identifiable {
 
     void flagDetachedId() {
         setId(id | ChunkedPool.IdSchema.DETACHED_BIT);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    public void lock() {
-        int prev;
-        while (isLocked(prev = id)) {
-        }
-        boolean set = idUpdater.compareAndSet(this, prev, prev | ChunkedPool.IdSchema.LOCK_BIT);
-        if (!set) {
-//            System.out.println("rec");
-//            unsafe.storeFence();
-            lock();
-        }
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    public void unlock() {
-        int prev;
-        while (!idUpdater.compareAndSet(this, prev = id, prev ^ ChunkedPool.IdSchema.LOCK_BIT)) {
-        }
     }
 
     @Override
@@ -303,12 +250,6 @@ public final class IntEntity implements Entity, Identifiable {
                 ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
                 '}';
     }
-
-//    public record Data(DataComposition composition, Object[] components, String name, IndexKey stateRoot, int offset) {
-//        public Data(DataComposition composition, Object[] components, Data other) {
-//            this(composition, components, other == null ? null : other.name, other == null ? null : other.stateRoot, other == null ? 0 : other.offset);
-//        }
-//    }
 
     public static class Data {
         private final String name;

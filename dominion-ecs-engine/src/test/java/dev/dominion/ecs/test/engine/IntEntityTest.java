@@ -19,25 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 class IntEntityTest {
 
     @Test
-    void lock() throws InterruptedException {
-        int threadCount = 10;
-        int limit = 1 << 20;
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        final IntWrapper intWrapper = new IntWrapper();
-        final IntEntity entity = new IntEntity(0, null, null);
-        for (int i = 0; i < limit; i++) {
-            executorService.execute(() -> {
-                entity.lock();
-                intWrapper.i++;
-                entity.unlock();
-            });
-        }
-        executorService.shutdown();
-        Assertions.assertTrue(executorService.awaitTermination(30, TimeUnit.SECONDS));
-        Assertions.assertEquals(limit, intWrapper.i);
-    }
-
-    @Test
     void add() {
         var c1 = new C1(0);
         var c2 = new C2(0);

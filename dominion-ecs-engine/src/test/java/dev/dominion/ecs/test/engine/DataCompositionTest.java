@@ -218,7 +218,7 @@ class DataCompositionTest {
             DataComposition composition = new DataComposition(null, tenant, classIndex, null
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class);
-            int capacity = 1 << 2;
+            int capacity = 1 << 16;
             for (int i = 0; i < capacity; i++) {
                 IntEntity entity = composition.createEntity(null, false, new C1(i));
                 composition.setEntityState(entity, State1.ONE);
