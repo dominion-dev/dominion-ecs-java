@@ -7,11 +7,11 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
-public final class IntEntity implements Entity, Identifiable {
+public final class IntEntity implements Entity, Item {
     private static final UncheckedUpdater.Int<IntEntity> idUpdater;
 
     static {
@@ -49,27 +49,23 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     @Override
-    public Identifiable getPrev() {
+    public Item getPrev() {
         return prev;
     }
 
     @Override
-    public Identifiable setPrev(Identifiable prev) {
-        Identifiable old = this.prev;
+    public void setPrev(Item prev) {
         this.prev = (IntEntity) prev;
-        return old;
     }
 
     @Override
-    public Identifiable getNext() {
+    public Item getNext() {
         return next;
     }
 
     @Override
-    public Identifiable setNext(Identifiable next) {
-        Identifiable old = this.next;
+    public void setNext(Item next) {
         this.next = (IntEntity) next;
-        return old;
     }
 
     @Override

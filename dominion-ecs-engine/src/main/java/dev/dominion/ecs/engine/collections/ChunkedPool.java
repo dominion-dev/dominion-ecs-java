@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
+public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final AtomicReferenceArray<LinkedChunk<T>> chunks;
@@ -91,19 +91,19 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         tenants.forEach(Tenant::close);
     }
 
-    public interface Identifiable {
+    public interface Item {
 
         int getId();
 
         int setId(int id);
 
-        Identifiable getPrev();
+        Item getPrev();
 
-        Identifiable setPrev(Identifiable prev);
+        void setPrev(Item prev);
 
-        Identifiable getNext();
+        Item getNext();
 
-        Identifiable setNext(Identifiable next);
+        void setNext(Item next);
 
         void setArray(Object[] array, int offset);
 
@@ -164,7 +164,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
     }
 
-    public static final class Tenant<T extends Identifiable> implements AutoCloseable {
+    public static final class Tenant<T extends Item> implements AutoCloseable {
         private static final AtomicInteger idGenerator = new AtomicInteger();
         private final int id = idGenerator.getAndIncrement();
         private final ChunkedPool<T> pool;
@@ -322,7 +322,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
     }
 
-    public static class PoolIterator<T extends Identifiable> implements Iterator<T> {
+    public static class PoolIterator<T extends Item> implements Iterator<T> {
         int next = 0;
         private LinkedChunk<T> currentChunk;
 
@@ -340,14 +340,14 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         @SuppressWarnings({"unchecked"})
         @Override
         public T next() {
-            return (T) currentChunk.idArray[next++];
+            return (T) currentChunk.itemArray[next++];
         }
     }
 
-    public static final class LinkedChunk<T extends Identifiable> {
+    public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = LoggingSystem.getLogger();
         private final IdSchema idSchema;
-        private final Identifiable[] idArray;
+        private final Item[] itemArray;
         private final Object[] dataArray;
         private final LinkedChunk<T> previous;
         private final Tenant<T> tenant;
@@ -361,7 +361,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, LoggingSystem.Context loggingContext) {
             this.idSchema = idSchema;
             this.dataLength = dataLength;
-            idArray = new Identifiable[idSchema.chunkCapacity];
+            itemArray = new Item[idSchema.chunkCapacity];
             dataArray = dataLength > 0 ? new Object[idSchema.chunkCapacity * dataLength] : null;
             this.previous = previous;
             this.tenant = tenant;
@@ -393,10 +393,10 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 if (lastIndex < 0) {
                     return 0;
                 }
-                Identifiable last = idArray[lastIndex];
-                Identifiable removed = idArray[removedIndex];
+                Item last = itemArray[lastIndex];
+                Item removed = itemArray[removedIndex];
                 if (last != null && last != removed) {
-                    synchronized (idArray[lastIndex]) {
+                    synchronized (itemArray[lastIndex]) {
                         if (last.setId(id) != id) {
                             recheck = true;
                             continue;
@@ -406,12 +406,12 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                             System.arraycopy(dataArray, last.getOffset(), dataArray, removedOffset, dataLength);
                         }
                         last.setArray(dataArray, removedOffset);
-                        idArray[removedIndex] = last;
+                        itemArray[removedIndex] = last;
                         removed.setArray(null, -1);
-                        idArray[lastIndex] = null;
+                        itemArray[lastIndex] = null;
                     }
                 } else {
-                    idArray[removedIndex] = null;
+                    itemArray[removedIndex] = null;
                     if (removed != null) {
                         int offset = removed.getOffset();
                         for (int i = offset; i < offset + dataLength; i++) {
@@ -425,7 +425,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
 
         @SuppressWarnings("unchecked")
         public T get(int id) {
-            return (T) idArray[idSchema.fetchObjectId(id)];
+            return (T) itemArray[idSchema.fetchObjectId(id)];
         }
 
         @SuppressWarnings("unchecked")
@@ -440,7 +440,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 }
                 value.setArray(dataArray, offset);
             }
-            return (T) (idArray[idx] = value);
+            return (T) (itemArray[idx] = value);
         }
 
         public boolean hasCapacity() {

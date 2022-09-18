@@ -2,7 +2,7 @@ package dev.dominion.ecs.test.engine.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
@@ -179,7 +179,7 @@ class ChunkedPoolTest {
             }
         }
 
-        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
+        public record Id(int id, Item prev, Item next) implements Item {
             @Override
             public int getId() {
                 return id;
@@ -191,23 +191,21 @@ class ChunkedPoolTest {
             }
 
             @Override
-            public Identifiable getPrev() {
+            public Item getPrev() {
                 return prev;
             }
 
             @Override
-            public Identifiable setPrev(Identifiable prev) {
-                return prev;
+            public void setPrev(Item prev) {
             }
 
             @Override
-            public Identifiable getNext() {
+            public Item getNext() {
                 return next;
             }
 
             @Override
-            public Identifiable setNext(Identifiable next) {
-                return next;
+            public void setNext(Item next) {
             }
 
             @Override

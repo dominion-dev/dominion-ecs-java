@@ -17,7 +17,7 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import static dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import static dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import static dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 public class ChunkedPoolBenchmark extends DominionBenchmark {
     private static final IdSchema ID_SCHEMA =
@@ -178,7 +178,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             tenant.close();
         }
 
-        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
+        public record Id(int id, Item prev, Item next) implements Item {
             @Override
             public int getId() {
                 return id;
@@ -190,23 +190,21 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public Identifiable getPrev() {
+            public Item getPrev() {
                 return prev;
             }
 
             @Override
-            public Identifiable setPrev(Identifiable prev) {
-                return prev;
+            public void setPrev(Item prev) {
             }
 
             @Override
-            public Identifiable getNext() {
+            public Item getNext() {
                 return next;
             }
 
             @Override
-            public Identifiable setNext(Identifiable next) {
-                return next;
+            public void setNext(Item next) {
             }
 
             @Override
