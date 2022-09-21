@@ -288,8 +288,16 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return reusableId;
         }
 
-        public Iterator<T> iterator() {
-            return new PoolIterator<>(firstChunk);
+        public PoolDataIterator<T> iterator() {
+            return dataLength == 1 ?
+                    new PoolDataIterator<>(firstChunk) :
+                    new PoolMultiDataIterator<>(firstChunk);
+        }
+
+        public PoolDataIterator<T> noItemIterator() {
+            return dataLength == 1 ?
+                    new PoolDataNoItemIterator<>(firstChunk) :
+                    new PoolMultiDataNoItemIterator<>(firstChunk);
         }
 
         public T register(int id, T entry, Object[] data) {
@@ -323,8 +331,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     public static class PoolIterator<T extends Item> implements Iterator<T> {
-        int next = 0;
-        private LinkedChunk<T> currentChunk;
+        protected int next = 0;
+        protected LinkedChunk<T> currentChunk;
 
         public PoolIterator(LinkedChunk<T> currentChunk) {
             this.currentChunk = currentChunk;
@@ -344,11 +352,60 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
+
+        public PoolDataIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        public Object data(int i) {
+            return currentChunk.dataArray[next];
+        }
+    }
+
+    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolMultiDataIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public Object data(int i) {
+            return currentChunk.multiDataArray[i][next];
+        }
+    }
+
+    public static final class PoolDataNoItemIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            return null;
+        }
+    }
+
+    public static final class PoolMultiDataNoItemIterator<T extends Item> extends PoolMultiDataIterator<T> {
+        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            return null;
+        }
+    }
+
     public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = LoggingSystem.getLogger();
         private final IdSchema idSchema;
+        //        private final int[] idArray;
         private final Item[] itemArray;
+
         private final Object[] dataArray;
+        private final Object[][] multiDataArray;
         private final LinkedChunk<T> previous;
         private final Tenant<T> tenant;
         private final int id;
@@ -361,8 +418,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, LoggingSystem.Context loggingContext) {
             this.idSchema = idSchema;
             this.dataLength = dataLength;
+//            idArray = new int[idSchema.chunkCapacity];
             itemArray = new Item[idSchema.chunkCapacity];
-            dataArray = dataLength > 0 ? new Object[idSchema.chunkCapacity * dataLength] : null;
+            dataArray = dataLength == 1 ? new Object[idSchema.chunkCapacity * dataLength] : null;
+            multiDataArray = dataLength > 1 ? new Object[dataLength][idSchema.chunkCapacity * dataLength] : null;
             this.previous = previous;
             this.tenant = tenant;
             this.id = id;
@@ -403,9 +462,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         }
                         int removedOffset = removed.getOffset();
                         if (dataLength > 0) {
-                            System.arraycopy(dataArray, last.getOffset(), dataArray, removedOffset, dataLength);
+                            System.arraycopy(multiDataArray[0], last.getOffset(), multiDataArray[0], removedOffset, dataLength);
                         }
-                        last.setArray(dataArray, removedOffset);
+                        last.setArray(multiDataArray[0], removedOffset);
                         itemArray[removedIndex] = last;
                         removed.setArray(null, -1);
                         itemArray[lastIndex] = null;
@@ -415,7 +474,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     if (removed != null) {
                         int offset = removed.getOffset();
                         for (int i = offset; i < offset + dataLength; i++) {
-                            dataArray[i] = null;
+                            multiDataArray[0][i] = null;
                         }
                     }
                 }
@@ -431,15 +490,26 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @SuppressWarnings("unchecked")
         public T set(int id, T value, Object[] data) {
             int idx = idSchema.fetchObjectId(id);
-            if (dataLength > 0) {
-                int offset = idx * dataLength;
-                if (data != null) {
-                    if (data.length == dataLength) {
-                        System.arraycopy(data, 0, dataArray, offset, dataLength);
-                    }
-                }
-                value.setArray(dataArray, offset);
+            if (dataLength == 1) {
+                dataArray[idx] = data[0];
             }
+            if (dataLength > 1) {
+                for (int i = 0; i < dataLength; i++) {
+                    multiDataArray[i][idx] = data[i];
+                }
+            }
+//            if (dataLength > 0) {
+//                int offset = idx * dataLength;
+//                if (data != null) {
+//                    if (data.length == dataLength) {
+//                        System.arraycopy(data, 0, multiDataArray[0], offset, dataLength);
+//                        System.arraycopy(data, 0, multiDataArray[1], offset, dataLength);
+//                    }
+//                }
+//                value.setArray(multiDataArray[0], offset);
+//            }
+
+//            idArray[idx] = id;
             return (T) (itemArray[idx] = value);
         }
 
