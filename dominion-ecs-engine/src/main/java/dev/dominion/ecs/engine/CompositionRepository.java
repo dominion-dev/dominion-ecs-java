@@ -217,7 +217,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void without(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithout(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -233,7 +233,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void withAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
