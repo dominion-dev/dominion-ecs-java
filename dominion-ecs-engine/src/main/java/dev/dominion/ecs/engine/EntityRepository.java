@@ -110,39 +110,75 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
+    public <T> Results<With1<T>> findCompositionsWith(Class<T> type) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type);
+        return new ResultSet.With1<>(compositions, nodes, false, type);
+    }
+
+    @Override
+    public <T1, T2> Results<With2<T1, T2>> findCompositionsWith(Class<T1> type1, Class<T2> type2) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2);
+        return new ResultSet.With2<>(compositions, nodes, false, type1, type2);
+    }
+
+    @Override
+    public <T1, T2, T3> Results<With3<T1, T2, T3>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3);
+        return new ResultSet.With3<>(compositions, nodes, false, type1, type2, type3);
+    }
+
+    @Override
+    public <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4);
+        return new ResultSet.With4<>(compositions, nodes, false, type1, type2, type3, type4);
+    }
+
+    @Override
+    public <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5);
+        return new ResultSet.With5<>(compositions, nodes, false, type1, type2, type3, type4, type5);
+    }
+
+    @Override
+    public <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5, type6);
+        return new ResultSet.With6<>(compositions, nodes, false, type1, type2, type3, type4, type5, type6);
+    }
+
+    @Override
     public <T> Results<With1<T>> findEntitiesWith(Class<T> type) {
         Map<IndexKey, Node> nodes = compositions.findWith(type);
-        return new ResultSet.With1<>(compositions, nodes, type);
+        return new ResultSet.With1<>(compositions, nodes, true, type);
     }
 
     @Override
     public <T1, T2> Results<With2<T1, T2>> findEntitiesWith(Class<T1> type1, Class<T2> type2) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2);
-        return new ResultSet.With2<>(compositions, nodes, type1, type2);
+        return new ResultSet.With2<>(compositions, nodes, true, type1, type2);
     }
 
     @Override
     public <T1, T2, T3> Results<With3<T1, T2, T3>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3);
-        return new ResultSet.With3<>(compositions, nodes, type1, type2, type3);
+        return new ResultSet.With3<>(compositions, nodes, true, type1, type2, type3);
     }
 
     @Override
     public <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4);
-        return new ResultSet.With4<>(compositions, nodes, type1, type2, type3, type4);
+        return new ResultSet.With4<>(compositions, nodes, true, type1, type2, type3, type4);
     }
 
     @Override
     public <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5);
-        return new ResultSet.With5<>(compositions, nodes, type1, type2, type3, type4, type5);
+        return new ResultSet.With5<>(compositions, nodes, true, type1, type2, type3, type4, type5);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5, type6);
-        return new ResultSet.With6<>(compositions, nodes, type1, type2, type3, type4, type5, type6);
+        return new ResultSet.With6<>(compositions, nodes, true, type1, type2, type3, type4, type5, type6);
     }
 
     @Override
