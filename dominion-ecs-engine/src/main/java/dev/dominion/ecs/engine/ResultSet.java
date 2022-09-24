@@ -17,9 +17,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ResultSet<T> implements Results<T> {
+    protected final boolean withEntity;
     private final CompositionRepository compositionRepository;
     private final Map<IndexKey, CompositionRepository.Node> nodeMap;
-    protected final boolean withEntity;
     protected IndexKey stateKey;
 
     public ResultSet(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, boolean withEntity) {
@@ -108,20 +108,33 @@ public abstract class ResultSet<T> implements Results<T> {
         }
     }
 
+    public final static class With<T> extends ResultSet<T> {
+        private final Class<T> type;
+
+        public With(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                    Class<T> type) {
+            super(compositionRepository, nodeMap, false);
+            this.type = type;
+        }
+
+        @Override
+        Iterator<T> compositionIterator(DataComposition composition) {
+            return composition.selectT(type, composition.getTenant().noItemIterator());
+        }
+    }
+
     public final static class With1<T> extends ResultSet<Results.With1<T>> {
         private final Class<T> type;
 
         public With1(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
-                     boolean withEntity, Class<T> type) {
-            super(compositionRepository, nodeMap, withEntity);
+                     Class<T> type) {
+            super(compositionRepository, nodeMap, true);
             this.type = type;
         }
 
         @Override
         Iterator<Results.With1<T>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
-            return composition.select(type, iterator);
+            return composition.select(type, composition.getTenant().iterator());
         }
     }
 

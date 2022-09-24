@@ -110,9 +110,9 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public <T> Results<With1<T>> findCompositionsWith(Class<T> type) {
+    public <T> Results<T> findCompositionsWith(Class<T> type) {
         Map<IndexKey, Node> nodes = compositions.findWith(type);
-        return new ResultSet.With1<>(compositions, nodes, false, type);
+        return new ResultSet.With<>(compositions, nodes, type);
     }
 
     @Override
@@ -148,7 +148,7 @@ public final class EntityRepository implements Dominion {
     @Override
     public <T> Results<With1<T>> findEntitiesWith(Class<T> type) {
         Map<IndexKey, Node> nodes = compositions.findWith(type);
-        return new ResultSet.With1<>(compositions, nodes, true, type);
+        return new ResultSet.With1<>(compositions, nodes, type);
     }
 
     @Override

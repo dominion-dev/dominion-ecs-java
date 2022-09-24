@@ -28,7 +28,8 @@ public class IteratingComponentBenchmark {
 //                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking05.class),
 //                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking06.class),
 //                        DominionBenchmark.fetchBenchmarkName(Artemis.class)
-                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking01.class),
+//                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking01.class),
+                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking02.class),
 //                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking06.class),
                 }
         );
@@ -59,7 +60,7 @@ public class IteratingComponentBenchmark {
             public void iterate(Blackhole bh) {
                 var iterator = entityRepository.findCompositionsWith(C1.class).iterator();
                 while (iterator.hasNext()) {
-                    bh.consume(iterator.next().comp());
+                    bh.consume(iterator.next());
                 }
             }
         }

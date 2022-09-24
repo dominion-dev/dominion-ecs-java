@@ -162,7 +162,7 @@ public interface Dominion extends AutoCloseable {
      * @param <T>  the component type
      * @return the results
      */
-    <T> Results<With1<T>> findCompositionsWith(Class<T> type);
+    <T> Results<T> findCompositionsWith(Class<T> type);
 
     /**
      * Finds all compositions with components of the specified types.

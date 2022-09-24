@@ -103,7 +103,7 @@ public class DominionTest {
         }
 
         @Override
-        public <T> Results<Results.With1<T>> findCompositionsWith(Class<T> type) {
+        public <T> Results<T> findCompositionsWith(Class<T> type) {
             return null;
         }
 

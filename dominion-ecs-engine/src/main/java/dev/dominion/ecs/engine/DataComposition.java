@@ -267,6 +267,11 @@ public final class DataComposition {
         }
     }
 
+    public <T> Iterator<T> selectT(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
+        int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
+        return new IteratorT<>(idx, iterator, this);
+    }
+
     public <T> Iterator<Results.With1<T>> select(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
         return new IteratorWith1<>(idx, iterator, this);
@@ -334,6 +339,22 @@ public final class DataComposition {
             var current = next;
             next = (IntEntity) next.getPrev();
             return current;
+        }
+    }
+
+    record IteratorT<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                        DataComposition composition) implements Iterator<T> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            T comp = (T) iterator.data(idx);
+            iterator.next();
+            return comp;
         }
     }
 

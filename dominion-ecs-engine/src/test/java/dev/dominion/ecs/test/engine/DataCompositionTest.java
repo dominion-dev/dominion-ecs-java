@@ -83,14 +83,14 @@ class DataCompositionTest {
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(null, false, new C1(i));
             }
-            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator());
+            var iterator = composition.selectT(C1.class, composition.getTenant().noItemIterator());
             int i = 0;
             while (iterator.hasNext()) {
-                long id = iterator.next().comp().id;
+                long id = iterator.next().id;
                 Assertions.assertEquals(i++, id);
             }
             var iteratorE = composition.select(C1.class, composition.getTenant().iterator());
-             i = 0;
+            i = 0;
             while (iteratorE.hasNext()) {
                 long id = iteratorE.next().comp().id;
                 Assertions.assertEquals(i++, id);
