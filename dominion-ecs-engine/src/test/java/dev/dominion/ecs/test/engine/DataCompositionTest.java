@@ -1,6 +1,5 @@
 package dev.dominion.ecs.test.engine;
 
-import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
@@ -10,7 +9,6 @@ import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -85,10 +83,16 @@ class DataCompositionTest {
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(null, false, new C1(i));
             }
-            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, composition.getTenant().noItemIterator());
+            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator());
             int i = 0;
             while (iterator.hasNext()) {
                 long id = iterator.next().comp().id;
+                Assertions.assertEquals(i++, id);
+            }
+            var iteratorE = composition.select(C1.class, composition.getTenant().iterator());
+             i = 0;
+            while (iteratorE.hasNext()) {
+                long id = iteratorE.next().comp().id;
                 Assertions.assertEquals(i++, id);
             }
         }
@@ -107,10 +111,19 @@ class DataCompositionTest {
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(null, false, new C1(i), new C2(i + 1));
             }
-            Iterator<Results.With2<C1, C2>> iterator = composition.select(C1.class, C2.class, tenant.noItemIterator());
+            var iterator = composition.select(C1.class, C2.class, tenant.noItemIterator());
             int i = 0;
             while (iterator.hasNext()) {
-                Results.With2<C1, C2> next = iterator.next();
+                var next = iterator.next();
+                long id1 = next.comp1().id;
+                long id2 = next.comp2().id;
+                Assertions.assertEquals(i++, id1);
+                Assertions.assertEquals(i, id2);
+            }
+            var iteratorE = composition.select(C1.class, C2.class, tenant.iterator());
+            i = 0;
+            while (iteratorE.hasNext()) {
+                var next = iteratorE.next();
                 long id1 = next.comp1().id;
                 long id2 = next.comp2().id;
                 Assertions.assertEquals(i++, id1);

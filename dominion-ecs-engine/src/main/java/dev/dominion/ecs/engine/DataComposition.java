@@ -381,7 +381,6 @@ public final class DataComposition {
         @SuppressWarnings({"unchecked"})
         @Override
         public Results.With3<T1, T2, T3> next() {
-
             return new Results.With3<>(
                     (T1) iterator.data(idx1),
                     (T2) iterator.data(idx2),
