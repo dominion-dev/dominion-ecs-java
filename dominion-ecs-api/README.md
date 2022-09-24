@@ -88,10 +88,11 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 
 ## Class Results
 
-A **Results** instance is the output of the [Dominion](#class-dominion).**findEntitiesWith** methods and represents a 
-simple container of all entities that match a set of components and, optionally, have a specified state. Results can be 
-further filtered by specifying one or more component types to exclude. Both iterator and stream methods are available to 
-retrieve found entities in sequence.
+A **Results** instance is the output of the [Dominion](#class-dominion)::**findCompositionWith** and 
+::**findEntitiesWith** methods and represents a simple container of all compositions that match a set of components and,
+optionally, the related entities.
+Results can be filtered by specifying one or more component types to include or exclude in the select list.
+Both iterator and stream methods are available to retrieve the results.
 
 | Method                                                                   | Description                                                                            |
 |--------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
