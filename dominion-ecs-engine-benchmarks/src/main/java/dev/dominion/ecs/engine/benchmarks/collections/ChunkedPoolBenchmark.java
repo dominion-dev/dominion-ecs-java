@@ -208,12 +208,8 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public void setArray(Object[] array, int offset) {
-            }
+            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
 
-            @Override
-            public int getOffset() {
-                return 0;
             }
 
             @Override

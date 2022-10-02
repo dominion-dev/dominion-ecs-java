@@ -120,7 +120,7 @@ class ChunkedPoolTest {
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-                Assertions.assertEquals(0, tenant.getStack().size());
+                Assertions.assertEquals(0, tenant.getIdStack().size());
                 Assertions.assertEquals(added - removed, chunkedPool.size());
                 Assertions.assertTrue(tenant.nextId() >= added - removed);
             }
@@ -209,12 +209,8 @@ class ChunkedPoolTest {
             }
 
             @Override
-            public void setArray(Object[] array, int offset) {
-            }
+            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
 
-            @Override
-            public int getOffset() {
-                return 0;
             }
 
             @Override

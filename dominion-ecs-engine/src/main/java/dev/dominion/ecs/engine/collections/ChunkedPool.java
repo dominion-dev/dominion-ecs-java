@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
-    public static final int ID_STACK_CAPACITY = 1 << 16;
+    public static final int ID_STACK_CAPACITY = 1 << 22;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final AtomicReferenceArray<LinkedChunk<T>> chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);
@@ -105,9 +105,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         void setNext(Item next);
 
-        void setArray(Object[] array, int offset);
-
-        int getOffset();
+        void setChunk(LinkedChunk<? extends Item> chunk);
 
         boolean isEnabled();
     }
@@ -169,7 +167,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final int id = idGenerator.getAndIncrement();
         private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
-        private final IdStack stack;
+        private final IdStack idStack;
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private final int dataLength;
@@ -189,7 +187,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         )
                 );
             }
-            stack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
+            idStack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
             while ((currentChunk = pool.newChunk(this, null, pool.chunkIndex.get())) == null) {
             }
             firstChunk = currentChunk;
@@ -215,7 +213,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         )
                 );
             }
-            int returnValue = stack.pop();
+            int returnValue = idStack.pop();
             if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
@@ -265,7 +263,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 return -1;
             }
             if (chunk.isEmpty()) {
-                stack.push(id);
+                idStack.push(id);
                 return id;
             }
             boolean notCurrentChunk = chunk != currentChunk;
@@ -281,7 +279,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 );
             }
             if (notCurrentChunk) {
-                stack.push(reusableId);
+                idStack.push(reusableId);
             } else {
                 newId = reusableId;
             }
@@ -316,8 +314,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return dataLength;
         }
 
-        public IdStack getStack() {
-            return stack;
+        public IdStack getIdStack() {
+            return idStack;
         }
 
         public ChunkedPool<T> getPool() {
@@ -326,7 +324,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         @Override
         public void close() {
-            stack.close();
+            idStack.close();
         }
     }
 
@@ -401,9 +399,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = LoggingSystem.getLogger();
         private final IdSchema idSchema;
-        //        private final int[] idArray;
         private final Item[] itemArray;
-
         private final Object[] dataArray;
         private final Object[][] multiDataArray;
         private final LinkedChunk<T> previous;
@@ -418,7 +414,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, LoggingSystem.Context loggingContext) {
             this.idSchema = idSchema;
             this.dataLength = dataLength;
-//            idArray = new int[idSchema.chunkCapacity];
             itemArray = new Item[idSchema.chunkCapacity];
             dataArray = dataLength == 1 ? new Object[idSchema.chunkCapacity * dataLength] : null;
             multiDataArray = dataLength > 1 ? new Object[dataLength][idSchema.chunkCapacity * dataLength] : null;
@@ -460,21 +455,27 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                             recheck = true;
                             continue;
                         }
-                        int removedOffset = removed.getOffset();
-                        if (dataLength > 0) {
-                            System.arraycopy(multiDataArray[0], last.getOffset(), multiDataArray[0], removedOffset, dataLength);
+                        if (dataLength == 1) {
+                            dataArray[removedIndex] = dataArray[lastIndex];
+                            dataArray[lastIndex] = null;
                         }
-                        last.setArray(multiDataArray[0], removedOffset);
+                        if (dataLength > 1) {
+                            for (int i = 0; i < dataLength; i++) {
+                                multiDataArray[i][removedIndex] = multiDataArray[i][lastIndex];
+                                multiDataArray[i][lastIndex] = null;
+                            }
+                        }
                         itemArray[removedIndex] = last;
-                        removed.setArray(null, -1);
                         itemArray[lastIndex] = null;
                     }
                 } else {
                     itemArray[removedIndex] = null;
-                    if (removed != null) {
-                        int offset = removed.getOffset();
-                        for (int i = offset; i < offset + dataLength; i++) {
-                            multiDataArray[0][i] = null;
+                    if (dataLength == 1) {
+                        dataArray[removedIndex] = null;
+                    }
+                    if (dataLength > 1) {
+                        for (int i = 0; i < dataLength; i++) {
+                            multiDataArray[i][removedIndex] = null;
                         }
                     }
                 }
@@ -498,19 +499,30 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     multiDataArray[i][idx] = data[i];
                 }
             }
-//            if (dataLength > 0) {
-//                int offset = idx * dataLength;
-//                if (data != null) {
-//                    if (data.length == dataLength) {
-//                        System.arraycopy(data, 0, multiDataArray[0], offset, dataLength);
-//                        System.arraycopy(data, 0, multiDataArray[1], offset, dataLength);
-//                    }
-//                }
-//                value.setArray(multiDataArray[0], offset);
-//            }
-
-//            idArray[idx] = id;
+            value.setChunk(this);
             return (T) (itemArray[idx] = value);
+        }
+
+        public Object[] getData(int id) {
+            int idx = idSchema.fetchObjectId(id);
+            Object[] data = new Object[dataLength];
+            if (dataLength == 1) {
+                data[0] = dataArray[idx];
+            }
+            if (dataLength > 1) {
+                for (int i = 0; i < dataLength; i++) {
+                    data[i] = multiDataArray[i][idx];
+                }
+            }
+            return data;
+        }
+
+        public Tenant<T> getTenant() {
+            return tenant;
+        }
+
+        public int getDataLength() {
+            return dataLength;
         }
 
         public boolean hasCapacity() {
