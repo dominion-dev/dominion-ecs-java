@@ -10,6 +10,7 @@ import dev.dominion.ecs.engine.system.UnsafeFactory;
 import sun.misc.Unsafe;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.StampedLock;
 
 public final class IdStack implements AutoCloseable {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
@@ -17,15 +18,16 @@ public final class IdStack implements AutoCloseable {
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final ChunkedPool.IdSchema idSchema;
     private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
-    private final long address;
-    private final int capacity;
     private final LoggingSystem.Context loggingContext;
+    private final StampedLock lock = new StampedLock();
+    private long address;
+    private int capacity;
 
-    public IdStack(int capacity, ChunkedPool.IdSchema idSchema, LoggingSystem.Context loggingContext) {
-        this.capacity = capacity;
+    public IdStack(int initialCapacity, ChunkedPool.IdSchema idSchema, LoggingSystem.Context loggingContext) {
+        this.capacity = initialCapacity;
         this.idSchema = idSchema;
         this.loggingContext = loggingContext;
-        address = unsafe.allocateMemory(capacity);
+        address = unsafe.allocateMemory(initialCapacity);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -54,19 +56,30 @@ public final class IdStack implements AutoCloseable {
 
     public boolean push(int id) {
         long offset = index.addAndGet(INT_BYTES);
-        if (offset < capacity) {
-            unsafe.putInt(address + offset, id);
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
-                LOGGER.log(
-                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
-                                , "Pushing id=" + idSchema.idToString(id)
-                        )
-                );
+        if (offset >= capacity) {
+            long l = lock.writeLock();
+            try {
+                int currentCapacity;
+                if (offset >= (currentCapacity = capacity)) {
+                    int newCapacity = currentCapacity + (currentCapacity >>> 1);
+                    long newAddress = unsafe.allocateMemory(newCapacity);
+                    unsafe.copyMemory(address, newAddress, currentCapacity);
+                    capacity = newCapacity;
+                    address = newAddress;
+                }
+            } finally {
+                lock.unlock(l);
             }
-            return true;
         }
-        index.addAndGet(-INT_BYTES);
-        return false;
+        unsafe.putInt(address + offset, id);
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
+            LOGGER.log(
+                    System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                            , "Pushing id=" + idSchema.idToString(id)
+                    )
+            );
+        }
+        return true;
     }
 
     public int size() {
