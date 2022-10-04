@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
-    public static final int ID_STACK_CAPACITY = 1 << 22;
+    public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final AtomicReferenceArray<LinkedChunk<T>> chunks;
     private final AtomicInteger chunkIndex = new AtomicInteger(-1);

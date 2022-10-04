@@ -166,11 +166,14 @@ class ChunkedPoolTest {
         public void iterator() {
             try (ChunkedPool<Id> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
                 ChunkedPool.Tenant<Id> tenant = chunkedPool.newTenant();
+                Assertions.assertEquals(0, tenant.currentChunkSize());
+                Iterator<Id> iterator = tenant.iterator();
+                Assertions.assertFalse(iterator.hasNext());
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
                     tenant.register(nextId, new Id(i, null, null), null);
                 }
-                Iterator<Id> iterator = tenant.iterator();
+                iterator = tenant.iterator();
                 int i = 0;
                 while (iterator.hasNext()) {
                     long id = iterator.next().id;
