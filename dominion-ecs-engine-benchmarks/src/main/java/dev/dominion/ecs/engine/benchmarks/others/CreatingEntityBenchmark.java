@@ -35,6 +35,7 @@ public class CreatingEntityBenchmark {
         Composition.Of1<C1> composition1;
         Composition.Of2<C1, C2> composition2;
         Composition.Of4<C1, C2, C3, C4> composition4;
+        Composition.Of6<C1, C2, C3, C4, C5, C6> composition6;
         Composition.Of8<C1, C2, C3, C4, C5, C6, C7, C8> composition8;
         Entity[] entities;
 
@@ -48,6 +49,7 @@ public class CreatingEntityBenchmark {
             composition1 = composition.of(C1.class);
             composition2 = composition.of(C1.class, C2.class);
             composition4 = composition.of(C1.class, C2.class, C3.class, C4.class);
+            composition6 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class);
             composition8 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class, C7.class, C8.class);
             entities = new Entity[size];
             for (int i = 0; i < size; i++) {
@@ -84,6 +86,13 @@ public class CreatingEntityBenchmark {
         }
 
         @Benchmark
+        public void createEntityWith06(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities[i] = entityRepository.createPreparedEntity(composition6.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6())));
+            }
+        }
+
+        @Benchmark
         public void createEntityWith08(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities[i] = entityRepository.createPreparedEntity(composition8.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6(), new C7(), new C8())));
@@ -96,6 +105,7 @@ public class CreatingEntityBenchmark {
         Archetype archetype1;
         Archetype archetype2;
         Archetype archetype4;
+        Archetype archetype6;
         Archetype archetype8;
         int[] entities;
         @Param(value = {"1000000"})
@@ -108,6 +118,7 @@ public class CreatingEntityBenchmark {
             archetype1 = new ArchetypeBuilder().add(C1.class).build(world);
             archetype2 = new ArchetypeBuilder().add(C1.class).add(C2.class).build(world);
             archetype4 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).build(world);
+            archetype6 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).build(world);
             archetype8 = new ArchetypeBuilder().add(C1.class).add(C2.class).add(C3.class).add(C4.class).add(C5.class).add(C6.class).add(C7.class).add(C8.class).build(world);
             entities = new int[size];
             for (int i = 0; i < size; i++) {
@@ -144,6 +155,14 @@ public class CreatingEntityBenchmark {
         public void createEntityWith04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities[i] = world.create(archetype4));
+            }
+            world.process();
+        }
+
+        @Benchmark
+        public void createEntityWith06(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities[i] = world.create(archetype6));
             }
             world.process();
         }
