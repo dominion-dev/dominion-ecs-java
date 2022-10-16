@@ -68,11 +68,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     public Tenant<T> newTenant() {
-        return newTenant(0);
+        return newTenant(0, null);
     }
 
-    public Tenant<T> newTenant(int dataLength) {
-        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, loggingContext);
+    public Tenant<T> newTenant(int dataLength, Object owner) {
+        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, owner, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
@@ -171,14 +171,17 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private final int dataLength;
+
+        private final Object owner;
         private volatile LinkedChunk<T> currentChunk;
         private int newId = Integer.MIN_VALUE;
 
         @SuppressWarnings("StatementWithEmptyBody")
-        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, LoggingSystem.Context loggingContext) {
+        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, LoggingSystem.Context loggingContext) {
             this.pool = pool;
             this.idSchema = idSchema;
             this.dataLength = dataLength;
+            this.owner = owner;
             this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
@@ -320,6 +323,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public ChunkedPool<T> getPool() {
             return pool;
+        }
+
+        public Object getOwner() {
+            return owner;
         }
 
         @Override
@@ -527,6 +534,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 }
             }
             return data;
+        }
+
+        public Object getFromDataArray(int id) {
+            return dataArray[idSchema.fetchObjectId(id)];
         }
 
         public Tenant<T> getTenant() {

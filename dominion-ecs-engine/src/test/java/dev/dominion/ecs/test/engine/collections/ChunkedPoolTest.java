@@ -133,9 +133,9 @@ class ChunkedPoolTest {
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
             try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                final ChunkedPool.Tenant<IntEntity> tenant1 = chunkedPool.newTenant(1);
-                final ChunkedPool.Tenant<IntEntity> tenant2 = chunkedPool.newTenant(2);
-                final ChunkedPool.Tenant<IntEntity> tenant3 = chunkedPool.newTenant(3);
+                final ChunkedPool.Tenant<IntEntity> tenant1 = chunkedPool.newTenant(1, null);
+                final ChunkedPool.Tenant<IntEntity> tenant2 = chunkedPool.newTenant(2, null);
+                final ChunkedPool.Tenant<IntEntity> tenant3 = chunkedPool.newTenant(3, null);
 
                 for (int i = 0; i < capacity; i++) {
                     executorService.execute(tenant1::nextId);

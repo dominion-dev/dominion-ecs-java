@@ -32,11 +32,11 @@ public final class DataComposition {
     private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
-    public DataComposition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
+    public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
             , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
-        this.tenant = tenant;
+        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this);
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
