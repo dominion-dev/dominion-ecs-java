@@ -550,13 +550,30 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class SetEnabled extends DominionBenchmark {
-        EntityRepository entityRepository;
-        Entity[] entities;
-        Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0),
+        private final Object[] input1 = new Object[]{
+                new C1(0)
+        };
+        private final Object[] input2 = new Object[]{
+                new C1(0), new C2(0)
+        };
+        private final Object[] input4 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+        };
+        private final Object[] input6 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+                , new C5(0), new C6(0)
+        };
+        private final Object[] input8 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+                , new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
+        EntityRepository entityRepository;
+        Entity[] entities1;
+        Entity[] entities2;
+        Entity[] entities4;
+        Entity[] entities6;
+        Entity[] entities8;
         @Param(value = {"1000000"})
         int size;
 
@@ -569,17 +586,67 @@ public class EntityBenchmark extends DominionBenchmark {
         @Setup(Level.Iteration)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            entities = new Entity[size];
+            entities1 = new Entity[size];
+            entities2 = new Entity[size];
+            entities4 = new Entity[size];
+            entities6 = new Entity[size];
+            entities8 = new Entity[size];
             for (int i = 0; i < size; i++) {
-                entities[i] = entityRepository.createEntity(input);
+                entities1[i] = entityRepository.createEntity(input1);
+                entities2[i] = entityRepository.createEntity(input2);
+                entities4[i] = entityRepository.createEntity(input4);
+                entities6[i] = entityRepository.createEntity(input6);
+                entities8[i] = entityRepository.createEntity(input8);
+            }
+        }
+
+        @Setup(Level.Invocation)
+        public void setupInvocation() {
+            if (entities1[0].isEnabled())
+                for (int i = 0; i < size; i++) entities1[i].setEnabled(false);
+            if (entities2[0].isEnabled())
+                for (int i = 0; i < size; i++) entities2[i].setEnabled(false);
+            if (entities4[0].isEnabled())
+                for (int i = 0; i < size; i++) entities4[i].setEnabled(false);
+            if (entities6[0].isEnabled())
+                for (int i = 0; i < size; i++) entities6[i].setEnabled(false);
+            if (entities8[0].isEnabled())
+                for (int i = 0; i < size; i++) entities8[i].setEnabled(false);
+
+        }
+
+        @Benchmark
+        public void enableEntityOf1(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities1[i].setEnabled(true));
             }
         }
 
         @Benchmark
-        public void setEnabled(Blackhole bh) {
+        public void enableEntityOf2(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                entities[i].setEnabled(false);
-                bh.consume(entities[i].isEnabled());
+                bh.consume(entities2[i].setEnabled(true));
+            }
+        }
+
+        @Benchmark
+        public void enableEntityOf4(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities4[i].setEnabled(true));
+            }
+        }
+
+        @Benchmark
+        public void enableEntityOf6(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities6[i].setEnabled(true));
+            }
+        }
+
+        @Benchmark
+        public void enableEntityOf8(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities8[i].setEnabled(true));
             }
         }
 
@@ -589,6 +656,112 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
+    public static class SetDisabled extends DominionBenchmark {
+        private final Object[] input1 = new Object[]{
+                new C1(0)
+        };
+        private final Object[] input2 = new Object[]{
+                new C1(0), new C2(0)
+        };
+        private final Object[] input4 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+        };
+        private final Object[] input6 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+                , new C5(0), new C6(0)
+        };
+        private final Object[] input8 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+                , new C5(0), new C6(0), new C7(0), new C8(0)
+        };
+
+        EntityRepository entityRepository;
+        Entity[] entities1;
+        Entity[] entities2;
+        Entity[] entities4;
+        Entity[] entities6;
+        Entity[] entities8;
+        @Param(value = {"1000000"})
+        int size;
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetDisabled.class)}
+            );
+        }
+
+        @Setup(Level.Iteration)
+        public void setup() {
+            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            entities1 = new Entity[size];
+            entities2 = new Entity[size];
+            entities4 = new Entity[size];
+            entities6 = new Entity[size];
+            entities8 = new Entity[size];
+            for (int i = 0; i < size; i++) {
+                entities1[i] = entityRepository.createEntity(input1);
+                entities2[i] = entityRepository.createEntity(input2);
+                entities4[i] = entityRepository.createEntity(input4);
+                entities6[i] = entityRepository.createEntity(input6);
+                entities8[i] = entityRepository.createEntity(input8);
+            }
+        }
+
+        @Setup(Level.Invocation)
+        public void setupInvocation() {
+            if (!entities1[0].isEnabled())
+                for (int i = 0; i < size; i++) entities1[i].setEnabled(true);
+            if (!entities2[0].isEnabled())
+                for (int i = 0; i < size; i++) entities2[i].setEnabled(true);
+            if (!entities4[0].isEnabled())
+                for (int i = 0; i < size; i++) entities4[i].setEnabled(true);
+            if (!entities6[0].isEnabled())
+                for (int i = 0; i < size; i++) entities6[i].setEnabled(true);
+            if (!entities8[0].isEnabled())
+                for (int i = 0; i < size; i++) entities8[i].setEnabled(true);
+
+        }
+
+        @Benchmark
+        public void disableEntityOf1(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities1[i].setEnabled(false));
+            }
+        }
+
+        @Benchmark
+        public void disableEntityOf2(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities2[i].setEnabled(false));
+            }
+        }
+
+        @Benchmark
+        public void disableEntityOf4(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities4[i].setEnabled(false));
+            }
+        }
+
+        @Benchmark
+        public void disableEntityOf6(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities6[i].setEnabled(false));
+            }
+        }
+
+        @Benchmark
+        public void disableEntityOf8(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities8[i].setEnabled(false));
+            }
+        }
+
+        @TearDown(Level.Iteration)
+        public void tearDown() {
+            entityRepository.close();
+        }
+    }
 
     public static class Contains extends DominionBenchmark {
         EntityRepository entityRepository;
