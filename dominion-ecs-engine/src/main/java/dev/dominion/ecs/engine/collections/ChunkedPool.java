@@ -499,8 +499,20 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     multiDataArray[i][idx] = data[i];
                 }
             }
+            value.setId(id);
             value.setChunk(this);
             return (T) (itemArray[idx] = value);
+        }
+
+        public void renew(T value, Object[] dataArray) {
+            tenant.register(tenant.nextId(), value, dataArray);
+        }
+
+        public Object[] disable(T value) {
+            int id = value.getId();
+            Object[] data = getData(id);
+            tenant.freeId(id);
+            return data;
         }
 
         public Object[] getData(int id) {
