@@ -549,6 +549,82 @@ public class EntityBenchmark extends DominionBenchmark {
         }
     }
 
+    public static class Contains extends DominionBenchmark {
+        EntityRepository entityRepository;
+        Entity[] entities01;
+        Entity[] entities02;
+        Entity[] entities04;
+        Entity[] entities08;
+        Object input01 = new C1(0);
+        Object[] input02 = new Object[]{
+                new C1(0), new C2(0)
+        };
+        Object[] input04 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0)
+        };
+        Object[] input08 = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C5(0), new C6(0), new C7(0), new C8(0)
+        };
+
+        @Param(value = {"1000000"})
+        int size;
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(Contains.class)}
+            );
+        }
+
+        @Setup(Level.Iteration)
+        public void setup() {
+            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            entities01 = new Entity[size];
+            entities02 = new Entity[size];
+            entities04 = new Entity[size];
+            entities08 = new Entity[size];
+            for (int i = 0; i < size; i++) {
+                entities01[i] = entityRepository.createEntity(input01);
+                entities02[i] = entityRepository.createEntity(input02);
+                entities04[i] = entityRepository.createEntity(input04);
+                entities08[i] = entityRepository.createEntity(input08);
+            }
+        }
+
+        @Benchmark
+        public void contains01(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities01[i].contains(input01));
+            }
+        }
+
+        @Benchmark
+        public void contains02(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities02[i].contains(input01));
+            }
+        }
+
+        @Benchmark
+        public void contains04(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities04[i].contains(input01));
+            }
+        }
+
+        @Benchmark
+        public void contains08(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities08[i].contains(input01));
+            }
+        }
+
+        @TearDown(Level.Iteration)
+        public void tearDown() {
+            entityRepository.close();
+        }
+    }
+
     public static class SetEnabled extends DominionBenchmark {
         private final Object[] input1 = new Object[]{
                 new C1(0)
@@ -754,82 +830,6 @@ public class EntityBenchmark extends DominionBenchmark {
         public void disableEntityOf8(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entities8[i].setEnabled(false));
-            }
-        }
-
-        @TearDown(Level.Iteration)
-        public void tearDown() {
-            entityRepository.close();
-        }
-    }
-
-    public static class Contains extends DominionBenchmark {
-        EntityRepository entityRepository;
-        Entity[] entities01;
-        Entity[] entities02;
-        Entity[] entities04;
-        Entity[] entities08;
-        Object input01 = new C1(0);
-        Object[] input02 = new Object[]{
-                new C1(0), new C2(0)
-        };
-        Object[] input04 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0)
-        };
-        Object[] input08 = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0)
-        };
-
-        @Param(value = {"1000000"})
-        int size;
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(Contains.class)}
-            );
-        }
-
-        @Setup(Level.Iteration)
-        public void setup() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            entities01 = new Entity[size];
-            entities02 = new Entity[size];
-            entities04 = new Entity[size];
-            entities08 = new Entity[size];
-            for (int i = 0; i < size; i++) {
-                entities01[i] = entityRepository.createEntity(input01);
-                entities02[i] = entityRepository.createEntity(input02);
-                entities04[i] = entityRepository.createEntity(input04);
-                entities08[i] = entityRepository.createEntity(input08);
-            }
-        }
-
-        @Benchmark
-        public void contains01(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities01[i].contains(input01));
-            }
-        }
-
-        @Benchmark
-        public void contains02(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities02[i].contains(input01));
-            }
-        }
-
-        @Benchmark
-        public void contains04(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities04[i].contains(input01));
-            }
-        }
-
-        @Benchmark
-        public void contains08(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities08[i].contains(input01));
             }
         }
 
