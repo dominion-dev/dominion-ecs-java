@@ -191,23 +191,22 @@ public class PreparedComposition implements Composition {
                 return new Object[0];
             }
             Object[] componentArray = new Object[length];
-            Object[] prevComponentArray = entity.getArray();
+            Object[] prevComponentArray = entity.getComponentArray();
             int prevComponentArrayLength = entity.getArrayLength();
-            int prevComponentArrayOffset = entity.getArrayOffset();
             if (prevComponentArray != null && prevComponentArrayLength > 0) {
-                populateComponentArray(componentArray, prevComponentArray, prevComponentArrayOffset, prevComponentArrayLength, targetComposition.indexMapping);
+                populateComponentArray(componentArray, prevComponentArray, prevComponentArrayLength, targetComposition.indexMapping);
             }
             if (addedComponents.length > 0) {
-                populateComponentArray(componentArray, addedComponents, 0, addedComponents.length, targetComposition.addedIndexMapping);
+                populateComponentArray(componentArray, addedComponents, addedComponents.length, targetComposition.addedIndexMapping);
             }
             return componentArray;
         }
 
-        private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int otherComponentArrayOffset, int otherComponentArrayLength, int[] indexMapping) {
+        private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int otherComponentArrayLength, int[] indexMapping) {
             for (int i = 0; i < otherComponentArrayLength; i++) {
                 int index = indexMapping[i];
                 if (index < 0) continue;
-                componentArray[index] = otherComponentArray[otherComponentArrayOffset + i];
+                componentArray[index] = otherComponentArray[i];
             }
         }
 

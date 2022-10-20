@@ -77,11 +77,11 @@ public final class EntityRepository implements Dominion {
     public Entity createEntityAs(String name, Entity prefab, Object... components) {
         IntEntity origin = (IntEntity) prefab;
         int originArrayLength;
-        if (origin.getArray() == null || (originArrayLength = origin.getArrayLength()) == 0) {
+        if (origin.getComponentArray() == null || (originArrayLength = origin.getArrayLength()) == 0) {
             return createEntity(name, components);
         }
         Object[] targetComponents = Arrays.copyOf(components, originArrayLength + components.length);
-        System.arraycopy(origin.getArray(), origin.getArrayOffset(), targetComponents, components.length, originArrayLength);
+        System.arraycopy(origin.getComponentArray(), 0, targetComponents, components.length, originArrayLength);
         return createEntity(name, targetComponents);
     }
 

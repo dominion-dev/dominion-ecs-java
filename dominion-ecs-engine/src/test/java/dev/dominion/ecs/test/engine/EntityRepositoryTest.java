@@ -2,6 +2,7 @@ package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Dominion;
+import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
@@ -22,10 +23,44 @@ class EntityRepositoryTest {
     void createEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
-            Assertions.assertNotNull(entity.getComposition());
-            Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
+            Assertions.assertNotNull(entity.getChunk());
+            Assertions.assertEquals(entity.getChunk().getTenant().getPool().getEntry(entity.getId()), entity);
+        }
+    }
+
+    //    @Test
+    void createEntityWithName() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entityWithName = (IntEntity) entityRepository.createEntity("an-entity");
             Assertions.assertEquals("an-entity", entityWithName.getName());
+        }
+    }
+
+    @Test
+    void createAndDeleteEntityBulk() {
+        int capacity = 1_000_000;
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
+            Entity[] entities = new Entity[capacity];
+            for (int i = 0; i < capacity; i++) {
+                entities[i] = entityRepository.createEntity(new C1(1), new C2(2), new C3(3));
+            }
+            System.out.println("new entities created: " + capacity);
+            for (int i = 0; i < capacity; i++) {
+                entityRepository.deleteEntity(entities[i]);
+            }
+            System.out.println("entities deleted: " + capacity);
+            for (int i = 0; i < capacity; i++) {
+                entities[i] = entityRepository.createEntity(new C1(1), new C2(2), new C3(3));
+            }
+            System.out.println("entities recreated: " + capacity);
+            for (int i = 0; i < capacity; i++) {
+                entityRepository.deleteEntity(entities[i]);
+            }
+            System.out.println("entities deleted: " + capacity);
+            for (int i = 0; i < capacity; i++) {
+                entities[i] = entityRepository.createEntity(new C1(1), new C2(2), new C3(3));
+            }
+            System.out.println("entities recreated: " + capacity);
         }
     }
 
@@ -34,9 +69,9 @@ class EntityRepositoryTest {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             C1 c1 = new C1(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1);
-            Assertions.assertNotNull(entity.getComposition());
-            Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
-            Assertions.assertEquals(c1, Objects.requireNonNull(entity.cloneComponentArray())[0]);
+            Assertions.assertNotNull(entity.getChunk());
+            Assertions.assertEquals(entity.getChunk().getTenant().getPool().getEntry(entity.getId()), entity);
+            Assertions.assertEquals(c1, Objects.requireNonNull(entity.getComponentArray())[0]);
         }
     }
 
@@ -46,9 +81,9 @@ class EntityRepositoryTest {
             C1 c1 = new C1(0);
             Composition.Of1<C1> ofC1 = entityRepository.composition().of(C1.class);
             IntEntity entity = (IntEntity) entityRepository.createPreparedEntity(ofC1.withValue(c1));
-            Assertions.assertNotNull(entity.getComposition());
-            Assertions.assertEquals(entity.getComposition().getTenant().getPool().getEntry(entity.getId()), entity);
-            Assertions.assertEquals(c1, Objects.requireNonNull(entity.cloneComponentArray())[0]);
+            Assertions.assertNotNull(entity.getChunk());
+            Assertions.assertEquals(entity.getChunk().getTenant().getPool().getEntry(entity.getId()), entity);
+            Assertions.assertEquals(c1, Objects.requireNonNull(entity.getComponentArray())[0]);
         }
     }
 
@@ -58,11 +93,11 @@ class EntityRepositoryTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(c1, c2);
-            Assertions.assertNotNull(entity1.getComposition());
-            Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.cloneComponentArray());
+            Assertions.assertNotNull(entity1.getChunk());
+            Assertions.assertEquals(entity1.getChunk().getTenant().getPool().getEntry(entity1.getId()), entity1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponentArray());
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c2, c1);
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponentArray());
         }
     }
 
@@ -74,11 +109,11 @@ class EntityRepositoryTest {
             Composition.Of2<C1, C2> ofC1C2 = entityRepository.composition().of(C1.class, C2.class);
             Composition.Of2<C2, C1> ofC2C1 = entityRepository.composition().of(C2.class, C1.class);
             IntEntity entity1 = (IntEntity) entityRepository.createPreparedEntity(ofC1C2.withValue(c1, c2));
-            Assertions.assertNotNull(entity1.getComposition());
-            Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.cloneComponentArray());
+            Assertions.assertNotNull(entity1.getChunk());
+            Assertions.assertEquals(entity1.getChunk().getTenant().getPool().getEntry(entity1.getId()), entity1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity1.getComponentArray());
             IntEntity entity2 = (IntEntity) entityRepository.createPreparedEntity(ofC2C1.withValue(c2, c1));
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity2.getComponentArray());
         }
     }
 
@@ -89,11 +124,11 @@ class EntityRepositoryTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             IntEntity entity1 = (IntEntity) entityRepository.createEntityAs(entity0, c1);
-            Assertions.assertNotNull(entity1.getComposition());
-            Assertions.assertEquals(entity1.getComposition().getTenant().getPool().getEntry(entity1.getId()), entity1);
-            Assertions.assertArrayEquals(new Object[]{c1}, entity1.cloneComponentArray());
+            Assertions.assertNotNull(entity1.getChunk());
+            Assertions.assertEquals(entity1.getChunk().getTenant().getPool().getEntry(entity1.getId()), entity1);
+            Assertions.assertArrayEquals(new Object[]{c1}, entity1.getComponentArray());
             IntEntity entity2 = (IntEntity) entityRepository.createEntityAs(entity1, c2);
-            Assertions.assertArrayEquals(new Object[]{c2, c1}, entity2.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c2, c1}, entity2.getComponentArray());
         }
     }
 
@@ -101,17 +136,11 @@ class EntityRepositoryTest {
     void deleteEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             C1 c10 = new C1(0);
-            C1 c11 = new C1(1);
-            C1 c12 = new C1(2);
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(c10);
-            IntEntity entity2 = (IntEntity) entityRepository.createEntity(c11);
             Assertions.assertTrue(entityRepository.deleteEntity(entity1));
-            IntEntity entity3 = (IntEntity) entityRepository.createEntity(c12);
             Assertions.assertTrue(entity1.isDeleted());
             Assertions.assertFalse(entity1.isEnabled());
-            Assertions.assertArrayEquals(null, entity1.cloneComponentArray());
-            Assertions.assertArrayEquals(new Object[]{c11}, entity2.cloneComponentArray());
-            Assertions.assertArrayEquals(new Object[]{c12}, entity3.cloneComponentArray());
+            Assertions.assertArrayEquals(null, entity1.getComponentArray());
         }
     }
 
@@ -122,31 +151,31 @@ class EntityRepositoryTest {
             var c2 = new C2(0);
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1);
-            Assertions.assertArrayEquals(new Object[]{c1}, entity.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponentArray());
             Composition composition = entityRepository.composition();
 
             Composition.Modifier modifier = composition.byRemoving(C1.class).withValue(entity);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
-            Assertions.assertNull(entity.cloneComponentArray());
+            Assertions.assertNull(entity.getComponentArray());
 
             modifier = composition.byAdding1AndRemoving(C1.class).withValue(entity, c1);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
-            Assertions.assertArrayEquals(new Object[]{c1}, entity.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponentArray());
 
             modifier = composition.byAdding1AndRemoving(C2.class, C1.class).withValue(entity, c2);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
-            Assertions.assertArrayEquals(new Object[]{c2}, entity.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c2}, entity.getComponentArray());
 
             modifier = composition.byAdding2AndRemoving(C1.class, C2.class, C2.class).withValue(entity, c1, c2);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
-            Assertions.assertArrayEquals(new Object[]{c1}, entity.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponentArray());
 
             Assertions.assertThrows(IllegalArgumentException.class,
                     () -> composition.byAdding1AndRemoving(C1.class).withValue(entity, c1));
 
             modifier = composition.byAdding2AndRemoving(C2.class, C3.class).withValue(entity, c2, c3);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.cloneComponentArray());
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());
         }
     }
 

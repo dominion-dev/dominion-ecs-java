@@ -24,17 +24,19 @@ public final class IntEntity implements Entity, Item {
         idUpdater = updater;
     }
 
+    ChunkedPool.LinkedChunk<IntEntity> chunk;
+//    private IntEntity prev = null;
+//    private IntEntity next = null;
+
+    //    private final Data data;
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
-    private IntEntity prev = null;
-    private IntEntity next = null;
 
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile Data data;
+    private Object[] backup;
 
     public IntEntity(int id, DataComposition composition, String name) {
         this.id = id;
-        data = new Data(composition, name);
+//        data = new Data(composition, name);
     }
 
     @Override
@@ -50,82 +52,72 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public Item getPrev() {
-        return prev;
+        return null;
+//        return prev;
     }
 
     @Override
     public void setPrev(Item prev) {
-        this.prev = (IntEntity) prev;
+//        this.prev = (IntEntity) prev;
     }
 
     @Override
     public Item getNext() {
-        return next;
+        return null;
+//        return next;
     }
 
     @Override
     public void setNext(Item next) {
-        this.next = (IntEntity) next;
-    }
-
-    @Override
-    public void setArray(Object[] components, int offset) {
-        data.components = components;
-        data.offset = offset;
-    }
-
-    @Override
-    public int getOffset() {
-        return data.offset;
+//        this.next = (IntEntity) next;
     }
 
     public DataComposition getComposition() {
-        return data.composition;
+        return (DataComposition) chunk.getTenant().getOwner();
+        //        return data.composition;
     }
 
     public IntEntity setComposition(DataComposition composition) {
-        data.composition = composition;
+//        data.composition = composition;
         return this;
     }
 
-    public Object[] cloneComponentArray() {
-        int arrayLength;
-        if (getArray() == null || (arrayLength = getArrayLength()) == 0) {
+    public ChunkedPool.LinkedChunk<IntEntity> getChunk() {
+        return chunk;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+//        data.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+        this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+    }
+
+    public Object[] getComponentArray() {
+        if (chunk == null || getArrayLength() == 0) {
             return null;
         }
-        Object[] components = new Object[arrayLength];
-        System.arraycopy(getArray(), getArrayOffset(), components, 0, arrayLength);
-        return components;
-    }
-
-    public Object[] getArray() {
-        return data.components;
-    }
-
-    public int getArrayOffset() {
-        return data.offset;
+        return chunk.getData(id);
     }
 
     public int getArrayLength() {
-        return data.composition.length();
-    }
-
-    public Data getData() {
-        return data;
+        return chunk.getDataLength();
     }
 
     public IndexKey getStateRoot() {
-        return data.stateRoot;
+//        return data.stateRoot;
+        return null;
     }
 
     public IntEntity setStateRoot(IndexKey stateRoot) {
-        data.stateRoot = stateRoot;
+//        data.stateRoot = stateRoot;
         return this;
     }
 
     @Override
     public String getName() {
-        return data.name;
+//        return data.name;
+        return null;
     }
 
     @Override
@@ -134,18 +126,17 @@ public final class IntEntity implements Entity, Item {
             if (!isEnabled()) {
                 return this;
             }
-            return data.composition.getRepository().addComponent(this, component);
+            return getComposition().getRepository().addComponent(this, component);
         }
     }
 
     @Override
     public boolean remove(Object component) {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, component.getClass());
+            return getComposition().getRepository().removeComponentType(this, component.getClass());
         }
     }
 
@@ -162,54 +153,58 @@ public final class IntEntity implements Entity, Item {
     @Override
     public boolean removeType(Class<?> componentType) {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, componentType);
+            return getComposition().getRepository().removeComponentType(this, componentType);
         }
     }
 
     @Override
     public boolean has(Class<?> componentType) {
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        data.composition.fetchComponentIndex(componentType) > -1 :
-                        data.components[0].getClass().equals(componentType));
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(getId()).getClass().equals(componentType);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+        return composition.fetchComponentIndex(componentType) > -1;
     }
 
     @Override
     public boolean contains(Object component) {
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(getId()).equals(component);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
         int idx;
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        (idx = data.composition.fetchComponentIndex(component.getClass())) > -1
-                                && data.components[idx].equals(component) :
-                        data.components[0].equals(component)
-        );
+        return (idx = composition.fetchComponentIndex(component.getClass())) > -1
+                && chunk.getData(getId())[idx].equals(component);
     }
 
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
-        if (!isEnabled()) {
-            return this;
-        }
-        return data.composition.setEntityState(this, state);
+//        if (!isEnabled()) {
+//            return this;
+//        }
+//        return data.composition.setEntityState(this, state);
+        return this;
     }
 
     @Override
     public boolean isEnabled() {
-        return !isDeleted() && data.offset > -1;
+        return !isDeleted() && backup == null;
     }
 
     @Override
     public Entity setEnabled(boolean enabled) {
         if (enabled && !isEnabled() && !isDeleted()) {
-            data.composition.reEnableEntity(this);
+            chunk.renew(this, backup);
+            backup = null;
         } else if (!enabled && isEnabled()) {
-            data.offset = -1;
+            backup = chunk.disable(this);
         }
         return this;
     }
@@ -219,7 +214,9 @@ public final class IntEntity implements Entity, Item {
             if (!isEnabled()) {
                 return false;
             }
-            data.composition.detachEntityAndState(this);
+            chunk.getTenant().freeId(id);
+            flagDetachedId();
+            chunk = null;
             return true;
         }
     }
@@ -235,48 +232,42 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public String toString() {
-        ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
-        String name = data.name == null ? "Entity" : data.name;
-        return name + "={" +
-                "id=" + idSchema.idToString(id) +
-                ", " + data.composition +
-                ", arrayOffset=" + data.offset +
-                ", stateRootKey=" + data.stateRoot +
-                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
-                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
-                '}';
+        ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
+        return "Entity={id=" + idSchema.idToString(id) + '}';
+//        String name = data.name == null ? "Entity" : data.name;
+//        return name + "={" +
+//                "id=" + idSchema.idToString(id) +
+//                ", " + data.composition +
+//                ", arrayOffset=" + data.offset +
+//                ", stateRootKey=" + data.stateRoot +
+//                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
+//                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
+//                '}';
     }
 
-    public static class Data {
-        private final String name;
-        private DataComposition composition;
-        private Object[] components;
-        private int offset;
-        private IndexKey stateRoot;
-
-        public Data(DataComposition composition, String name) {
-            this.composition = composition;
-            this.name = name;
-        }
-
-        public DataComposition composition() {
-            return composition;
-        }
-
-        public Object[] components() {
-            return components;
-        }
-
-        public String name() {
-            return name;
-        }
-
-        public IndexKey stateRoot() {
-            return stateRoot;
-        }
-
-        public int offset() {
-            return offset;
-        }
-    }
+//    public static class Data {
+//        private final String name;
+//        private final DataComposition composition;
+//        public ChunkedPool.LinkedChunk<IntEntity> chunk;
+//        private Object[] components;
+//        private int offset;
+//        private IndexKey stateRoot;
+//
+//        public Data(DataComposition composition, String name) {
+//            this.composition = composition;
+//            this.name = name;
+//        }
+//
+//        public DataComposition composition() {
+//            return composition;
+//        }
+//
+//        public String name() {
+//            return name;
+//        }
+//
+//        public IndexKey stateRoot() {
+//            return stateRoot;
+//        }
+//    }
 }
