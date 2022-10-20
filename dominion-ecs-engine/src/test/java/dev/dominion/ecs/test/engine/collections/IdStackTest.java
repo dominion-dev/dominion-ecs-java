@@ -33,8 +33,8 @@ class IdStackTest {
         try (IdStack stack = new IdStack(8, ID_SCHEMA, LoggingSystem.Context.TEST)) {
             Assertions.assertTrue(stack.push(1));
             Assertions.assertTrue(stack.push(2));
-            Assertions.assertFalse(stack.push(3));
-            Assertions.assertEquals(2, stack.size());
+            Assertions.assertTrue(stack.push(3));
+            Assertions.assertEquals(3, stack.size());
         }
     }
 
