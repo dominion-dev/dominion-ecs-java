@@ -9,11 +9,6 @@ import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 class DataCompositionTest {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
@@ -130,107 +125,107 @@ class DataCompositionTest {
         }
     }
 
-    @Test
-    void setEntityState() {
-        ClassIndex classIndex = new ClassIndex();
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
-            DataComposition composition =
-                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
-            IntEntity entity = composition.createEntity(null, false);
-            composition.setEntityState(entity, State1.ONE);
-            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
+//    @Test
+//    void setEntityState() {
+//        ClassIndex classIndex = new ClassIndex();
+//        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+//            DataComposition composition =
+//                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
+//            IntEntity entity = composition.createEntity(null, false);
+//            composition.setEntityState(entity, State1.ONE);
+//            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
+//
+//            composition.setEntityState(entity, State1.TWO);
+//            Assertions.assertFalse(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
+//            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.TWO, classIndex)));
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
+//
+//            IntEntity entity2 = composition.createEntity(null, false);
+//            composition.setEntityState(entity2, State1.TWO);
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+//            Assertions.assertEquals(entity, entity2.getPrev());
+//            Assertions.assertEquals(entity2, entity.getNext());
+//            Assertions.assertNull(entity.getData().stateRoot());
+//
+//            composition.setEntityState(entity2, null);
+//            Assertions.assertNull(entity2.getData().stateRoot());
+//            Assertions.assertNull(entity2.getPrev());
+//            Assertions.assertNull(entity2.getNext());
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
+//
+//            composition.setEntityState(entity2, State1.TWO);
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
+//            IntEntity entity3 = composition.createEntity(null, false);
+//            composition.setEntityState(entity3, State1.TWO);
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+//            Assertions.assertNull(entity2.getData().stateRoot());
+//            Assertions.assertEquals(entity2, entity.getNext());
+//            Assertions.assertEquals(entity, entity2.getPrev());
+//            Assertions.assertEquals(entity3, entity2.getNext());
+//            Assertions.assertEquals(entity2, entity3.getPrev());
+//            Assertions.assertNull(entity3.getNext());
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
+//
+//            composition.setEntityState(entity2, null);
+//            Assertions.assertNull(entity2.getPrev());
+//            Assertions.assertNull(entity2.getNext());
+//            Assertions.assertNull(entity2.getData().stateRoot());
+//            Assertions.assertEquals(entity3, entity.getNext());
+//            Assertions.assertEquals(entity, entity3.getPrev());
+//        }
+//    }
 
-            composition.setEntityState(entity, State1.TWO);
-            Assertions.assertFalse(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.ONE, classIndex)));
-            Assertions.assertTrue(composition.getStates().containsKey(DataComposition.calcIndexKey(State1.TWO, classIndex)));
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
-
-            IntEntity entity2 = composition.createEntity(null, false);
-            composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
-            Assertions.assertEquals(entity, entity2.getPrev());
-            Assertions.assertEquals(entity2, entity.getNext());
-            Assertions.assertNull(entity.getData().stateRoot());
-
-            composition.setEntityState(entity2, null);
-            Assertions.assertNull(entity2.getData().stateRoot());
-            Assertions.assertNull(entity2.getPrev());
-            Assertions.assertNull(entity2.getNext());
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity.getData().stateRoot());
-
-            composition.setEntityState(entity2, State1.TWO);
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity2.getData().stateRoot());
-            IntEntity entity3 = composition.createEntity(null, false);
-            composition.setEntityState(entity3, State1.TWO);
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
-            Assertions.assertNull(entity2.getData().stateRoot());
-            Assertions.assertEquals(entity2, entity.getNext());
-            Assertions.assertEquals(entity, entity2.getPrev());
-            Assertions.assertEquals(entity3, entity2.getNext());
-            Assertions.assertEquals(entity2, entity3.getPrev());
-            Assertions.assertNull(entity3.getNext());
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.TWO, classIndex), entity3.getData().stateRoot());
-
-            composition.setEntityState(entity2, null);
-            Assertions.assertNull(entity2.getPrev());
-            Assertions.assertNull(entity2.getNext());
-            Assertions.assertNull(entity2.getData().stateRoot());
-            Assertions.assertEquals(entity3, entity.getNext());
-            Assertions.assertEquals(entity, entity3.getPrev());
-        }
-    }
-
-    @Test
-    void concurrentSetEntityState() throws InterruptedException {
-        int capacity = 1 << 20;
-        int threadCount = 8;
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        IntEntity[] entities = new IntEntity[capacity];
-        ClassIndex classIndex = new ClassIndex();
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            DataComposition composition =
-                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
-            for (int i = 0; i < capacity; i++) {
-                entities[i] = composition.createEntity(null, false);
-            }
-            AtomicInteger counter = new AtomicInteger(0);
-            for (int i = 0; i < capacity; i++) {
-                executorService.execute(() -> {
-                    int idx = counter.getAndIncrement();
-                    composition.setEntityState(entities[idx], State1.ONE);
-                });
-            }
-            executorService.shutdown();
-            Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
-
-            int count = 1;
-            IntEntity entity = composition.getStates().get(DataComposition.calcIndexKey(State1.ONE, classIndex));
-            System.out.println(entity);
-            Assertions.assertEquals(DataComposition.calcIndexKey(State1.ONE, classIndex), entity.getData().stateRoot());
-            IntEntity last = entity;
-            while ((entity = (IntEntity) entity.getPrev()) != null) {
-                Assertions.assertNull(entity.getData().stateRoot());
-                Assertions.assertEquals(last, entity.getNext());
-                last = entity;
-                count++;
-            }
-            Assertions.assertEquals(capacity, count);
-        }
-    }
+//    @Test
+//    void concurrentSetEntityState() throws InterruptedException {
+//        int capacity = 1 << 20;
+//        int threadCount = 8;
+//        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+//        IntEntity[] entities = new IntEntity[capacity];
+//        ClassIndex classIndex = new ClassIndex();
+//        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+//            DataComposition composition =
+//                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST);
+//            for (int i = 0; i < capacity; i++) {
+//                entities[i] = composition.createEntity(null, false);
+//            }
+//            AtomicInteger counter = new AtomicInteger(0);
+//            for (int i = 0; i < capacity; i++) {
+//                executorService.execute(() -> {
+//                    int idx = counter.getAndIncrement();
+//                    composition.setEntityState(entities[idx], State1.ONE);
+//                });
+//            }
+//            executorService.shutdown();
+//            Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+//
+//            int count = 1;
+//            IntEntity entity = composition.getStates().get(DataComposition.calcIndexKey(State1.ONE, classIndex));
+//            System.out.println(entity);
+//            Assertions.assertEquals(DataComposition.calcIndexKey(State1.ONE, classIndex), entity.getData().stateRoot());
+//            IntEntity last = entity;
+//            while ((entity = (IntEntity) entity.getPrev()) != null) {
+//                Assertions.assertNull(entity.getData().stateRoot());
+//                Assertions.assertEquals(last, entity.getNext());
+//                last = entity;
+//                count++;
+//            }
+//            Assertions.assertEquals(capacity, count);
+//        }
+//    }
 
     //    @Test
-    public void select1CompWithState() {
-        ClassIndex classIndex = new ClassIndex();
-        classIndex.addClass(C1.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            DataComposition composition = new DataComposition(null, chunkedPool, classIndex, null
-                    , LoggingSystem.Context.VERBOSE_TEST
-                    , C1.class);
-            int capacity = 1 << 16;
-            for (int i = 0; i < capacity; i++) {
-                IntEntity entity = composition.createEntity(null, false, new C1(i));
-                composition.setEntityState(entity, State1.ONE);
-            }
+//    public void select1CompWithState() {
+//        ClassIndex classIndex = new ClassIndex();
+//        classIndex.addClass(C1.class);
+//        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+//            DataComposition composition = new DataComposition(null, chunkedPool, classIndex, null
+//                    , LoggingSystem.Context.VERBOSE_TEST
+//                    , C1.class);
+//            int capacity = 1 << 16;
+//            for (int i = 0; i < capacity; i++) {
+//                IntEntity entity = composition.createEntity(null, false, new C1(i));
+//                composition.setEntityState(entity, State1.ONE);
+//            }
 //            IntEntity entity = composition.getStateRootEntity(DataComposition.calcIndexKey(State1.ONE, classIndex));
 //            Iterator<Results.With1<C1>> iterator = composition.select(C1.class, new DataComposition.StateIterator(entity));
 //            int count = 0;
@@ -242,12 +237,12 @@ class DataCompositionTest {
 //                count++;
 //            }
 //            Assertions.assertEquals(capacity, count);
-        }
-    }
+//        }
+//    }
 
-    enum State1 {
-        ONE, TWO
-    }
+//    enum State1 {
+//        ONE, TWO
+//    }
 
     record C1(int id) {
     }
