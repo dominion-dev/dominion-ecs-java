@@ -156,9 +156,10 @@ public final class CompositionRepository implements AutoCloseable {
 
             );
         }
-//        entity.getComposition().detachEntityAndState(entity);
-        entity.getComposition().detachEntity(entity);
+       int prevId = entity.getId();
+        ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
         newDataComposition.attachEntity(entity, true, newComponentArray);
+        prevTenant.freeId(prevId);
     }
 
     public Entity addComponent(IntEntity entity, Object component) {
