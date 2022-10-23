@@ -261,9 +261,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int freeId(int id) {
+            return freeId(id, true);
+        }
+
+        public int freeId(int id, boolean check) {
             LinkedChunk<T> chunk = pool.getChunk(id);
-            if (chunk == null) {
-                return -1;
+            if (check && (chunk == null || chunk.tenant != this)) {
+                throw new IllegalArgumentException("Invalid chunk [" + chunk + "] retrieved by [" + id + "]");
             }
             if (chunk.isEmpty()) {
                 idStack.push(id);
