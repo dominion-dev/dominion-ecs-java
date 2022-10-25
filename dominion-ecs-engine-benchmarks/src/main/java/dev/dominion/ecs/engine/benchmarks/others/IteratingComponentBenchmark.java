@@ -20,17 +20,8 @@ public class IteratingComponentBenchmark {
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
                 new String[]{
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking01.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking02.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking03.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking04.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking05.class),
-//                        DominionBenchmark.fetchBenchmarkName(Dominion.IterateUnpacking06.class),
-//                        DominionBenchmark.fetchBenchmarkName(Artemis.class)
-//                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking01.class),
-                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking02.class),
-//                        DominionBenchmark.fetchBenchmarkName(Artemis.IterateUnpacking06.class),
+                        DominionBenchmark.fetchBenchmarkName(Dominion.class),
+                        DominionBenchmark.fetchBenchmarkName(Artemis.class)
                 }
         );
     }
