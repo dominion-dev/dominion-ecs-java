@@ -69,7 +69,7 @@ public class AddingComponentBenchmark {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createEntity();
+                    entities1[i] = entityRepository.createEntity(new C1());
                 }
             }
 
@@ -77,7 +77,7 @@ public class AddingComponentBenchmark {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities3[i]);
-                    entities3[i] = entityRepository.createEntity();
+                    entities3[i] = entityRepository.createEntity(new C1(), new C2(), new C3());
                 }
             }
 
@@ -85,7 +85,7 @@ public class AddingComponentBenchmark {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities5[i]);
-                    entities5[i] = entityRepository.createEntity();
+                    entities5[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5());
                 }
             }
         }
