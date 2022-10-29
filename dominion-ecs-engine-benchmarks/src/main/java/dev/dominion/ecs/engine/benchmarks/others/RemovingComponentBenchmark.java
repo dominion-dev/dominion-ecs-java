@@ -94,7 +94,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities1[i].remove(new C1()));
+                bh.consume(entities1[i].removeType(C1.class));
             }
             run1 = true;
         }
@@ -102,7 +102,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities2[i].remove(new C1()));
+                bh.consume(entities2[i].removeType(C1.class));
             }
             run2 = true;
         }
@@ -110,7 +110,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities4[i].remove(new C1()));
+                bh.consume(entities4[i].removeType(C1.class));
             }
             run4 = true;
         }
@@ -118,7 +118,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities6[i].remove(new C1()));
+                bh.consume(entities6[i].removeType(C1.class));
             }
             run6 = true;
         }
