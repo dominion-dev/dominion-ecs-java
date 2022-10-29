@@ -96,7 +96,7 @@ public final class EntityRepository implements Dominion {
         if (mod == null) {
             return false;
         }
-        return mod.entity().modify(compositions, mod.newDataComposition(), mod.newComponentArray());
+        return mod.entity().modify(compositions, mod.targetComposition(), mod.addedComponents());
     }
 
     @Override

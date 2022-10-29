@@ -140,12 +140,12 @@ public final class IntEntity implements Entity, Item {
         }
     }
 
-    public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
+    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
         synchronized (this) {
             if (!isEnabled()) {
                 return false;
             }
-            compositions.modifyComponents(this, newDataComposition, newComponentArray);
+            compositions.modifyComponents(this, targetComposition, addedComponents);
             return true;
         }
     }

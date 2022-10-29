@@ -309,6 +309,16 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return pool.getChunk(id).set(id, entry, data);
         }
 
+        public T migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
+            LinkedChunk<T> prevChunk = pool.getChunk(entry.getId());
+            LinkedChunk<T> newChunk = pool.getChunk(newId);
+            entry = newChunk.copy(entry, prevChunk, newId, indexMapping);
+            if (addedIndexMapping != null) {
+                newChunk.add(newId, addedIndexMapping, addedComponents);
+            }
+            return entry;
+        }
+
         public int currentChunkSize() {
             return currentChunk.size();
         }
@@ -515,8 +525,55 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return (T) (itemArray[idx] = value);
         }
 
-        public void renew(T value, Object[] dataArray) {
-            tenant.register(tenant.nextId(), value, dataArray);
+        @SuppressWarnings("unchecked")
+        public T copy(T value, LinkedChunk<T> prevChunk, int newId, int[] indexMapping) {
+            int prevIdx = idSchema.fetchObjectId(value.getId());
+            int newIdx = idSchema.fetchObjectId(newId);
+            if (indexMapping.length > 0) {
+                if (dataLength == 1) { // copy to new dataArray
+                    if (prevChunk.dataLength == 1) { // copy from prev.dataArray
+                        dataArray[newIdx] = prevChunk.dataArray[prevIdx];
+                    } else if (prevChunk.dataLength > 1) { // copy from prev.multiDataArray
+                        for (int i = 0; i < indexMapping.length; i++) {
+                            if (indexMapping[i] == 0) {
+                                dataArray[newIdx] = prevChunk.multiDataArray[i][prevIdx];
+                            }
+                        }
+                    }
+                } else if (dataLength > 1) { // copy to new multiDataArray
+                    if (prevChunk.dataLength == 1) { // copy from prev.dataArray
+                        if (indexMapping[0] > -1) {
+                            multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx];
+                        }
+                    } else if (prevChunk.dataLength > 1) {  // copy from prev.multiDataArray
+                        for (int i = 0; i < indexMapping.length; i++) {
+                            if (indexMapping[i] > -1) {
+                                multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
+                            }
+                        }
+                    }
+                }
+            }
+            value.setId(newId);
+            value.setChunk(this);
+            return (T) (itemArray[newIdx] = value);
+        }
+
+        public void add(int id, int[] addedIndexMapping, Object[] addedComponents) {
+            int idx = idSchema.fetchObjectId(id);
+            if (dataLength == 1) { // add to dataArray
+                for (int i = 0; i < addedIndexMapping.length; i++) {
+                    if (addedIndexMapping[i] == 0) {
+                        dataArray[idx] = addedComponents[i];
+                    }
+                }
+            } else if (dataLength > 1) { // add to multiDataArray
+                for (int i = 0; i < addedIndexMapping.length; i++) {
+                    if (addedIndexMapping[i] > -1) {
+                        multiDataArray[addedIndexMapping[i]][idx] = addedComponents[i];
+                    }
+                }
+            }
         }
 
         public Object[] disable(T value) {
@@ -524,6 +581,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             Object[] data = getData(id);
             tenant.freeId(id);
             return data;
+        }
+
+        public void renew(T value, Object[] dataArray) {
+            tenant.register(tenant.nextId(), value, dataArray);
         }
 
         public Object[] getData(int id) {

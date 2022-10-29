@@ -151,11 +151,12 @@ public class PreparedComposition implements Composition {
         }
     }
 
-    record TargetComposition(DataComposition target, int[] indexMapping, int[] addedIndexMapping) {
+    public record TargetComposition(DataComposition target, int[] indexMapping, int[] addedIndexMapping) {
     }
 
-    public record NewEntityComposition(IntEntity entity, DataComposition newDataComposition,
-                                       Object[] newComponentArray) implements Modifier {
+    public record NewEntityComposition(IntEntity entity,
+                                       TargetComposition targetComposition,
+                                       Object[] addedComponents) implements Modifier {
     }
 
     public static class PreparedModifier implements ByRemoving {
@@ -181,7 +182,8 @@ public class PreparedComposition implements Composition {
             var composition = intEntity.getComposition();
             TargetComposition targetComposition = fetchTargetComposition(composition);
             return !targetComposition.target.equals(composition) ?
-                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, addedComponents)) :
+                    new NewEntityComposition(intEntity, targetComposition, addedComponents) :
+//                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, addedComponents)) :
                     null;
         }
 

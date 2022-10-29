@@ -110,18 +110,16 @@ public final class DataComposition {
 //        }
 //    }
 
-    public void attachEntity(IntEntity entity, boolean prepared, Object... components) {
+    public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Start Attaching " + entity + " to " + this + " and  " + tenant)
             );
         }
-        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
-            case 0 -> null;
-            case 1 -> components;
-            default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
-        });
+
+        entity = tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
+
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
