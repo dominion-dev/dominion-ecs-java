@@ -156,6 +156,34 @@ public interface Dominion extends AutoCloseable {
     Scheduler createScheduler();
 
     /**
+     * Finds all compositions with a component of the specified type.
+     *
+     * @param type the component class
+     * @param <T>  the component type
+     * @return the results
+     */
+    <T> Results<T> findCompositionsWith(Class<T> type);
+
+    /**
+     * Finds all compositions with components of the specified types.
+     *
+     * @param type1 the 1st component class
+     * @param type2 the 2nd component class
+     * @param <T1>  the 1st component type
+     * @param <T2>  the 2nd component type
+     * @return the results
+     */
+    <T1, T2> Results<With2<T1, T2>> findCompositionsWith(Class<T1> type1, Class<T2> type2);
+
+    <T1, T2, T3> Results<With3<T1, T2, T3>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3);
+
+    <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4);
+
+    <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5);
+
+    <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6);
+
+    /**
      * Finds all entities with a component of the specified type.
      *
      * @param type the component class

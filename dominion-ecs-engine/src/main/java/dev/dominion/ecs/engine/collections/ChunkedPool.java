@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements AutoCloseable {
+public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final AtomicReferenceArray<LinkedChunk<T>> chunks;
@@ -68,11 +68,11 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
     }
 
     public Tenant<T> newTenant() {
-        return newTenant(0);
+        return newTenant(0, null);
     }
 
-    public Tenant<T> newTenant(int dataLength) {
-        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, loggingContext);
+    public Tenant<T> newTenant(int dataLength, Object owner) {
+        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, owner, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
@@ -91,31 +91,21 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         tenants.forEach(Tenant::close);
     }
 
-    public interface Identifiable {
-
-        static int lockedId(int id) {
-            return id | ChunkedPool.IdSchema.LOCK_BIT;
-        }
-
-        static int unlockedId(int id) {
-            return id ^ ChunkedPool.IdSchema.LOCK_BIT;
-        }
+    public interface Item {
 
         int getId();
 
         int setId(int id);
 
-        Identifiable getPrev();
+        Item getPrev();
 
-        Identifiable setPrev(Identifiable prev);
+        void setPrev(Item prev);
 
-        Identifiable getNext();
+        Item getNext();
 
-        Identifiable setNext(Identifiable next);
+        void setNext(Item next);
 
-        void setArray(Object[] array, int offset);
-
-        int getOffset();
+        void setChunk(LinkedChunk<? extends Item> chunk);
 
         boolean isEnabled();
     }
@@ -172,23 +162,26 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         }
     }
 
-    public static final class Tenant<T extends Identifiable> implements AutoCloseable {
+    public static final class Tenant<T extends Item> implements AutoCloseable {
         private static final AtomicInteger idGenerator = new AtomicInteger();
         private final int id = idGenerator.getAndIncrement();
         private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
-        private final IdStack stack;
+        private final IdStack idStack;
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private final int dataLength;
+
+        private final Object owner;
         private volatile LinkedChunk<T> currentChunk;
         private int newId = Integer.MIN_VALUE;
 
         @SuppressWarnings("StatementWithEmptyBody")
-        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, LoggingSystem.Context loggingContext) {
+        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, LoggingSystem.Context loggingContext) {
             this.pool = pool;
             this.idSchema = idSchema;
             this.dataLength = dataLength;
+            this.owner = owner;
             this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
@@ -197,7 +190,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         )
                 );
             }
-            stack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
+            idStack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
             while ((currentChunk = pool.newChunk(this, null, pool.chunkIndex.get())) == null) {
             }
             firstChunk = currentChunk;
@@ -223,7 +216,7 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         )
                 );
             }
-            int returnValue = stack.pop();
+            int returnValue = idStack.pop();
             if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
@@ -233,7 +226,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 LinkedChunk<T> chunk = currentChunk;
                 int currentChunkIndex = pool.chunkIndex.get();
 
-//                if (chunk.index.get() < idSchema.chunkCapacity - 1) {
                 // try to get a newId from the current chunk
                 if (chunk == null) {
                     continue;
@@ -241,12 +233,10 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 while ((objectId = chunk.index.get()) < idSchema.chunkCapacity - 1) {
                     if (chunk.index.compareAndSet(objectId, objectId + 1)) {
                         newId = idSchema.createId(chunk.id, ++objectId);
-//                        System.out.println("[" + Thread.currentThread().getName() + "] chunk.id = " + chunk.id + ", objectId = " + objectId + ", newId = " + newId);
                         return returnValue;
                     }
                 }
 
-//                } else {
                 // current chunk is over
                 currentChunk = null;
                 while (currentChunk == null) {
@@ -255,7 +245,6 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         currentChunk = chunk;
                         objectId = chunk.incrementIndex();
                         newId = idSchema.createId(chunk.id, objectId);
-//                        System.out.println("[" + Thread.currentThread().getName() + "] new chunk.id = " + chunk.id + ", objectId = " + objectId + ", newId = " + newId);
                         return returnValue;
 
                     }
@@ -268,17 +257,20 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                         currentChunk = chunk;
                     }
                 }
-//                }
             }
         }
 
         public int freeId(int id) {
+            return freeId(id, true);
+        }
+
+        public int freeId(int id, boolean check) {
             LinkedChunk<T> chunk = pool.getChunk(id);
-            if (chunk == null) {
-                return -1;
+            if (check && (chunk == null || chunk.tenant != this)) {
+                throw new IllegalArgumentException("Invalid chunk [" + chunk + "] retrieved by [" + id + "]");
             }
             if (chunk.isEmpty()) {
-                stack.push(id);
+                idStack.push(id);
                 return id;
             }
             boolean notCurrentChunk = chunk != currentChunk;
@@ -294,19 +286,37 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 );
             }
             if (notCurrentChunk) {
-                stack.push(reusableId);
+                idStack.push(reusableId);
             } else {
                 newId = reusableId;
             }
             return reusableId;
         }
 
-        public Iterator<T> iterator() {
-            return new PoolIterator<>(firstChunk);
+        public PoolDataIterator<T> iterator() {
+            return dataLength == 1 ?
+                    new PoolDataIterator<>(firstChunk) :
+                    new PoolMultiDataIterator<>(firstChunk);
+        }
+
+        public PoolDataIterator<T> noItemIterator() {
+            return dataLength == 1 ?
+                    new PoolDataNoItemIterator<>(firstChunk) :
+                    new PoolMultiDataNoItemIterator<>(firstChunk);
         }
 
         public T register(int id, T entry, Object[] data) {
             return pool.getChunk(id).set(id, entry, data);
+        }
+
+        public T migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
+            LinkedChunk<T> prevChunk = pool.getChunk(entry.getId());
+            LinkedChunk<T> newChunk = pool.getChunk(newId);
+            entry = newChunk.copy(entry, prevChunk, newId, indexMapping);
+            if (addedIndexMapping != null) {
+                newChunk.add(newId, addedIndexMapping, addedComponents);
+            }
+            return entry;
         }
 
         public int currentChunkSize() {
@@ -321,23 +331,27 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
             return dataLength;
         }
 
-        public IdStack getStack() {
-            return stack;
+        public IdStack getIdStack() {
+            return idStack;
         }
 
         public ChunkedPool<T> getPool() {
             return pool;
         }
 
+        public Object getOwner() {
+            return owner;
+        }
+
         @Override
         public void close() {
-            stack.close();
+            idStack.close();
         }
     }
 
-    public static class PoolIterator<T extends Identifiable> implements Iterator<T> {
-        int next = 0;
-        private LinkedChunk<T> currentChunk;
+    public static class PoolIterator<T extends Item> implements Iterator<T> {
+        protected int next = 0;
+        protected LinkedChunk<T> currentChunk;
 
         public PoolIterator(LinkedChunk<T> currentChunk) {
             this.currentChunk = currentChunk;
@@ -353,20 +367,66 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         @SuppressWarnings({"unchecked"})
         @Override
         public T next() {
-            return (T) currentChunk.idArray[next++];
+            return (T) currentChunk.itemArray[next++];
         }
     }
 
-    public static final class LinkedChunk<T extends Identifiable> {
+    public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
+
+        public PoolDataIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        public Object data(int i) {
+            return currentChunk.dataArray[next];
+        }
+    }
+
+    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolMultiDataIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public Object data(int i) {
+            return currentChunk.multiDataArray[i][next];
+        }
+    }
+
+    public static final class PoolDataNoItemIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            return null;
+        }
+    }
+
+    public static final class PoolMultiDataNoItemIterator<T extends Item> extends PoolMultiDataIterator<T> {
+        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk) {
+            super(currentChunk);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            return null;
+        }
+    }
+
+    public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = LoggingSystem.getLogger();
         private final IdSchema idSchema;
-        private final Identifiable[] idArray;
+        private final Item[] itemArray;
         private final Object[] dataArray;
+        private final Object[][] multiDataArray;
         private final LinkedChunk<T> previous;
         private final Tenant<T> tenant;
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
-        //        private final LoggingSystem.Context loggingContext;
         private final int dataLength;
 
         private LinkedChunk<T> next;
@@ -375,12 +435,12 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
         public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, LoggingSystem.Context loggingContext) {
             this.idSchema = idSchema;
             this.dataLength = dataLength;
-            idArray = new Identifiable[idSchema.chunkCapacity];
-            dataArray = dataLength > 0 ? new Object[idSchema.chunkCapacity * dataLength] : null;
+            itemArray = new Item[idSchema.chunkCapacity];
+            dataArray = dataLength == 1 ? new Object[idSchema.chunkCapacity * dataLength] : null;
+            multiDataArray = dataLength > 1 ? new Object[dataLength][idSchema.chunkCapacity * dataLength] : null;
             this.previous = previous;
             this.tenant = tenant;
             this.id = id;
-//            this.loggingContext = loggingContext;
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -408,59 +468,149 @@ public final class ChunkedPool<T extends ChunkedPool.Identifiable> implements Au
                 if (lastIndex < 0) {
                     return 0;
                 }
-                Identifiable last = idArray[lastIndex];
-                Identifiable removed = idArray[removedIndex];
+                Item last = itemArray[lastIndex];
+                Item removed = itemArray[removedIndex];
                 if (last != null && last != removed) {
-//                    last.lock();
-//                    try {
-                    synchronized (idArray[lastIndex]) {
+                    synchronized (itemArray[lastIndex]) {
                         if (last.setId(id) != id) {
                             recheck = true;
                             continue;
                         }
-                        int removedOffset = removed.getOffset();
-                        if (dataLength > 0) {
-                            System.arraycopy(dataArray, last.getOffset(), dataArray, removedOffset, dataLength);
+                        if (dataLength == 1) {
+                            dataArray[removedIndex] = dataArray[lastIndex];
+                            dataArray[lastIndex] = null;
                         }
-                        last.setArray(dataArray, removedOffset);
-                        idArray[removedIndex] = last;
-                        removed.setArray(null, -1);
-                        idArray[lastIndex] = null;
+                        if (dataLength > 1) {
+                            for (int i = 0; i < dataLength; i++) {
+                                multiDataArray[i][removedIndex] = multiDataArray[i][lastIndex];
+                                multiDataArray[i][lastIndex] = null;
+                            }
+                        }
+                        itemArray[removedIndex] = last;
+                        itemArray[lastIndex] = null;
                     }
-//                    } finally {
-//                        last.unlock();
-//                    }
                 } else {
-                    idArray[removedIndex] = null;
-                    if (removed != null) {
-                        int offset = removed.getOffset();
-                        for (int i = offset; i < offset + dataLength; i++) {
-                            dataArray[i] = null;
+                    itemArray[removedIndex] = null;
+                    if (dataLength == 1) {
+                        dataArray[removedIndex] = null;
+                    }
+                    if (dataLength > 1) {
+                        for (int i = 0; i < dataLength; i++) {
+                            multiDataArray[i][removedIndex] = null;
                         }
                     }
                 }
-                return Identifiable.unlockedId(idSchema.mergeId(id, lastIndex));
+                return idSchema.mergeId(id, lastIndex);
             }
         }
 
         @SuppressWarnings("unchecked")
         public T get(int id) {
-            return (T) idArray[idSchema.fetchObjectId(id)];
+            return (T) itemArray[idSchema.fetchObjectId(id)];
         }
 
         @SuppressWarnings("unchecked")
         public T set(int id, T value, Object[] data) {
             int idx = idSchema.fetchObjectId(id);
-            if (dataLength > 0) {
-                int offset = idx * dataLength;
-                if (data != null) {
-                    if (data.length == dataLength) {
-                        System.arraycopy(data, 0, dataArray, offset, dataLength);
+            if (dataLength == 1) {
+                dataArray[idx] = data[0];
+            }
+            if (dataLength > 1) {
+                for (int i = 0; i < dataLength; i++) {
+                    multiDataArray[i][idx] = data[i];
+                }
+            }
+            value.setId(id);
+            value.setChunk(this);
+            return (T) (itemArray[idx] = value);
+        }
+
+        @SuppressWarnings("unchecked")
+        public T copy(T value, LinkedChunk<T> prevChunk, int newId, int[] indexMapping) {
+            int prevIdx = idSchema.fetchObjectId(value.getId());
+            int newIdx = idSchema.fetchObjectId(newId);
+            if (indexMapping.length > 0) {
+                if (dataLength == 1) { // copy to new dataArray
+                    if (prevChunk.dataLength == 1) { // copy from prev.dataArray
+                        dataArray[newIdx] = prevChunk.dataArray[prevIdx];
+                    } else if (prevChunk.dataLength > 1) { // copy from prev.multiDataArray
+                        for (int i = 0; i < indexMapping.length; i++) {
+                            if (indexMapping[i] == 0) {
+                                dataArray[newIdx] = prevChunk.multiDataArray[i][prevIdx];
+                            }
+                        }
+                    }
+                } else if (dataLength > 1) { // copy to new multiDataArray
+                    if (prevChunk.dataLength == 1) { // copy from prev.dataArray
+                        if (indexMapping[0] > -1) {
+                            multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx];
+                        }
+                    } else if (prevChunk.dataLength > 1) {  // copy from prev.multiDataArray
+                        for (int i = 0; i < indexMapping.length; i++) {
+                            if (indexMapping[i] > -1) {
+                                multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
+                            }
+                        }
                     }
                 }
-                value.setArray(dataArray, offset);
             }
-            return (T) (idArray[idx] = value);
+            value.setId(newId);
+            value.setChunk(this);
+            return (T) (itemArray[newIdx] = value);
+        }
+
+        public void add(int id, int[] addedIndexMapping, Object[] addedComponents) {
+            int idx = idSchema.fetchObjectId(id);
+            if (dataLength == 1) { // add to dataArray
+                for (int i = 0; i < addedIndexMapping.length; i++) {
+                    if (addedIndexMapping[i] == 0) {
+                        dataArray[idx] = addedComponents[i];
+                    }
+                }
+            } else if (dataLength > 1) { // add to multiDataArray
+                for (int i = 0; i < addedIndexMapping.length; i++) {
+                    if (addedIndexMapping[i] > -1) {
+                        multiDataArray[addedIndexMapping[i]][idx] = addedComponents[i];
+                    }
+                }
+            }
+        }
+
+        public Object[] disable(T value) {
+            int id = value.getId();
+            Object[] data = getData(id);
+            tenant.freeId(id);
+            return data;
+        }
+
+        public void renew(T value, Object[] dataArray) {
+            tenant.register(tenant.nextId(), value, dataArray);
+        }
+
+        public Object[] getData(int id) {
+            int idx = idSchema.fetchObjectId(id);
+            Object[] data = new Object[dataLength];
+            if (dataLength == 1) {
+                data[0] = dataArray[idx];
+            }
+            if (dataLength > 1) {
+                for (int i = 0; i < dataLength; i++) {
+                    data[i] = multiDataArray[i][idx];
+                }
+            }
+            return data;
+        }
+
+        public Object getFromDataArray(int id) {
+            return dataArray[idSchema.fetchObjectId(id)];
+        }
+
+        public Tenant<T> getTenant() {
+            return tenant;
+        }
+
+        public int getDataLength() {
+            return dataLength;
         }
 
         public boolean hasCapacity() {

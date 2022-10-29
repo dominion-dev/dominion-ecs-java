@@ -118,11 +118,9 @@ public class DataCompositionBenchmark extends DominionBenchmark {
             );
         }
 
-        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
-            composition = new DataComposition(null, tenant, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
+            composition = new DataComposition(null, new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST), classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
                 composition.createEntity(null, false, c1);
@@ -131,7 +129,7 @@ public class DataCompositionBenchmark extends DominionBenchmark {
 
         @Benchmark
         public void iterate1Comp(Blackhole bh) {
-            var iterator = composition.select(C1.class, composition.getTenant().iterator());
+            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator());
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp());
             }

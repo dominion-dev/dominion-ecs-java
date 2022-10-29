@@ -60,7 +60,7 @@ public final class CompositionRepository implements AutoCloseable {
         pool = new ChunkedPool<>(idSchema, loggingContext);
         preparedComposition = new PreparedComposition(this);
         root = new Node();
-        root.composition = new DataComposition(this, pool.newTenant(), classIndex, idSchema, loggingContext);
+        root.composition = new DataComposition(this, pool, classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
@@ -148,16 +148,18 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
-    public void modifyComponents(IntEntity entity, DataComposition newDataComposition, Object[] newComponentArray) {
+    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + newDataComposition)
+                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
 
             );
         }
-        entity.getComposition().detachEntityAndState(entity);
-        newDataComposition.attachEntity(entity, true, newComponentArray);
+        int prevId = entity.getId();
+        ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
+        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponents);
+        prevTenant.freeId(prevId);
     }
 
     public Entity addComponent(IntEntity entity, Object component) {
@@ -170,7 +172,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         var modifier = fetchAddingTypeModifier(component.getClass());
         var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component);
-        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
         return entity;
     }
 
@@ -189,7 +191,7 @@ public final class CompositionRepository implements AutoCloseable {
         if (mod == null) {
             return false;
         }
-        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
         return true;
     }
 
@@ -217,7 +219,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void without(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithout(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -233,7 +235,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void withAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -346,8 +348,8 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant(componentTypes.length)
-                            , classIndex, idSchema, loggingContext, componentTypes);
+                    value = composition = new DataComposition(CompositionRepository.this, pool,
+                            classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
                 return value;

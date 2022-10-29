@@ -157,7 +157,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.without(nodeMap, C2.class);
+            compositionRepository.mapWithout(nodeMap, C2.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(1, nodeMap.size());
             Assertions.assertEquals(compositionC1, nodeMap.get(compositionC1Key).getComposition());
@@ -183,7 +183,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.withAlso(nodeMap, C2.class);
+            compositionRepository.mapWithAlso(nodeMap, C2.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(2, nodeMap.size());
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
@@ -195,7 +195,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.withAlso(nodeMap, C1.class, C3.class);
+            compositionRepository.mapWithAlso(nodeMap, C1.class, C3.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(1, nodeMap.size());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());

@@ -14,7 +14,6 @@ class ObjectArrayPoolTest {
     @Test
     void pull() {
         ObjectArrayPool objectArrayPool = new ObjectArrayPool(LoggingSystem.Context.TEST);
-//        Assertions.assertThrows(AssertionError.class, () -> objectArrayPool.pop(0));
         Object[] arrayObjects = objectArrayPool.pop(1);
         Assertions.assertEquals(1, arrayObjects.length);
         Object[] arrayObjects2 = objectArrayPool.pop(1);

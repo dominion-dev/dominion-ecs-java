@@ -2,7 +2,7 @@ package dev.dominion.ecs.test.engine.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 import org.junit.jupiter.api.Assertions;
@@ -120,7 +120,7 @@ class ChunkedPoolTest {
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-                Assertions.assertEquals(0, tenant.getStack().size());
+                Assertions.assertEquals(0, tenant.getIdStack().size());
                 Assertions.assertEquals(added - removed, chunkedPool.size());
                 Assertions.assertTrue(tenant.nextId() >= added - removed);
             }
@@ -133,25 +133,25 @@ class ChunkedPoolTest {
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
             try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                final ChunkedPool.Tenant<IntEntity> tenant1 = chunkedPool.newTenant(1);
-                final ChunkedPool.Tenant<IntEntity> tenant2 = chunkedPool.newTenant(2);
-                final ChunkedPool.Tenant<IntEntity> tenant3 = chunkedPool.newTenant(3);
+                final ChunkedPool.Tenant<IntEntity> tenant1 = chunkedPool.newTenant(1, null);
+                final ChunkedPool.Tenant<IntEntity> tenant2 = chunkedPool.newTenant(2, null);
+                final ChunkedPool.Tenant<IntEntity> tenant3 = chunkedPool.newTenant(3, null);
 
                 for (int i = 0; i < capacity; i++) {
                     executorService.execute(tenant1::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant1.freeId(idx));
+                        executorService.execute(() -> tenant1.freeId(idx, false));
                     }
                     executorService.execute(tenant2::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant2.freeId(idx));
+                        executorService.execute(() -> tenant2.freeId(idx, false));
                     }
                     executorService.execute(tenant3::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant3.freeId(idx));
+                        executorService.execute(() -> tenant3.freeId(idx, false));
                     }
                 }
                 executorService.shutdown();
@@ -166,11 +166,14 @@ class ChunkedPoolTest {
         public void iterator() {
             try (ChunkedPool<Id> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
                 ChunkedPool.Tenant<Id> tenant = chunkedPool.newTenant();
+                Assertions.assertEquals(0, tenant.currentChunkSize());
+                Iterator<Id> iterator = tenant.iterator();
+                Assertions.assertFalse(iterator.hasNext());
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
                     tenant.register(nextId, new Id(i, null, null), null);
                 }
-                Iterator<Id> iterator = tenant.iterator();
+                iterator = tenant.iterator();
                 int i = 0;
                 while (iterator.hasNext()) {
                     long id = iterator.next().id;
@@ -179,7 +182,7 @@ class ChunkedPoolTest {
             }
         }
 
-        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
+        public record Id(int id, Item prev, Item next) implements Item {
             @Override
             public int getId() {
                 return id;
@@ -191,32 +194,26 @@ class ChunkedPoolTest {
             }
 
             @Override
-            public Identifiable getPrev() {
+            public Item getPrev() {
                 return prev;
             }
 
             @Override
-            public Identifiable setPrev(Identifiable prev) {
-                return prev;
+            public void setPrev(Item prev) {
             }
 
             @Override
-            public Identifiable getNext() {
+            public Item getNext() {
                 return next;
             }
 
             @Override
-            public Identifiable setNext(Identifiable next) {
-                return next;
+            public void setNext(Item next) {
             }
 
             @Override
-            public void setArray(Object[] array, int offset) {
-            }
+            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
 
-            @Override
-            public int getOffset() {
-                return 0;
             }
 
             @Override

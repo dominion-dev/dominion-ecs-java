@@ -10,7 +10,8 @@ import org.openjdk.jmh.annotations.*;
 import java.util.concurrent.TimeUnit;
 
 @OutputTimeUnit(TimeUnit.SECONDS)
-@BenchmarkMode(Mode.Throughput)
+//@BenchmarkMode(Mode.Throughput)
+@BenchmarkMode(Mode.AverageTime)
 @Warmup(iterations = 3)
 @Measurement(iterations = 3)
 @Fork(value = 1, warmups = 1)
@@ -20,6 +21,4 @@ public class OthersBenchmark {
     static {
         System.setProperty("dominion.show-banner", "false");
     }
-
-
 }

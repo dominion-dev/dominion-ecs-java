@@ -7,11 +7,11 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
-public final class IntEntity implements Entity, Identifiable {
+public final class IntEntity implements Entity, Item {
     private static final UncheckedUpdater.Int<IntEntity> idUpdater;
 
     static {
@@ -24,23 +24,19 @@ public final class IntEntity implements Entity, Identifiable {
         idUpdater = updater;
     }
 
+    ChunkedPool.LinkedChunk<IntEntity> chunk;
+//    private IntEntity prev = null;
+//    private IntEntity next = null;
+
+    //    private final Data data;
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
-    //    private final int id;
-    private IntEntity prev = null;
-    private IntEntity next = null;
 
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile Data data;
-//    private final Data data;
+    private Object[] backup;
 
     public IntEntity(int id, DataComposition composition, String name) {
         this.id = id;
-        data = new Data(composition, name);
-    }
-
-    public static boolean isLocked(int id) {
-        return (id & ChunkedPool.IdSchema.LOCK_BIT) == ChunkedPool.IdSchema.LOCK_BIT;
+//        data = new Data(composition, name);
     }
 
     @Override
@@ -55,210 +51,174 @@ public final class IntEntity implements Entity, Identifiable {
     }
 
     @Override
-    public Identifiable getPrev() {
-        return prev;
+    public Item getPrev() {
+        return null;
+//        return prev;
     }
 
     @Override
-    public Identifiable setPrev(Identifiable prev) {
-        Identifiable old = this.prev;
-        this.prev = (IntEntity) prev;
-        return old;
+    public void setPrev(Item prev) {
+//        this.prev = (IntEntity) prev;
     }
 
     @Override
-    public Identifiable getNext() {
-        return next;
+    public Item getNext() {
+        return null;
+//        return next;
     }
 
     @Override
-    public Identifiable setNext(Identifiable next) {
-        Identifiable old = this.next;
-        this.next = (IntEntity) next;
-        return old;
-    }
-
-    @Override
-    public void setArray(Object[] components, int offset) {
-        data.components = components;
-        data.offset = offset;
-    }
-
-    @Override
-    public int getOffset() {
-        return data.offset;
+    public void setNext(Item next) {
+//        this.next = (IntEntity) next;
     }
 
     public DataComposition getComposition() {
-        return data.composition;
+        return (DataComposition) chunk.getTenant().getOwner();
+        //        return data.composition;
     }
 
     public IntEntity setComposition(DataComposition composition) {
-        data.composition = composition;
+//        data.composition = composition;
         return this;
     }
 
-    public Object[] cloneComponentArray() {
-        int arrayLength;
-        if (getArray() == null || (arrayLength = getArrayLength()) == 0) {
+    public ChunkedPool.LinkedChunk<IntEntity> getChunk() {
+        return chunk;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+//        data.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+        this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+    }
+
+    public Object[] getComponentArray() {
+        if (chunk == null || getArrayLength() == 0) {
             return null;
         }
-        Object[] components = new Object[arrayLength];
-        System.arraycopy(getArray(), getArrayOffset(), components, 0, arrayLength);
-        return components;
-    }
-
-    public Object[] getArray() {
-        return data.components;
-    }
-
-    public int getArrayOffset() {
-        return data.offset;
+        return chunk.getData(id);
     }
 
     public int getArrayLength() {
-        return data.composition.length();
-    }
-
-    public Data getData() {
-        return data;
+        return chunk.getDataLength();
     }
 
     public IndexKey getStateRoot() {
-        return data.stateRoot;
+//        return data.stateRoot;
+        return null;
     }
 
     public IntEntity setStateRoot(IndexKey stateRoot) {
-        data.stateRoot = stateRoot;
+//        data.stateRoot = stateRoot;
         return this;
     }
 
     @Override
     public String getName() {
-        return data.name;
+//        return data.name;
+        return null;
     }
 
     @Override
     public Entity add(Object component) {
-//        lock();
-//        try {
         synchronized (this) {
             if (!isEnabled()) {
                 return this;
             }
-            return data.composition.getRepository().addComponent(this, component);
+            return getComposition().getRepository().addComponent(this, component);
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
     public boolean remove(Object component) {
-//        lock();
-//        try {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, component.getClass());
+            return getComposition().getRepository().removeComponentType(this, component.getClass());
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
-    public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
-//        lock();
-//        try {
+    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            compositions.modifyComponents(this, newDataComposition, newComponentArray);
+            compositions.modifyComponents(this, targetComposition, addedComponents);
             return true;
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
     public boolean removeType(Class<?> componentType) {
-//        lock();
-//        try {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, componentType);
+            return getComposition().getRepository().removeComponentType(this, componentType);
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
     public boolean has(Class<?> componentType) {
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        data.composition.fetchComponentIndex(componentType) > -1 :
-                        data.components[0].getClass().equals(componentType));
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(getId()).getClass().equals(componentType);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+        return composition.fetchComponentIndex(componentType) > -1;
     }
 
     @Override
     public boolean contains(Object component) {
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(getId()).equals(component);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
         int idx;
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        (idx = data.composition.fetchComponentIndex(component.getClass())) > -1
-                                && data.components[idx].equals(component) :
-                        data.components[0].equals(component)
-        );
+        return (idx = composition.fetchComponentIndex(component.getClass())) > -1
+                && chunk.getData(getId())[idx].equals(component);
     }
 
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
-        if (!isEnabled()) {
-            return this;
-        }
-        return data.composition.setEntityState(this, state);
+//        if (!isEnabled()) {
+//            return this;
+//        }
+//        return data.composition.setEntityState(this, state);
+        return this;
     }
 
     @Override
     public boolean isEnabled() {
-        return !isDeleted() && data.offset > -1;
+        return !isDeleted() && backup == null;
     }
 
     @Override
     public Entity setEnabled(boolean enabled) {
         if (enabled && !isEnabled() && !isDeleted()) {
-            data.composition.reEnableEntity(this);
+            chunk.renew(this, backup);
+            backup = null;
         } else if (!enabled && isEnabled()) {
-            data.offset = -1;
+            backup = chunk.disable(this);
         }
         return this;
     }
 
     boolean delete() {
-//        lock();
-//        try {
         synchronized (this) {
-
             if (!isEnabled()) {
                 return false;
             }
-            data.composition.detachEntityAndState(this);
+            chunk.getTenant().freeId(id);
+            flagDetachedId();
+            chunk = null;
             return true;
         }
-//        } finally {
-//            unlock();
-//        }
     }
 
     @Override
@@ -270,76 +230,44 @@ public final class IntEntity implements Entity, Identifiable {
         setId(id | ChunkedPool.IdSchema.DETACHED_BIT);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    public void lock() {
-        int prev;
-        while (isLocked(prev = id)) {
-        }
-        boolean set = idUpdater.compareAndSet(this, prev, prev | ChunkedPool.IdSchema.LOCK_BIT);
-        if (!set) {
-//            System.out.println("rec");
-//            unsafe.storeFence();
-            lock();
-        }
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    public void unlock() {
-        int prev;
-        while (!idUpdater.compareAndSet(this, prev = id, prev ^ ChunkedPool.IdSchema.LOCK_BIT)) {
-        }
-    }
-
     @Override
     public String toString() {
-        ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
-        String name = data.name == null ? "Entity" : data.name;
-        return name + "={" +
-                "id=" + idSchema.idToString(id) +
-                ", " + data.composition +
-                ", arrayOffset=" + data.offset +
-                ", stateRootKey=" + data.stateRoot +
-                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
-                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
-                '}';
+        ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
+        return "Entity={id=" + idSchema.idToString(id) + '}';
+//        String name = data.name == null ? "Entity" : data.name;
+//        return name + "={" +
+//                "id=" + idSchema.idToString(id) +
+//                ", " + data.composition +
+//                ", arrayOffset=" + data.offset +
+//                ", stateRootKey=" + data.stateRoot +
+//                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
+//                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
+//                '}';
     }
 
-//    public record Data(DataComposition composition, Object[] components, String name, IndexKey stateRoot, int offset) {
-//        public Data(DataComposition composition, Object[] components, Data other) {
-//            this(composition, components, other == null ? null : other.name, other == null ? null : other.stateRoot, other == null ? 0 : other.offset);
+//    public static class Data {
+//        private final String name;
+//        private final DataComposition composition;
+//        public ChunkedPool.LinkedChunk<IntEntity> chunk;
+//        private Object[] components;
+//        private int offset;
+//        private IndexKey stateRoot;
+//
+//        public Data(DataComposition composition, String name) {
+//            this.composition = composition;
+//            this.name = name;
+//        }
+//
+//        public DataComposition composition() {
+//            return composition;
+//        }
+//
+//        public String name() {
+//            return name;
+//        }
+//
+//        public IndexKey stateRoot() {
+//            return stateRoot;
 //        }
 //    }
-
-    public static class Data {
-        private final String name;
-        private DataComposition composition;
-        private Object[] components;
-        private int offset;
-        private IndexKey stateRoot;
-
-        public Data(DataComposition composition, String name) {
-            this.composition = composition;
-            this.name = name;
-        }
-
-        public DataComposition composition() {
-            return composition;
-        }
-
-        public Object[] components() {
-            return components;
-        }
-
-        public String name() {
-            return name;
-        }
-
-        public IndexKey stateRoot() {
-            return stateRoot;
-        }
-
-        public int offset() {
-            return offset;
-        }
-    }
 }

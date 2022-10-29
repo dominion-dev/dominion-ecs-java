@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Results;
+import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.IndexKey;
 
 import java.util.Iterator;
@@ -16,13 +17,15 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ResultSet<T> implements Results<T> {
+    protected final boolean withEntity;
     private final CompositionRepository compositionRepository;
     private final Map<IndexKey, CompositionRepository.Node> nodeMap;
     protected IndexKey stateKey;
 
-    public ResultSet(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap) {
+    public ResultSet(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, boolean withEntity) {
         this.compositionRepository = compositionRepository;
         this.nodeMap = nodeMap;
+        this.withEntity = withEntity;
     }
 
     abstract Iterator<T> compositionIterator(DataComposition composition);
@@ -60,13 +63,13 @@ public abstract class ResultSet<T> implements Results<T> {
 
     @Override
     public Results<T> without(Class<?>... componentTypes) {
-        compositionRepository.without(nodeMap, componentTypes);
+        compositionRepository.mapWithout(nodeMap, componentTypes);
         return this;
     }
 
     @Override
     public Results<T> withAlso(Class<?>... componentTypes) {
-        compositionRepository.withAlso(nodeMap, componentTypes);
+        compositionRepository.mapWithAlso(nodeMap, componentTypes);
         return this;
     }
 
@@ -105,20 +108,33 @@ public abstract class ResultSet<T> implements Results<T> {
         }
     }
 
+    public final static class With<T> extends ResultSet<T> {
+        private final Class<T> type;
+
+        public With(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                    Class<T> type) {
+            super(compositionRepository, nodeMap, false);
+            this.type = type;
+        }
+
+        @Override
+        Iterator<T> compositionIterator(DataComposition composition) {
+            return composition.selectT(type, composition.getTenant().noItemIterator());
+        }
+    }
+
     public final static class With1<T> extends ResultSet<Results.With1<T>> {
         private final Class<T> type;
 
-        public With1(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T> type) {
-            super(compositionRepository, nodeMap);
+        public With1(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     Class<T> type) {
+            super(compositionRepository, nodeMap, true);
             this.type = type;
         }
 
         @Override
         Iterator<Results.With1<T>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
-            return composition.select(type, iterator);
+            return composition.select(type, composition.getTenant().iterator());
         }
     }
 
@@ -126,17 +142,17 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T1> type1;
         private final Class<T2> type2;
 
-        public With2(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T1> type1, Class<T2> type2) {
-            super(compositionRepository, nodeMap);
+        public With2(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     boolean withEntity, Class<T1> type1, Class<T2> type2) {
+            super(compositionRepository, nodeMap, withEntity);
             this.type1 = type1;
             this.type2 = type2;
         }
 
         @Override
         Iterator<Results.With2<T1, T2>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
+            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
+                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
             return composition.select(type1, type2, iterator);
         }
     }
@@ -146,8 +162,9 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T2> type2;
         private final Class<T3> type3;
 
-        public With3(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
-            super(compositionRepository, nodeMap);
+        public With3(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+            super(compositionRepository, nodeMap, withEntity);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -155,9 +172,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With3<T1, T2, T3>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
+            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
+                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
             return composition.select(type1, type2, type3, iterator);
         }
     }
@@ -168,8 +184,9 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T3> type3;
         private final Class<T4> type4;
 
-        public With4(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
-            super(compositionRepository, nodeMap);
+        public With4(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+            super(compositionRepository, nodeMap, withEntity);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -178,9 +195,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With4<T1, T2, T3, T4>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
+            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
+                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
             return composition.select(type1, type2, type3, type4, iterator);
         }
     }
@@ -192,8 +208,9 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T4> type4;
         private final Class<T5> type5;
 
-        public With5(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
-            super(compositionRepository, nodeMap);
+        public With5(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+            super(compositionRepository, nodeMap, withEntity);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -203,9 +220,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With5<T1, T2, T3, T4, T5>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
+            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
+                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
             return composition.select(type1, type2, type3, type4, type5, iterator);
         }
     }
@@ -218,8 +234,9 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T5> type5;
         private final Class<T6> type6;
 
-        public With6(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
-            super(compositionRepository, nodeMap);
+        public With6(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
+                     boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+            super(compositionRepository, nodeMap, withEntity);
             this.type1 = type1;
             this.type2 = type2;
             this.type3 = type3;
@@ -230,9 +247,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> compositionIterator(DataComposition composition) {
-            Iterator<IntEntity> iterator = stateKey == null ?
-                    composition.getTenant().iterator() :
-                    new DataComposition.StateIterator(composition.getStateRootEntity(stateKey));
+            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
+                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
             return composition.select(type1, type2, type3, type4, type5, type6, iterator);
         }
     }

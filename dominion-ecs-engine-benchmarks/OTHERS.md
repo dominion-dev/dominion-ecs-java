@@ -5,7 +5,7 @@ performance comparison with other ECS libraries to compare the same features in 
 
 ECS frameworks tested:
 
-* [Dominion v0.7.0-EA](https://github.com/dominion-dev/dominion-ecs-java) - This project.
+* [Dominion v0.8.0-EA](https://github.com/dominion-dev/dominion-ecs-java) - This project.
 * [Artemis v2.3.0](https://github.com/junkdog/artemis-odb) - Artemis is a famous Java ECS and is considered the
   reference by the Java community. It already provides a particular benchmark suite that is a bit
   cumbersome: [entity-system-benchmarks](https://github.com/junkdog/entity-system-benchmarks)

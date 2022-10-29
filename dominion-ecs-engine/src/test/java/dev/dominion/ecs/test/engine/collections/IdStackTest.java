@@ -33,22 +33,23 @@ class IdStackTest {
         try (IdStack stack = new IdStack(8, ID_SCHEMA, LoggingSystem.Context.TEST)) {
             Assertions.assertTrue(stack.push(1));
             Assertions.assertTrue(stack.push(2));
-            Assertions.assertFalse(stack.push(3));
-            Assertions.assertEquals(2, stack.size());
+            Assertions.assertTrue(stack.push(3));
+            Assertions.assertEquals(3, stack.size());
         }
     }
 
     @Test
     void concurrentPush() throws InterruptedException {
-        final int capacity = 1 << 20;
-        try (IdStack stack = new IdStack(capacity * 8, ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-            final ExecutorService pool = Executors.newFixedThreadPool(4);
-            for (int i = 0; i < capacity; i++) {
+        final int capacity = 1 << 10;
+        final int limit = 1 << 20;
+        try (IdStack stack = new IdStack(capacity * 8, ID_SCHEMA, LoggingSystem.Context.TEST)) {
+            final ExecutorService pool = Executors.newFixedThreadPool(8);
+            for (int i = 0; i < limit; i++) {
                 pool.execute(() -> stack.push(1));
             }
             pool.shutdown();
             Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
-            Assertions.assertEquals(capacity, stack.size());
+            Assertions.assertEquals(limit, stack.size());
         }
     }
 

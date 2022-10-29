@@ -28,15 +28,15 @@ public final class DataComposition {
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
-    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
-    private final StampedLock stateLock = new StampedLock();
+//    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
+//    private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
-    public DataComposition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
+    public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
             , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
-        this.tenant = tenant;
+        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this);
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
@@ -103,25 +103,23 @@ public final class DataComposition {
                 !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
-    public void detachEntityAndState(IntEntity entity) {
-        detachEntity(entity);
-        if (entity.getPrev() != null || entity.getNext() != null) {
-            detachEntityState(entity);
-        }
-    }
+//    public void detachEntityAndState(IntEntity entity) {
+//        detachEntity(entity);
+//        if (entity.getPrev() != null || entity.getNext() != null) {
+//            detachEntityState(entity);
+//        }
+//    }
 
-    public void attachEntity(IntEntity entity, boolean prepared, Object... components) {
+    public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Start Attaching " + entity + " to " + this + " and  " + tenant)
             );
         }
-        entity = tenant.register(entity.setId(ChunkedPool.Identifiable.lockedId(tenant.nextId())), entity.setComposition(this), switch (length()) {
-            case 0 -> null;
-            case 1 -> components;
-            default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
-        });
+
+        entity = tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
+
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -129,113 +127,125 @@ public final class DataComposition {
             );
         }
     }
+//
+//    public void attachEntity(IntEntity entity, boolean prepared, Object... components) {
+//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//            LOGGER.log(
+//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                            , "Start Attaching " + entity + " to " + this + " and  " + tenant)
+//            );
+//        }
+//        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
+//            case 0 -> null;
+//            case 1 -> components;
+//            default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
+//        });
+//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//            LOGGER.log(
+//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                            , "Attached " + entity)
+//            );
+//        }
+//    }
 
-    public void reEnableEntity(IntEntity entity) {
-        tenant.register(entity.getId(), entity, null);
-    }
+//    public void reEnableEntity(IntEntity entity) {
+//        tenant.register(entity.getId(), entity, null);
+//    }
 
-    public void detachEntity(IntEntity entity) {
-        tenant.freeId(entity.getId());
-        entity.flagDetachedId();
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Detached: " + entity)
-            );
-        }
-    }
+//    public void detachEntity(IntEntity entity) {
+//        tenant.freeId(entity.getId());
+//        entity.flagDetachedId();
+//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//            LOGGER.log(
+//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                            , "Detached: " + entity)
+//            );
+//        }
+//    }
 
-    public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
-        boolean detached = detachEntityState(entity);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Detaching state from " + entity + " : " + detached)
-            );
-        }
-        if (state != null) {
-            attachEntityState(entity, state);
-        }
-        return entity;
-    }
+//    public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
+//        boolean detached = detachEntityState(entity);
+//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//            LOGGER.log(
+//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                            , "Detaching state from " + entity + " : " + detached)
+//            );
+//        }
+//        if (state != null) {
+//            attachEntityState(entity, state);
+//        }
+//        return entity;
+//    }
 
-    private boolean detachEntityState(IntEntity entity) {
-        IndexKey key = entity.getStateRoot();
-        // if entity is root
-        if (key != null) {
-            // if alone: root
-            if (entity.getPrev() == null) {
-                if (states.remove(key) != null) {
-                    entity.setStateRoot(null);
-//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
-                    return true;
-                }
-            } else
-            // root -> prev
-            {
-                IntEntity prev = (IntEntity) entity.getPrev();
-                if (states.replace(key, entity, prev)) {
-                    entity.setStateRoot(null);
-                    entity.setPrev(null);
-                    prev.setNext(null);
-                    prev.setStateRoot(key);
-//                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
-//                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
-                    return true;
-                }
-            }
-        } else
-        // next -> entity -> ?prev
-        {
-            long stamp = stateLock.writeLock();
-            try {
-                IntEntity prev, next;
-                // recheck after lock
-                if ((next = (IntEntity) entity.getNext()) != null) {
-                    if ((prev = (IntEntity) entity.getPrev()) != null) {
-                        prev.setNext(next);
-                        next.setPrev(prev);
-                    } else {
-                        next.setPrev(null);
-                    }
-                }
-                entity.setPrev(null);
-                entity.setNext(null);
-                return true;
-            } finally {
-                stateLock.unlockWrite(stamp);
-            }
-        }
-        return false;
-    }
-
-    private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
-        IndexKey indexKey = calcIndexKey(state, classIndex);
-//        IntEntity.Data entityData = entity.getData();
-        IntEntity prev = states.computeIfAbsent(indexKey
-                , entity::setStateRoot);
-//                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset())));
-        if (prev != entity) {
-            states.computeIfPresent(indexKey, (k, oldEntity) -> {
-                entity.setPrev(oldEntity);
-                entity.setStateRoot(k);
-//                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k, entityData.offset()));
-                oldEntity.setNext(entity);
-                oldEntity.setStateRoot(null);
-//                IntEntity.Data oldEntityData = oldEntity.getData();
-//                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null, oldEntityData.offset()));
-                return entity;
-            });
-        }
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attaching state "
-                                    + state.getClass().getSimpleName() + "." + state
-                                    + " to " + entity)
-            );
-        }
-    }
+//    private boolean detachEntityState(IntEntity entity) {
+//        IndexKey key = entity.getStateRoot();
+//        // if entity is root
+//        if (key != null) {
+//            // if alone: root
+//            if (entity.getPrev() == null) {
+//                if (states.remove(key) != null) {
+//                    entity.setStateRoot(null);
+//                    return true;
+//                }
+//            } else
+//            // root -> prev
+//            {
+//                IntEntity prev = (IntEntity) entity.getPrev();
+//                if (states.replace(key, entity, prev)) {
+//                    entity.setStateRoot(null);
+//                    entity.setPrev(null);
+//                    prev.setNext(null);
+//                    prev.setStateRoot(key);
+//                    return true;
+//                }
+//            }
+//        } else
+//        // next -> entity -> ?prev
+//        {
+//            long stamp = stateLock.writeLock();
+//            try {
+//                IntEntity prev, next;
+//                // recheck after lock
+//                if ((next = (IntEntity) entity.getNext()) != null) {
+//                    if ((prev = (IntEntity) entity.getPrev()) != null) {
+//                        prev.setNext(next);
+//                        next.setPrev(prev);
+//                    } else {
+//                        next.setPrev(null);
+//                    }
+//                }
+//                entity.setPrev(null);
+//                entity.setNext(null);
+//                return true;
+//            } finally {
+//                stateLock.unlockWrite(stamp);
+//            }
+//        }
+//        return false;
+//    }
+//
+//    private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
+//        IndexKey indexKey = calcIndexKey(state, classIndex);
+//        IntEntity prev = states.computeIfAbsent(indexKey
+//                , entity::setStateRoot);
+//        if (prev != entity) {
+//            states.computeIfPresent(indexKey, (k, oldEntity) -> {
+//                entity.setPrev(oldEntity);
+//                entity.setStateRoot(k);
+//                oldEntity.setNext(entity);
+//                oldEntity.setStateRoot(null);
+//                return entity;
+//            });
+//        }
+//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+//            LOGGER.log(
+//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+//                            , "Attaching state "
+//                                    + state.getClass().getSimpleName() + "." + state
+//                                    + " to " + entity)
+//            );
+//        }
+//    }
 
     public Class<?>[] getComponentTypes() {
         return componentTypes;
@@ -249,13 +259,13 @@ public final class DataComposition {
         return tenant;
     }
 
-    public Map<IndexKey, IntEntity> getStates() {
-        return Collections.unmodifiableMap(states);
-    }
+//    public Map<IndexKey, IntEntity> getStates() {
+//        return Collections.unmodifiableMap(states);
+//    }
 
-    public IntEntity getStateRootEntity(IndexKey key) {
-        return states.get(key);
-    }
+//    public IntEntity getStateRootEntity(IndexKey key) {
+//        return states.get(key);
+//    }
 
     public IdSchema getIdSchema() {
         return idSchema;
@@ -275,19 +285,24 @@ public final class DataComposition {
         }
     }
 
-    public <T> Iterator<Results.With1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
+    public <T> Iterator<T> selectT(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
+        int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
+        return new IteratorT<>(idx, iterator, this);
+    }
+
+    public <T> Iterator<Results.With1<T>> select(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
         return new IteratorWith1<>(idx, iterator, this);
     }
 
-    public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, Iterator<IntEntity> iterator) {
+    public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         return new IteratorWith2<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
                 iterator, this);
     }
 
-    public <T1, T2, T3> Iterator<Results.With3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Iterator<IntEntity> iterator) {
+    public <T1, T2, T3> Iterator<Results.With3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         return new IteratorWith3<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
@@ -295,7 +310,7 @@ public final class DataComposition {
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4> Iterator<Results.With4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Iterator<IntEntity> iterator) {
+    public <T1, T2, T3, T4> Iterator<Results.With4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         return new IteratorWith4<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
@@ -304,7 +319,7 @@ public final class DataComposition {
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5> Iterator<Results.With5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Iterator<IntEntity> iterator) {
+    public <T1, T2, T3, T4, T5> Iterator<Results.With5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         return new IteratorWith5<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
@@ -314,7 +329,7 @@ public final class DataComposition {
                 iterator, this);
     }
 
-    public <T1, T2, T3, T4, T5, T6> Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Iterator<IntEntity> iterator) {
+    public <T1, T2, T3, T4, T5, T6> Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
         return new IteratorWith6<>(
                 fetchComponentIndex(type1),
                 fetchComponentIndex(type2),
@@ -345,173 +360,134 @@ public final class DataComposition {
         }
     }
 
-    record IteratorWith1<T>(int idx, Iterator<IntEntity> iterator,
+    record IteratorT<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                        DataComposition composition) implements Iterator<T> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            T comp = (T) iterator.data(idx);
+            iterator.next();
+            return comp;
+        }
+    }
+
+    record IteratorWith1<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator,
                             DataComposition composition) implements Iterator<Results.With1<T>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With1<T> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
-            return new Results.With1<>(
-                    (T) components[offset + idx],
-                    intEntity);
+            return new Results.With1<>((T) iterator.data(idx), iterator.next());
         }
     }
 
     record IteratorWith2<T1, T2>(int idx1, int idx2,
-                                 Iterator<IntEntity> iterator,
+                                 ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                  DataComposition composition) implements Iterator<Results.With2<T1, T2>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With2<T1, T2> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
+
             return new Results.With2<>(
-                    (T1) components[offset + idx1],
-                    (T2) components[offset + idx2],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    iterator.next());
         }
     }
 
     record IteratorWith3<T1, T2, T3>(int idx1, int idx2, int idx3,
-                                     Iterator<IntEntity> iterator,
+                                     ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                      DataComposition composition) implements Iterator<Results.With3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With3<T1, T2, T3> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
             return new Results.With3<>(
-                    (T1) components[offset + idx1],
-                    (T2) components[offset + idx2],
-                    (T3) components[offset + idx3],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    iterator.next());
         }
     }
 
     record IteratorWith4<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
-                                         Iterator<IntEntity> iterator,
+                                         ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                          DataComposition composition) implements Iterator<Results.With4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With4<T1, T2, T3, T4> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
             return new Results.With4<>(
-                    (T1) components[offset + idx1],
-                    (T2) components[offset + idx2],
-                    (T3) components[offset + idx3],
-                    (T4) components[offset + idx4],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    iterator.next());
         }
     }
 
     record IteratorWith5<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
-                                             Iterator<IntEntity> iterator,
+                                             ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                              DataComposition composition) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With5<T1, T2, T3, T4, T5> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
             return new Results.With5<>(
-                    (T1) components[offset + idx1],
-                    (T2) components[offset + idx2],
-                    (T3) components[offset + idx3],
-                    (T4) components[offset + idx4],
-                    (T5) components[offset + idx5],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    (T5) iterator.data(idx5),
+                    iterator.next());
         }
     }
 
     record IteratorWith6<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                 Iterator<IntEntity> iterator,
+                                                 ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                                  DataComposition composition) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody", "ConstantConditions"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With6<T1, T2, T3, T4, T5, T6> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while (
-                    ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition || data.offset() < 0)
-                            && iterator.hasNext()
-            ) {
-            }
-            Object[] components = data.components();
-            int offset = data.offset();
             return new Results.With6<>(
-                    (T1) components[offset + idx1],
-                    (T2) components[offset + idx2],
-                    (T3) components[offset + idx3],
-                    (T4) components[offset + idx4],
-                    (T5) components[offset + idx5],
-                    (T6) components[offset + idx6],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    (T5) iterator.data(idx5),
+                    (T6) iterator.data(idx6),
+                    iterator.next());
         }
     }
 }

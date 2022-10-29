@@ -9,10 +9,10 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
- * A Results instance is the output of the Dominion::findComponents method list and represents a simple container of all entities
- * that match a set of components and, optionally, have a specified state. Results can be further filtered by specifying
- * one or more component types to exclude. Both iterator and stream methods are available to retrieve found entities in
- * sequence.
+ * A Results instance is the output of the Dominion::findCompositionWith and ::findEntitiesWith methods and represents
+ * a simple container of all compositions that match a set of components and, optionally, the related entities.
+ * Results can be filtered by specifying one or more component types to include or exclude in the select list.
+ * Both iterator and stream methods are available to retrieve the results.
  *
  * @param <T> the type of each result
  * @author Enrico Stara
@@ -58,6 +58,13 @@ public interface Results<T> {
      */
     <S extends Enum<S>> Results<T> withState(S state);
 
+    /**
+     * Represents the unpacked result
+     *
+     * @param comp   the required component
+     * @param entity the related entity (maybe null)
+     * @param <T>
+     */
     record With1<T>(T comp, Entity entity) {
     }
 
