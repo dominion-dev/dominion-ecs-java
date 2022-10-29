@@ -1,6 +1,5 @@
 package dev.dominion.ecs.test.engine.collections;
 
-import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.ConfigSystem;
@@ -20,17 +19,17 @@ class ChunkedPoolTest {
 
     @Test
     public void newTenant() {
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
-            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
+        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+            ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
             Assertions.assertNotNull(tenant);
         }
     }
 
     @Test
     public void register() {
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
-            ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
-            IntEntity entry = new IntEntity(1, null, null);
+        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+            ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
+            TestEntity entry = new TestEntity(1, null, null);
             Assertions.assertEquals(entry, tenant.register(1, entry, null));
             Assertions.assertEquals(entry, chunkedPool.getEntry(1));
         }
@@ -41,8 +40,8 @@ class ChunkedPoolTest {
 
         @Test
         public void nextId() {
-            try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(0, (tenant.nextId() >> ID_SCHEMA.chunkBit())
@@ -58,8 +57,8 @@ class ChunkedPoolTest {
 
         @Test
         public void freeId() {
-            try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(1, tenant.currentChunkSize());
@@ -86,8 +85,8 @@ class ChunkedPoolTest {
 
         @Test
         public void concurrentNextId() throws InterruptedException {
-            try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 final int capacity = 1 << 20;
                 final ExecutorService pool = Executors.newFixedThreadPool(8);
                 for (int i = 0; i < capacity; i++) {
@@ -103,8 +102,8 @@ class ChunkedPoolTest {
 
         @Test
         public void concurrentNextAndFreeId() throws InterruptedException {
-            try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                ChunkedPool.Tenant<IntEntity> tenant = chunkedPool.newTenant();
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 final int capacity = 1 << 20;
                 final ExecutorService pool = Executors.newFixedThreadPool(8);
                 int added = 0;
@@ -132,10 +131,10 @@ class ChunkedPoolTest {
             int threadCount = 10;
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-            try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                final ChunkedPool.Tenant<IntEntity> tenant1 = chunkedPool.newTenant(1, null);
-                final ChunkedPool.Tenant<IntEntity> tenant2 = chunkedPool.newTenant(2, null);
-                final ChunkedPool.Tenant<IntEntity> tenant3 = chunkedPool.newTenant(3, null);
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                final ChunkedPool.Tenant<TestEntity> tenant1 = chunkedPool.newTenant(1, null);
+                final ChunkedPool.Tenant<TestEntity> tenant2 = chunkedPool.newTenant(2, null);
+                final ChunkedPool.Tenant<TestEntity> tenant3 = chunkedPool.newTenant(3, null);
 
                 for (int i = 0; i < capacity; i++) {
                     executorService.execute(tenant1::nextId);
@@ -164,14 +163,14 @@ class ChunkedPoolTest {
 
         @Test
         public void iterator() {
-            try (ChunkedPool<Id> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                ChunkedPool.Tenant<Id> tenant = chunkedPool.newTenant();
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+                ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
-                Iterator<Id> iterator = tenant.iterator();
+                Iterator<TestEntity> iterator = tenant.iterator();
                 Assertions.assertFalse(iterator.hasNext());
                 for (int i = 0; i < 1_000_000; i++) {
                     int nextId = tenant.nextId();
-                    tenant.register(nextId, new Id(i, null, null), null);
+                    tenant.register(nextId, new TestEntity(i, null, null), null);
                 }
                 iterator = tenant.iterator();
                 int i = 0;
@@ -181,46 +180,6 @@ class ChunkedPoolTest {
                 }
             }
         }
-
-        public record Id(int id, Item prev, Item next) implements Item {
-            @Override
-            public int getId() {
-                return id;
-            }
-
-            @Override
-            public int setId(int id) {
-                return id;
-            }
-
-            @Override
-            public Item getPrev() {
-                return prev;
-            }
-
-            @Override
-            public void setPrev(Item prev) {
-            }
-
-            @Override
-            public Item getNext() {
-                return next;
-            }
-
-            @Override
-            public void setNext(Item next) {
-            }
-
-            @Override
-            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-
-            }
-
-            @Override
-            public boolean isEnabled() {
-                return false;
-            }
-        }
     }
 
     @Nested
@@ -228,7 +187,7 @@ class ChunkedPoolTest {
 
         @Test
         public void size() {
-            ChunkedPool.LinkedChunk<IntEntity> chunk =
+            ChunkedPool.LinkedChunk<TestEntity> chunk =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
             Assertions.assertEquals(0, chunk.incrementIndex());
             Assertions.assertEquals(1, chunk.incrementIndex());
@@ -236,7 +195,7 @@ class ChunkedPoolTest {
 
         @Test
         public void capacity() {
-            ChunkedPool.LinkedChunk<IntEntity> chunk =
+            ChunkedPool.LinkedChunk<TestEntity> chunk =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
             Assertions.assertTrue(chunk.hasCapacity());
             for (int i = 0; i < ID_SCHEMA.chunkCapacity() - 1; i++) {
@@ -249,14 +208,54 @@ class ChunkedPoolTest {
 
         @Test
         public void data() {
-            ChunkedPool.LinkedChunk<IntEntity> previous =
+            ChunkedPool.LinkedChunk<TestEntity> previous =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
-            ChunkedPool.LinkedChunk<IntEntity> chunk =
+            ChunkedPool.LinkedChunk<TestEntity> chunk =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, previous, 0, null, LoggingSystem.Context.TEST);
-            IntEntity entity = new IntEntity(1, null, null);
+            var entity = new TestEntity(1, null, null);
             chunk.set(10, entity, null);
             Assertions.assertEquals(entity, chunk.get(10));
             Assertions.assertEquals(previous, chunk.getPrevious());
+        }
+    }
+
+    public record TestEntity(int id, Item prev, Item next) implements Item {
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public int setId(int id) {
+            return id;
+        }
+
+        @Override
+        public Item getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(Item prev) {
+        }
+
+        @Override
+        public Item getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(Item next) {
+        }
+
+        @Override
+        public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return false;
         }
     }
 }
