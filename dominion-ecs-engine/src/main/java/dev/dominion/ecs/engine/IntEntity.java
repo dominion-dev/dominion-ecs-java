@@ -23,13 +23,13 @@ public final class IntEntity implements Entity, Item {
         idUpdater = updater;
     }
 
-    ChunkedPool.LinkedChunk<IntEntity> chunk;
-    ChunkedPool.LinkedChunk<IntEntity> state;
-
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
 
-    private Object[] backup;
+    ChunkedPool.LinkedChunk<IntEntity> chunk;
+    ChunkedPool.LinkedChunk<IntEntity> state;
+
+    private Object[] shelf;
 
     public IntEntity(int id, String name) {
         this.id = id;
@@ -165,28 +165,26 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public boolean isEnabled() {
-        return !isDeleted() && backup == null;
+        return !isDeleted() && shelf == null;
     }
 
     @Override
     public Entity setEnabled(boolean enabled) {
-        if (enabled && !isEnabled() && !isDeleted()) {
-            chunk.renew(this, backup);
-            backup = null;
+        if (enabled && !isEnabled()) {
+            chunk.unshelve(this, shelf);
+            shelf = null;
         } else if (!enabled && isEnabled()) {
-            backup = chunk.disable(this);
+            shelf = chunk.shelve(this);
         }
         return this;
     }
 
     boolean delete() {
         synchronized (this) {
-            if (!isEnabled()) {
-                return false;
-            }
             chunk.getTenant().freeId(id);
             flagDetachedId();
             chunk = null;
+            shelf = null;
             return true;
         }
     }

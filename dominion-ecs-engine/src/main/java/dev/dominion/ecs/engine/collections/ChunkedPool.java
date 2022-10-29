@@ -576,14 +576,14 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             }
         }
 
-        public Object[] disable(T value) {
+        public Object[] shelve(T value) {
             int id = value.getId();
             Object[] data = getData(id);
             tenant.freeId(id);
             return data;
         }
 
-        public void renew(T value, Object[] dataArray) {
+        public void unshelve(T value, Object[] dataArray) {
             tenant.register(tenant.nextId(), value, dataArray);
         }
 
