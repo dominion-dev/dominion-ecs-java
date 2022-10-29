@@ -8,7 +8,6 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
-import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
 public final class IntEntity implements Entity, Item {
@@ -25,18 +24,15 @@ public final class IntEntity implements Entity, Item {
     }
 
     ChunkedPool.LinkedChunk<IntEntity> chunk;
-//    private IntEntity prev = null;
-//    private IntEntity next = null;
+    ChunkedPool.LinkedChunk<IntEntity> state;
 
-    //    private final Data data;
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
 
     private Object[] backup;
 
-    public IntEntity(int id, DataComposition composition, String name) {
+    public IntEntity(int id, String name) {
         this.id = id;
-//        data = new Data(composition, name);
     }
 
     @Override
@@ -53,33 +49,23 @@ public final class IntEntity implements Entity, Item {
     @Override
     public Item getPrev() {
         return null;
-//        return prev;
     }
 
     @Override
     public void setPrev(Item prev) {
-//        this.prev = (IntEntity) prev;
     }
 
     @Override
     public Item getNext() {
         return null;
-//        return next;
     }
 
     @Override
     public void setNext(Item next) {
-//        this.next = (IntEntity) next;
     }
 
     public DataComposition getComposition() {
         return (DataComposition) chunk.getTenant().getOwner();
-        //        return data.composition;
-    }
-
-    public IntEntity setComposition(DataComposition composition) {
-//        data.composition = composition;
-        return this;
     }
 
     public ChunkedPool.LinkedChunk<IntEntity> getChunk() {
@@ -89,7 +75,6 @@ public final class IntEntity implements Entity, Item {
     @SuppressWarnings("unchecked")
     @Override
     public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-//        data.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
         this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
     }
 
@@ -104,19 +89,8 @@ public final class IntEntity implements Entity, Item {
         return chunk.getDataLength();
     }
 
-    public IndexKey getStateRoot() {
-//        return data.stateRoot;
-        return null;
-    }
-
-    public IntEntity setStateRoot(IndexKey stateRoot) {
-//        data.stateRoot = stateRoot;
-        return this;
-    }
-
     @Override
     public String getName() {
-//        return data.name;
         return null;
     }
 
@@ -186,10 +160,6 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
-//        if (!isEnabled()) {
-//            return this;
-//        }
-//        return data.composition.setEntityState(this, state);
         return this;
     }
 
@@ -234,40 +204,5 @@ public final class IntEntity implements Entity, Item {
     public String toString() {
         ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
         return "Entity={id=" + idSchema.idToString(id) + '}';
-//        String name = data.name == null ? "Entity" : data.name;
-//        return name + "={" +
-//                "id=" + idSchema.idToString(id) +
-//                ", " + data.composition +
-//                ", arrayOffset=" + data.offset +
-//                ", stateRootKey=" + data.stateRoot +
-//                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
-//                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
-//                '}';
     }
-
-//    public static class Data {
-//        private final String name;
-//        private final DataComposition composition;
-//        public ChunkedPool.LinkedChunk<IntEntity> chunk;
-//        private Object[] components;
-//        private int offset;
-//        private IndexKey stateRoot;
-//
-//        public Data(DataComposition composition, String name) {
-//            this.composition = composition;
-//            this.name = name;
-//        }
-//
-//        public DataComposition composition() {
-//            return composition;
-//        }
-//
-//        public String name() {
-//            return name;
-//        }
-//
-//        public IndexKey stateRoot() {
-//            return stateRoot;
-//        }
-//    }
 }

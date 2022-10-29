@@ -99,7 +99,7 @@ public final class DataComposition {
 
     public IntEntity createEntity(String name, boolean prepared, Object... components) {
         int id = tenant.nextId();
-        return tenant.register(id, new IntEntity(id, this, name),
+        return tenant.register(id, new IntEntity(id, name),
                 !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
