@@ -121,15 +121,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             , int chunkCount, int chunkIdBitMask, int chunkIdBitMaskShifted
             , int chunkCapacity, int objectIdBitMask
     ) {
-        public static final int BIT_LENGTH = 30;
+        public static final int BIT_LENGTH = 31;
         public static final int MIN_CHUNK_BIT = 10;
         public static final int MIN_CHUNK_COUNT_BIT = 6;
         public static final int MAX_CHUNK_BIT = BIT_LENGTH - MIN_CHUNK_COUNT_BIT;
         public static final int MAX_CHUNK_COUNT_BIT = BIT_LENGTH - MIN_CHUNK_BIT;
         public static final int DETACHED_BIT_IDX = 31;
         public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
-        public static final int LOCK_BIT_IDX = 30;
-        public static final int LOCK_BIT = 1 << LOCK_BIT_IDX;
 
         public IdSchema(int chunkBit, int chunkCountBit) {
             this(chunkBit
@@ -144,7 +142,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public String idToString(int id) {
             return "|" + ((id & DETACHED_BIT) >>> DETACHED_BIT_IDX)
-                    + ":" + ((id & LOCK_BIT) >>> LOCK_BIT_IDX)
                     + ":" + (fetchChunkId(id))
                     + ":" + (fetchObjectId(id))
                     + "|";
