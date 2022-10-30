@@ -12,22 +12,29 @@ import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
 public final class IntEntity implements Entity, Item {
     private static final UncheckedUpdater.Int<IntEntity> idUpdater;
+    private static final UncheckedUpdater.Int<IntEntity> stateIdUpdater;
 
     static {
         UncheckedUpdater.Int<IntEntity> updater = null;
+        UncheckedUpdater.Int<IntEntity> stateUpdater = null;
         try {
             updater = new UncheckedUpdater.Int<>(IntEntity.class, "id");
+            stateUpdater = new UncheckedUpdater.Int<>(IntEntity.class, "stateId");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
         idUpdater = updater;
+        stateIdUpdater = stateUpdater;
     }
 
     @SuppressWarnings("FieldMayBeFinal")
     private volatile int id;
 
+    @SuppressWarnings("FieldMayBeFinal")
+    private volatile int stateId;
+
     ChunkedPool.LinkedChunk<IntEntity> chunk;
-    ChunkedPool.LinkedChunk<IntEntity> state;
+    ChunkedPool.LinkedChunk<IntEntity> stateChunk;
 
     private Object[] shelf;
 
@@ -44,6 +51,17 @@ public final class IntEntity implements Entity, Item {
     public int setId(int id) {
         int prev = this.id;
         return idUpdater.compareAndSet(this, prev, id) ? id : prev;
+    }
+
+    @Override
+    public int getStateId() {
+        return stateId;
+    }
+
+    @Override
+    public int setStateId(int stateId) {
+        int prev = this.stateId;
+        return stateIdUpdater.compareAndSet(this, prev, stateId) ? stateId : prev;
     }
 
     @Override
@@ -76,6 +94,12 @@ public final class IntEntity implements Entity, Item {
     @Override
     public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
         this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+        this.stateChunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
     }
 
     public Object[] getComponentArray() {
@@ -158,9 +182,17 @@ public final class IntEntity implements Entity, Item {
                 && chunk.getData(getId())[idx].equals(component);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
-        return this;
+        synchronized (this) {
+            if (!isEnabled()) {
+                return this;
+            }
+            if (stateChunk != null) stateChunk.getTenant().freeId(stateId);
+            stateChunk = getComposition().getRepository().fetchStateTenants(state).registerState(this);
+            return this;
+        }
     }
 
     @Override
@@ -201,6 +233,9 @@ public final class IntEntity implements Entity, Item {
     @Override
     public String toString() {
         ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
-        return "Entity={id=" + idSchema.idToString(id) + '}';
+        return "Entity={" +
+                "id=" + idSchema.idToString(id) + ", " +
+                "enabled=" + isEnabled() +
+                "}";
     }
 }
