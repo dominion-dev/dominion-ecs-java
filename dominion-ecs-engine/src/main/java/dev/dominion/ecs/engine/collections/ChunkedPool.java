@@ -97,6 +97,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         int setId(int id);
 
+        int getStateId();
+
+        int setStateId(int id);
+
         Item getPrev();
 
         void setPrev(Item prev);
@@ -106,6 +110,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         void setNext(Item next);
 
         void setChunk(LinkedChunk<? extends Item> chunk);
+
+        void setStateChunk(LinkedChunk<? extends Item> chunk);
 
         boolean isEnabled();
     }
@@ -307,6 +313,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public T register(int id, T entry, Object[] data) {
             return pool.getChunk(id).set(id, entry, data);
+        }
+
+        public LinkedChunk<T> registerState(T entry) {
+            int stateId = nextId();
+            LinkedChunk<T> stateChunk = pool.getChunk(stateId);
+            stateChunk.setState(stateId, entry);
+            return stateChunk;
         }
 
         public T migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
@@ -523,6 +536,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             value.setId(id);
             value.setChunk(this);
             return (T) (itemArray[idx] = value);
+        }
+
+        public void setState(int stateId, T value) {
+            int idx = idSchema.fetchObjectId(stateId);
+            value.setStateId(stateId);
+            value.setStateChunk(this);
+            itemArray[idx] = value;
         }
 
         @SuppressWarnings("unchecked")

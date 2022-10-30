@@ -190,6 +190,16 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
+            public int getStateId() {
+                return 0;
+            }
+
+            @Override
+            public int setStateId(int id) {
+                return 0;
+            }
+
+            @Override
             public Item getPrev() {
                 return prev;
             }
@@ -209,7 +219,10 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
             @Override
             public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+            }
 
+            @Override
+            public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
             }
 
             @Override
