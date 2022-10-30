@@ -52,7 +52,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
     @Override
     public <S extends Enum<S>> Results<T> withState(S state) {
-        stateKey = DataComposition.calcIndexKey(state, compositionRepository.getClassIndex());
+        stateKey = compositionRepository.getClassIndex().getIndexKeyByEnum(state);
         return this;
     }
 

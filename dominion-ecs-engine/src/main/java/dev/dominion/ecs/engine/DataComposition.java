@@ -9,15 +9,10 @@ import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.StampedLock;
 
 public final class DataComposition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
@@ -28,7 +23,7 @@ public final class DataComposition {
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
-//    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
+    //    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
 //    private final StampedLock stateLock = new StampedLock();
     private final LoggingSystem.Context loggingContext;
 
@@ -56,12 +51,6 @@ public final class DataComposition {
                             , "Creating " + this)
             );
         }
-    }
-
-    public static <S extends Enum<S>> IndexKey calcIndexKey(S state, ClassIndex classIndex) {
-        int cIndex = classIndex.getIndex(state.getClass());
-        cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
-        return new IndexKey(new int[]{cIndex, state.ordinal()});
     }
 
     public int length() {
