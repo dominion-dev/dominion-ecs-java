@@ -28,6 +28,7 @@ public final class CompositionRepository implements AutoCloseable {
     private final PreparedComposition preparedComposition;
     private final Map<Class<?>, Composition.ByAdding1AndRemoving<?>> addingTypeModifiers = new ConcurrentHashMap<>();
     private final Map<Class<?>, Composition.ByRemoving> removingTypeModifiers = new ConcurrentHashMap<>();
+    private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
     private final Node root;
     private final LoggingSystem.Context loggingContext;
 
@@ -80,6 +81,11 @@ public final class CompositionRepository implements AutoCloseable {
     public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
         return removingTypeModifiers.computeIfAbsent(compType
                 , k -> preparedComposition.byRemoving(compType));
+    }
+
+    public  <S extends Enum<S>>  ChunkedPool.Tenant<IntEntity> fetchStateTenants(S state) {
+        return stateTenants.computeIfAbsent(classIndex.getIndexKeyByEnum(state)
+                , s -> pool.newTenant());
     }
 
     public DataComposition getOrCreate(Object[] components) {
