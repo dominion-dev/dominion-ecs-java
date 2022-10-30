@@ -29,7 +29,7 @@ class CompositionRepositoryTest {
                              , LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(24, idSchema.chunkBit());
+            Assertions.assertEquals(25, idSchema.chunkBit());
             Assertions.assertEquals(6, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
@@ -38,7 +38,7 @@ class CompositionRepositoryTest {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(22, idSchema.chunkBit());
-            Assertions.assertEquals(8, idSchema.chunkCountBit());
+            Assertions.assertEquals(9, idSchema.chunkCountBit());
         }
         try (CompositionRepository compositionRepository =
                      new CompositionRepository(1, 1, 100
@@ -46,7 +46,7 @@ class CompositionRepositoryTest {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(10, idSchema.chunkBit());
-            Assertions.assertEquals(20, idSchema.chunkCountBit());
+            Assertions.assertEquals(21, idSchema.chunkCountBit());
         }
     }
 
