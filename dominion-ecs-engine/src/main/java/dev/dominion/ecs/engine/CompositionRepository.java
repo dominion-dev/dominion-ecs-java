@@ -88,6 +88,10 @@ public final class CompositionRepository implements AutoCloseable {
                 , s -> pool.newTenant());
     }
 
+    public  ChunkedPool.Tenant<IntEntity> getStateTenants(IndexKey state) {
+        return stateTenants.get(state);
+    }
+
     public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
