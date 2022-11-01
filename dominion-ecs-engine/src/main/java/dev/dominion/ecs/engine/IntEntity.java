@@ -190,7 +190,7 @@ public final class IntEntity implements Entity, Item {
                 return this;
             }
             if (stateChunk != null) stateChunk.getTenant().freeId(stateId);
-            stateChunk = getComposition().getRepository().fetchStateTenants(state).registerState(this);
+            stateChunk = getComposition().fetchStateTenants(state).registerState(this);
             return this;
         }
     }

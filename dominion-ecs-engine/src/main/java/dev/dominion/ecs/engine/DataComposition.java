@@ -9,28 +9,35 @@ import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DataComposition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
+    private final ChunkedPool<IntEntity> pool;
     private final ChunkedPool.Tenant<IntEntity> tenant;
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
     //    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
-//    private final StampedLock stateLock = new StampedLock();
+    //    private final StampedLock stateLock = new StampedLock();
+    private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
+
     private final LoggingSystem.Context loggingContext;
 
     public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
             , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
+        this.pool = pool;
         this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this);
         this.classIndex = classIndex;
         this.idSchema = idSchema;
@@ -85,6 +92,16 @@ public final class DataComposition {
         components[newIdx] = components[i];
         components[i] = temp;
     }
+
+    public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> fetchStateTenants(S state) {
+        return stateTenants.computeIfAbsent(classIndex.getIndexKeyByEnum(state)
+                , s -> pool.newTenant());
+    }
+
+    public ChunkedPool.Tenant<IntEntity> getStateTenant(IndexKey state) {
+        return stateTenants.get(state);
+    }
+
 
     public IntEntity createEntity(String name, boolean prepared, Object... components) {
         int id = tenant.nextId();
