@@ -21,7 +21,7 @@ import static dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 public class ChunkedPoolBenchmark extends DominionBenchmark {
     private static final IdSchema ID_SCHEMA =
-            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(

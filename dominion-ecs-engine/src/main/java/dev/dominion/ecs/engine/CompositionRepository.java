@@ -40,16 +40,10 @@ public final class CompositionRepository implements AutoCloseable {
         );
     }
 
-    public CompositionRepository(
-            int classIndexBit, int chunkBit, int chunkCountBit
-            , LoggingSystem.Context loggingContext
-    ) {
+    public CompositionRepository(int classIndexBit, int chunkBit, LoggingSystem.Context loggingContext) {
         classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
-        int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
-        chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
-                Math.min(chunkCountBit, Math.min(reservedBit, IdSchema.MAX_CHUNK_COUNT_BIT)));
-        idSchema = new IdSchema(chunkBit, chunkCountBit);
+        idSchema = new IdSchema(chunkBit);
         this.loggingContext = loggingContext;
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(

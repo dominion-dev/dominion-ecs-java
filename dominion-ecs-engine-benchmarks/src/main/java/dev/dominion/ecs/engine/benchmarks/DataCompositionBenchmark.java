@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DataCompositionBenchmark extends DominionBenchmark {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     DataComposition composition2;
     Object[] inputArray2 = new Object[]{

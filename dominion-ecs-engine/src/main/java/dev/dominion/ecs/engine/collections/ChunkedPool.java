@@ -117,24 +117,21 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|
-    public record IdSchema(int chunkBit, int chunkCountBit
+    public record IdSchema(int chunkBit
             , int chunkCount, int chunkIdBitMask, int chunkIdBitMaskShifted
             , int chunkCapacity, int objectIdBitMask
     ) {
-        public static final int BIT_LENGTH = 31;
-        public static final int MIN_CHUNK_BIT = 10;
-        public static final int MIN_CHUNK_COUNT_BIT = 6;
-        public static final int MAX_CHUNK_BIT = BIT_LENGTH - MIN_CHUNK_COUNT_BIT;
-        public static final int MAX_CHUNK_COUNT_BIT = BIT_LENGTH - MIN_CHUNK_BIT;
+        public static final int TOTAL_BIT = 31;
+        public static final int MIN_CHUNK_BIT = 8;
+        public static final int MAX_CHUNK_BIT = 16;
         public static final int DETACHED_BIT_IDX = 31;
         public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
 
-        public IdSchema(int chunkBit, int chunkCountBit) {
+        public IdSchema(int chunkBit) {
             this(chunkBit
-                    , chunkCountBit
-                    , 1 << chunkCountBit
-                    , (1 << (BIT_LENGTH - chunkBit)) - 1
-                    , ((1 << (BIT_LENGTH - chunkBit)) - 1) << chunkBit
+                    , 1 << (TOTAL_BIT - chunkBit)
+                    , (1 << (TOTAL_BIT - chunkBit)) - 1
+                    , ((1 << (TOTAL_BIT - chunkBit)) - 1) << chunkBit
                     , 1 << Math.min(chunkBit, MAX_CHUNK_BIT)
                     , (1 << chunkBit) - 1
             );

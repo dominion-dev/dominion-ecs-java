@@ -25,12 +25,12 @@ public final class EntityRepository implements Dominion {
     private final CompositionRepository compositions;
     private final int systemTimeoutSeconds;
 
-    public EntityRepository(String name, int classIndexBit, int chunkBit, int chunkCountBit, int systemTimeoutSeconds,
+    public EntityRepository(String name, int classIndexBit, int chunkBit, int systemTimeoutSeconds,
                             LoggingSystem.Context loggingContext) {
         this.name = name;
         this.systemTimeoutSeconds = systemTimeoutSeconds;
         this.loggingContext = loggingContext;
-        compositions = new CompositionRepository(classIndexBit, chunkBit, chunkCountBit, loggingContext);
+        compositions = new CompositionRepository(classIndexBit, chunkBit, loggingContext);
     }
 
     @Override
@@ -212,8 +212,6 @@ public final class EntityRepository implements Dominion {
             int classIndexBit = fetchClassIndexBit.orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT);
             Optional<Integer> fetchChunkBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_BIT);
             int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
-            Optional<Integer> fetchChunkCountBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_COUNT_BIT);
-            int chunkCountBit = fetchChunkCountBit.orElse(ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
             Optional<Integer> fetchSystemTimeoutSeconds = ConfigSystem.fetchIntValue(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS);
             int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
 
@@ -229,9 +227,6 @@ public final class EntityRepository implements Dominion {
                         , "  Chunk-Bit: " + chunkBit
                                 + (fetchChunkBit.isEmpty() ? " (set sys-property '"
                                 + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_BIT) + "')" : "")
-                        , "  ChunkCount-Bit: " + chunkCountBit
-                                + (fetchChunkCountBit.isEmpty() ? " (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_COUNT_BIT) + "')" : "")
                         , "  SystemTimeout-Seconds: " + systemTimeoutSeconds
                                 + (fetchSystemTimeoutSeconds.isEmpty() ? " (set sys-property '"
                                 + ConfigSystem.getPropertyName(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
@@ -243,7 +238,6 @@ public final class EntityRepository implements Dominion {
             return new EntityRepository(name
                     , classIndexBit
                     , chunkBit
-                    , chunkCountBit
                     , systemTimeoutSeconds
                     , new LoggingSystem.Context(name, loggingLevelIndex)
             );

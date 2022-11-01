@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 class IdStackTest {
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     @Test
     void pop() {
