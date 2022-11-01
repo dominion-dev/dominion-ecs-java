@@ -73,6 +73,23 @@ public abstract class ResultSet<T> implements Results<T> {
         return this;
     }
 
+    protected ChunkedPool.PoolDataIterator<IntEntity> getPoolDataIterator(DataComposition composition, boolean multiData) {
+        boolean withState = stateKey != null;
+        ChunkedPool.PoolDataIterator<IntEntity> iterator;
+        if (withState) {
+            var tenant = composition.getStateTenant(stateKey);
+            iterator = withEntity ?
+                    tenant.iteratorWithState(multiData) :
+                    tenant.noItemIteratorWithState(multiData);
+        } else {
+            var tenant = composition.getTenant();
+            iterator = withEntity ?
+                    tenant.iterator() :
+                    tenant.noItemIterator();
+        }
+        return iterator;
+    }
+
     private static final class IteratorWrapper<T> implements Iterator<T> {
         private final ResultSet<T> owner;
         private final Iterator<CompositionRepository.Node> nodesIterator;
@@ -119,7 +136,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<T> compositionIterator(DataComposition composition) {
-            return composition.selectT(type, composition.getTenant().noItemIterator());
+            var iterator = getPoolDataIterator(composition, composition.length() > 1);
+            return composition.selectT(type, iterator);
         }
     }
 
@@ -134,7 +152,8 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With1<T>> compositionIterator(DataComposition composition) {
-            return composition.select(type, composition.getTenant().iterator());
+            var iterator = getPoolDataIterator(composition, composition.length() > 1);
+            return composition.select(type, iterator);
         }
     }
 
@@ -151,8 +170,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With2<T1, T2>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
+            var iterator = getPoolDataIterator(composition, true);
             return composition.select(type1, type2, iterator);
         }
     }
@@ -172,8 +190,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With3<T1, T2, T3>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
+            var iterator = getPoolDataIterator(composition, true);
             return composition.select(type1, type2, type3, iterator);
         }
     }
@@ -195,8 +212,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With4<T1, T2, T3, T4>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
+            var iterator = getPoolDataIterator(composition, true);
             return composition.select(type1, type2, type3, type4, iterator);
         }
     }
@@ -220,8 +236,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With5<T1, T2, T3, T4, T5>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
+            var iterator = getPoolDataIterator(composition, true);
             return composition.select(type1, type2, type3, type4, type5, iterator);
         }
     }
@@ -247,8 +262,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> compositionIterator(DataComposition composition) {
-            ChunkedPool.PoolDataIterator<IntEntity> iterator = withEntity ?
-                    composition.getTenant().iterator() : composition.getTenant().noItemIterator();
+            var iterator = getPoolDataIterator(composition, true);
             return composition.select(type1, type2, type3, type4, type5, type6, iterator);
         }
     }

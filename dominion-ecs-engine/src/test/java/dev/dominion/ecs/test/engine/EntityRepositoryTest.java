@@ -235,6 +235,60 @@ class EntityRepositoryTest {
     }
 
     @Test
+    void findComponentsWithState() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(10)).setState(State.ONE);
+            entityRepository.createEntity(new C1(11), new C2(20)).setState(State.ONE);
+            entityRepository.createEntity(new C1(12), new C2(21)).setState(State.ONE);
+            entityRepository.createEntity(new C1(13), new C2(22)).setState(State.TWO);
+            entityRepository.createEntity(new C1(14)).setState(State.TWO);
+
+            var results1 = entityRepository.findEntitiesWith(C1.class);
+            var iterator = results1.withState(State.ONE).iterator();
+            Assertions.assertNotNull(iterator);
+            Assertions.assertTrue(iterator.hasNext());
+            var next = iterator.next();
+            Assertions.assertEquals(10, next.comp().id);
+            Assertions.assertTrue(iterator.hasNext());
+            Assertions.assertEquals(11, iterator.next().comp().id);
+            Assertions.assertTrue(iterator.hasNext());
+            Assertions.assertEquals(12, iterator.next().comp().id);
+            Assertions.assertFalse(iterator.hasNext());
+
+            var results2 = entityRepository.findEntitiesWith(C1.class, C2.class);
+            var iterator2 = results2.withState(State.ONE).iterator();
+            Assertions.assertNotNull(iterator2);
+            Assertions.assertTrue(iterator2.hasNext());
+            var next2 = iterator2.next();
+            Assertions.assertEquals(11, next2.comp1().id);
+            Assertions.assertEquals(20, next2.comp2().id);
+            Assertions.assertTrue(iterator2.hasNext());
+            next2 = iterator2.next();
+            Assertions.assertEquals(12, next2.comp1().id);
+            Assertions.assertEquals(21, next2.comp2().id);
+            Assertions.assertFalse(iterator2.hasNext());
+
+            var iterator3 = results2.withState(State.TWO).iterator();
+            Assertions.assertNotNull(iterator3);
+            Assertions.assertTrue(iterator3.hasNext());
+            var next3 = iterator3.next();
+            Assertions.assertEquals(13, next3.comp1().id);
+            Assertions.assertEquals(22, next3.comp2().id);
+            Assertions.assertFalse(iterator3.hasNext());
+
+            var iterator4 = results1.withState(State.TWO).iterator();
+            Assertions.assertNotNull(iterator4);
+            Assertions.assertTrue(iterator4.hasNext());
+            var next4 = iterator4.next();
+            Assertions.assertEquals(14, next4.comp().id);
+            Assertions.assertTrue(iterator4.hasNext());
+            next4 = iterator4.next();
+            Assertions.assertEquals(13, next4.comp().id);
+            Assertions.assertFalse(iterator4.hasNext());
+        }
+    }
+
+    @Test
     void findComponents1FromMoreCompositions() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity1 = (IntEntity) entityRepository.createEntity(new C1(0));
@@ -316,5 +370,9 @@ class EntityRepositoryTest {
     }
 
     record C6(int id) {
+    }
+
+    enum State {
+        ONE, TWO
     }
 }

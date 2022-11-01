@@ -109,6 +109,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         void setNext(Item next);
 
+        LinkedChunk<? extends Item> getChunk();
+
         void setChunk(LinkedChunk<? extends Item> chunk);
 
         void setStateChunk(LinkedChunk<? extends Item> chunk);
@@ -295,15 +297,28 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public PoolDataIterator<T> iterator() {
             return dataLength == 1 ?
-                    new PoolDataIterator<>(firstChunk) :
-                    new PoolMultiDataIterator<>(firstChunk);
+                    new PoolDataIterator<>(firstChunk, idSchema) :
+                    new PoolMultiDataIterator<>(firstChunk, idSchema);
         }
 
         public PoolDataIterator<T> noItemIterator() {
             return dataLength == 1 ?
-                    new PoolDataNoItemIterator<>(firstChunk) :
-                    new PoolMultiDataNoItemIterator<>(firstChunk);
+                    new PoolDataNoItemIterator<>(firstChunk, idSchema) :
+                    new PoolMultiDataNoItemIterator<>(firstChunk, idSchema);
         }
+
+        public PoolDataIterator<T> iteratorWithState(boolean multiData) {
+            return multiData ?
+                    new PoolMultiDataIteratorWithState<>(firstChunk, idSchema) :
+                    new PoolDataIteratorWithState<>(firstChunk, idSchema);
+        }
+
+        public PoolDataIterator<T> noItemIteratorWithState(boolean multiData) {
+            return multiData ?
+                    new PoolMultiDataNoItemIteratorWithState<>(firstChunk, idSchema) :
+                    new PoolDataNoItemIteratorWithState<>(firstChunk, idSchema);
+        }
+
 
         public T register(int id, T entry, Object[] data) {
             return pool.getChunk(id).set(id, entry, data);
@@ -356,12 +371,17 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    // ROOT iterator
+
     public static class PoolIterator<T extends Item> implements Iterator<T> {
         protected int next = 0;
         protected LinkedChunk<T> currentChunk;
 
-        public PoolIterator(LinkedChunk<T> currentChunk) {
+        protected IdSchema idSchema;
+
+        public PoolIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             this.currentChunk = currentChunk;
+            this.idSchema = idSchema;
         }
 
         @SuppressWarnings("ConstantConditions")
@@ -378,10 +398,12 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    // SINGLE data iterator
+
     public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
 
-        public PoolDataIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+        public PoolDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         public Object data(int i) {
@@ -389,20 +411,34 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
-    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
-        public PoolMultiDataIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+    public static class PoolDataIteratorWithState<T extends Item> extends PoolDataIterator<T> {
+
+        protected LinkedChunk<? extends Item> itemChunk;
+        protected int itemIdx;
+
+        public PoolDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         @Override
         public Object data(int i) {
-            return currentChunk.multiDataArray[i][next];
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            var itemIdx = idSchema.fetchObjectId(item.getId());
+            return itemChunk.dataArray != null ? itemChunk.dataArray[itemIdx] : itemChunk.multiDataArray[i][itemIdx];
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            return (T) currentChunk.itemArray[next++];
         }
     }
 
+
     public static final class PoolDataNoItemIterator<T extends Item> extends PoolDataIterator<T> {
-        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         @Override
@@ -412,14 +448,75 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
-    public static final class PoolMultiDataNoItemIterator<T extends Item> extends PoolMultiDataIterator<T> {
-        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+    public static final class PoolDataNoItemIteratorWithState<T extends Item> extends PoolDataIteratorWithState<T> {
+        public PoolDataNoItemIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         @Override
         public T next() {
             next++;
+            return null;
+        }
+    }
+
+    // MULTI data iterator
+
+    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolMultiDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public Object data(int i) {
+            return currentChunk.multiDataArray[i][next];
+        }
+    }
+
+    public static class PoolMultiDataIteratorWithState<T extends Item> extends PoolDataIteratorWithState<T> {
+        public PoolMultiDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public Object data(int i) {
+            if (itemChunk == null) {
+                var item = currentChunk.itemArray[next];
+                itemChunk = item.getChunk();
+                itemIdx = idSchema.fetchObjectId(item.getId());
+            }
+            return itemChunk.multiDataArray[i][itemIdx];
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            itemChunk = null;
+            return (T) currentChunk.itemArray[next++];
+        }
+    }
+
+    public static final class PoolMultiDataNoItemIterator<T extends Item> extends PoolMultiDataIterator<T> {
+        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            return null;
+        }
+    }
+
+    public static final class PoolMultiDataNoItemIteratorWithState<T extends Item> extends PoolMultiDataIteratorWithState<T> {
+        public PoolMultiDataNoItemIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public T next() {
+            next++;
+            itemChunk = null;
             return null;
         }
     }

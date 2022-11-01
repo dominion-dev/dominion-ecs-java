@@ -259,6 +259,11 @@ class ChunkedPoolTest {
         }
 
         @Override
+        public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
+            return null;
+        }
+
+        @Override
         public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
         }
 
