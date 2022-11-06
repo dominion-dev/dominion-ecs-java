@@ -250,9 +250,9 @@ class EntityRepositoryTest {
             var next = iterator.next();
             Assertions.assertEquals(10, next.comp().id);
             Assertions.assertTrue(iterator.hasNext());
-            Assertions.assertEquals(11, iterator.next().comp().id);
-            Assertions.assertTrue(iterator.hasNext());
             Assertions.assertEquals(12, iterator.next().comp().id);
+            Assertions.assertTrue(iterator.hasNext());
+            Assertions.assertEquals(11, iterator.next().comp().id);
             Assertions.assertFalse(iterator.hasNext());
 
             var results2 = entityRepository.findEntitiesWith(C1.class, C2.class);
@@ -260,12 +260,12 @@ class EntityRepositoryTest {
             Assertions.assertNotNull(iterator2);
             Assertions.assertTrue(iterator2.hasNext());
             var next2 = iterator2.next();
-            Assertions.assertEquals(11, next2.comp1().id);
-            Assertions.assertEquals(20, next2.comp2().id);
-            Assertions.assertTrue(iterator2.hasNext());
-            next2 = iterator2.next();
             Assertions.assertEquals(12, next2.comp1().id);
             Assertions.assertEquals(21, next2.comp2().id);
+            Assertions.assertTrue(iterator2.hasNext());
+            next2 = iterator2.next();
+            Assertions.assertEquals(11, next2.comp1().id);
+            Assertions.assertEquals(20, next2.comp2().id);
             Assertions.assertFalse(iterator2.hasNext());
 
             var iterator3 = results2.withState(State.TWO).iterator();

@@ -92,6 +92,10 @@ public final class IntEntity implements Entity, Item {
         this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
     }
 
+    public ChunkedPool.LinkedChunk<IntEntity> getStateChunk() {
+        return stateChunk;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
@@ -185,8 +189,15 @@ public final class IntEntity implements Entity, Item {
             if (!isEnabled()) {
                 return this;
             }
-            if (stateChunk != null) stateChunk.getTenant().freeId(stateId);
-            stateChunk = getComposition().fetchStateTenants(state).registerState(this);
+            DataComposition composition = getComposition();
+            if (stateChunk != null ) {
+                var tenant = stateChunk.getTenant();
+                if(tenant == composition.getStateTenant(state)) {
+                    return this;
+                }
+                tenant.freeStateId(stateId);
+            }
+            stateChunk = composition.fetchStateTenants(state).registerState(this);
             return this;
         }
     }
