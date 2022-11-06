@@ -243,6 +243,8 @@ class EntityRepositoryTest {
             entityRepository.createEntity(new C1(13), new C2(22)).setState(State.TWO);
             entityRepository.createEntity(new C1(14)).setState(State.TWO);
 
+            Assertions.assertThrows(UnsupportedOperationException.class, () -> entityRepository.findCompositionsWith(C1.class).withState(State.ONE));
+
             var results1 = entityRepository.findEntitiesWith(C1.class);
             var iterator = results1.withState(State.ONE).iterator();
             Assertions.assertNotNull(iterator);
