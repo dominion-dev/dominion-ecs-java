@@ -109,7 +109,7 @@ class ChunkedPoolTest {
         }
 
         @Test
-        public void freeId() {
+        public void freeIdAndStateId() {
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
@@ -128,7 +128,7 @@ class ChunkedPoolTest {
                 }
                 Assertions.assertEquals(3, tenant.currentChunkSize());
                 Assertions.assertEquals(3, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
-                Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.freeId(1) & ID_SCHEMA.objectIdBitMask());
+                Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.freeStateId(1) & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(4, tenant.currentChunkSize());
                 Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(4, tenant.nextId() & ID_SCHEMA.objectIdBitMask());

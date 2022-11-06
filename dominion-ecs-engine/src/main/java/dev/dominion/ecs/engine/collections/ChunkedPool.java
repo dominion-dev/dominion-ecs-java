@@ -651,7 +651,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         }
                     }
                 }
-                if (isState) removed.setStateId(IdSchema.DETACHED_BIT_IDX);
                 return idSchema.mergeId(id, lastIndex);
             }
         }
