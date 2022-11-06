@@ -52,24 +52,6 @@ class ChunkedPoolTest {
         }
 
         @Override
-        public Item getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(Item prev) {
-        }
-
-        @Override
-        public Item getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(Item next) {
-        }
-
-        @Override
         public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
             return null;
         }

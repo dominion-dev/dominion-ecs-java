@@ -97,17 +97,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         int setId(int id);
 
-//        int getStateId();
-
         int setStateId(int id);
-
-        Item getPrev();
-
-        void setPrev(Item prev);
-
-        Item getNext();
-
-        void setNext(Item next);
 
         LinkedChunk<? extends Item> getChunk();
 
