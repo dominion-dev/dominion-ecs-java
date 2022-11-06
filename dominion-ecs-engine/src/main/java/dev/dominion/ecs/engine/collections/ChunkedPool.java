@@ -169,7 +169,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final int id = idGenerator.getAndIncrement();
         private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
-        private final IdStack idStack;
+        private final IntStack idStack;
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private final int dataLength;
@@ -185,7 +185,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.dataLength = dataLength;
             this.owner = owner;
             this.loggingContext = loggingContext;
-            idStack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
+            idStack = new IntStack(ID_STACK_CAPACITY);
             while ((currentChunk = pool.newChunk(this, null, pool.chunkIndex.get())) == null) {
             }
             firstChunk = currentChunk;
@@ -210,7 +210,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         @SuppressWarnings("StatementWithEmptyBody")
         public int nextId() {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
+            boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+            if (loggable) {
                 LOGGER.log(
                         System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                                 , "Getting nextId from " + currentChunk
@@ -219,6 +220,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 );
             }
             int returnValue = idStack.pop();
+            if (loggable) {
+                LOGGER.log(
+                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                                , "Popping nextId:" + idSchema.idToString(returnValue)
+                        )
+                );
+            }
             if (returnValue != Integer.MIN_VALUE) {
                 return returnValue;
             }
@@ -275,13 +283,21 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             if (check && (chunk == null || chunk.tenant != this)) {
                 throw new IllegalArgumentException("Invalid chunk [" + chunk + "] retrieved by [" + id + "]");
             }
+            boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             if (chunk.isEmpty()) {
                 idStack.push(id);
+                if (loggable) {
+                    LOGGER.log(
+                            System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                                    , "Pushing id: " + idSchema.idToString(id)
+                            )
+                    );
+                }
                 return id;
             }
             boolean notCurrentChunk = chunk != currentChunk;
             int reusableId = chunk.remove(id, notCurrentChunk, isState);
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
+            if (loggable) {
                 LOGGER.log(
                         System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
                                 , "Freeing " + (isState ? "stateId" : "id") + "=" + idSchema.idToString(id)
@@ -292,6 +308,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 );
             }
             if (notCurrentChunk) {
+                if (loggable) {
+                    LOGGER.log(
+                            System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                                    , "Pushing reusableId: " + idSchema.idToString(reusableId)
+                            )
+                    );
+                }
                 idStack.push(reusableId);
             } else {
                 newId = reusableId;
@@ -364,7 +387,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return dataLength;
         }
 
-        public IdStack getIdStack() {
+        public IntStack getIdStack() {
             return idStack;
         }
 
@@ -446,9 +469,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
 
     public static class PoolDataIteratorWithState<T extends Item> extends PoolDataIterator<T> {
-        private int begin;
         protected LinkedChunk<? extends Item> itemChunk;
         protected int itemIdx;
+        private int begin;
 
         public PoolDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             super(currentChunk, idSchema);
