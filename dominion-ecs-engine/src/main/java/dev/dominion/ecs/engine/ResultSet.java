@@ -8,6 +8,7 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.IndexKey;
+import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ResultSet<T> implements Results<T> {
+    private static final System.Logger LOGGER = LoggingSystem.getLogger();
     protected final boolean withEntity;
     private final CompositionRepository compositionRepository;
     private final Map<IndexKey, CompositionRepository.Node> nodeMap;
@@ -26,6 +28,21 @@ public abstract class ResultSet<T> implements Results<T> {
         this.compositionRepository = compositionRepository;
         this.nodeMap = nodeMap;
         this.withEntity = withEntity;
+        if (LoggingSystem.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(compositionRepository.getLoggingContext().subject()
+                            , "Creating " + this)
+            );
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ResultSet{" +
+                "nodes=" + (nodeMap == null ? null : nodeMap.values()) +
+                ", withEntity=" + withEntity +
+                ", stateKey=" + stateKey +
+                '}';
     }
 
     abstract Iterator<T> compositionIterator(DataComposition composition);
@@ -53,6 +70,12 @@ public abstract class ResultSet<T> implements Results<T> {
     @Override
     public <S extends Enum<S>> Results<T> withState(S state) {
         stateKey = compositionRepository.getClassIndex().getIndexKeyByEnum(state);
+        if (LoggingSystem.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(compositionRepository.getLoggingContext().subject()
+                            , "Setting state " + state + " to " + this)
+            );
+        }
         return this;
     }
 
@@ -78,9 +101,11 @@ public abstract class ResultSet<T> implements Results<T> {
         ChunkedPool.PoolDataIterator<IntEntity> iterator;
         if (withState) {
             var tenant = composition.getStateTenant(stateKey);
-            iterator = withEntity ?
-                    tenant.iteratorWithState(multiData) :
-                    tenant.noItemIteratorWithState(multiData);
+            iterator = tenant == null ?
+                    new ChunkedPool.PoolDataEmptyIterator<>() :
+                    withEntity ?
+                            tenant.iteratorWithState(multiData) :
+                            tenant.noItemIteratorWithState(multiData);
         } else {
             var tenant = composition.getTenant();
             iterator = withEntity ?
