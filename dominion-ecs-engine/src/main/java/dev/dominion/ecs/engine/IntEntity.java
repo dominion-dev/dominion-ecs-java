@@ -27,15 +27,12 @@ public final class IntEntity implements Entity, Item {
         stateIdUpdater = stateUpdater;
     }
 
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile int id;
-
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile int stateId;
-
     ChunkedPool.LinkedChunk<IntEntity> chunk;
     ChunkedPool.LinkedChunk<IntEntity> stateChunk;
-
+    @SuppressWarnings("FieldMayBeFinal")
+    private volatile int id;
+    @SuppressWarnings("FieldMayBeFinal")
+    private volatile int stateId;
     private Object[] shelf;
 
     public IntEntity(int id, String name) {
@@ -190,9 +187,9 @@ public final class IntEntity implements Entity, Item {
                 return this;
             }
             DataComposition composition = getComposition();
-            if (stateChunk != null ) {
+            if (stateChunk != null) {
                 var tenant = stateChunk.getTenant();
-                if(tenant == composition.getStateTenant(state)) {
+                if (tenant == composition.getStateTenant(state)) {
                     return this;
                 }
                 tenant.freeStateId(stateId);

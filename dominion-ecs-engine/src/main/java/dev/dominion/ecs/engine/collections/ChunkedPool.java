@@ -459,7 +459,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @SuppressWarnings("ConstantConditions")
         @Override
         public boolean hasNext() {
-            return  next > -1
+            return next > -1
                     || ((next = begin) == begin && (currentChunk = currentChunk.next) != null);
         }
 
@@ -651,7 +651,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         }
                     }
                 }
-                if(isState) removed.setStateId(IdSchema.DETACHED_BIT_IDX);
+                if (isState) removed.setStateId(IdSchema.DETACHED_BIT_IDX);
                 return idSchema.mergeId(id, lastIndex);
             }
         }

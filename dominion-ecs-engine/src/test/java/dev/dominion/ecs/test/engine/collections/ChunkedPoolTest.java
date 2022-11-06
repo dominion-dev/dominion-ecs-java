@@ -35,6 +35,59 @@ class ChunkedPoolTest {
         }
     }
 
+    public record TestEntity(int id, Item prev, Item next) implements Item {
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public int setId(int id) {
+            return id;
+        }
+
+        @Override
+        public int setStateId(int id) {
+            return 0;
+        }
+
+        @Override
+        public Item getPrev() {
+            return prev;
+        }
+
+        @Override
+        public void setPrev(Item prev) {
+        }
+
+        @Override
+        public Item getNext() {
+            return next;
+        }
+
+        @Override
+        public void setNext(Item next) {
+        }
+
+        @Override
+        public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
+            return null;
+        }
+
+        @Override
+        public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+        }
+
+        @Override
+        public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return false;
+        }
+    }
+
     @Nested
     public class TenantTest {
 
@@ -216,59 +269,6 @@ class ChunkedPoolTest {
             chunk.set(10, entity, null);
             Assertions.assertEquals(entity, chunk.get(10));
             Assertions.assertEquals(previous, chunk.getPrevious());
-        }
-    }
-
-    public record TestEntity(int id, Item prev, Item next) implements Item {
-        @Override
-        public int getId() {
-            return id;
-        }
-
-        @Override
-        public int setId(int id) {
-            return id;
-        }
-
-        @Override
-        public int setStateId(int id) {
-            return 0;
-        }
-
-        @Override
-        public Item getPrev() {
-            return prev;
-        }
-
-        @Override
-        public void setPrev(Item prev) {
-        }
-
-        @Override
-        public Item getNext() {
-            return next;
-        }
-
-        @Override
-        public void setNext(Item next) {
-        }
-
-        @Override
-        public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
-            return null;
-        }
-
-        @Override
-        public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-        }
-
-        @Override
-        public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return false;
         }
     }
 }

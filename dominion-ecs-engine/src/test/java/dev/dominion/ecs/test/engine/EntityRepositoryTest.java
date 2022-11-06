@@ -354,6 +354,10 @@ class EntityRepositoryTest {
         }
     }
 
+    enum State {
+        ONE, TWO
+    }
+
     record C1(int id) {
     }
 
@@ -370,9 +374,5 @@ class EntityRepositoryTest {
     }
 
     record C6(int id) {
-    }
-
-    enum State {
-        ONE, TWO
     }
 }

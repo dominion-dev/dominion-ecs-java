@@ -100,7 +100,7 @@ public final class DataComposition {
                     if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(
                                 System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                                        , "Adding state " + state +  " with " + newStateTenant + " to " + this)
+                                        , "Adding state " + state + " with " + newStateTenant + " to " + this)
                         );
                     }
                     return newStateTenant;
