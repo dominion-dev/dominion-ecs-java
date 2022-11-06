@@ -446,21 +446,20 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
 
     public static class PoolDataIteratorWithState<T extends Item> extends PoolDataIterator<T> {
-
-        private final int begin;
+        private int begin;
         protected LinkedChunk<? extends Item> itemChunk;
         protected int itemIdx;
 
         public PoolDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             super(currentChunk, idSchema);
-            next = (begin = currentChunk.size() - 1);
+            next = begin = currentChunk.size() - 1;
         }
 
         @SuppressWarnings("ConstantConditions")
         @Override
         public boolean hasNext() {
             return next > -1
-                    || ((next = begin) == begin && (currentChunk = currentChunk.next) != null);
+                    || ((currentChunk = currentChunk.next) != null && (next = begin = currentChunk.size() - 1) == begin);
         }
 
         @Override
