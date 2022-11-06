@@ -190,6 +190,12 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Find entities with " + Arrays.toString(componentTypes))
+            );
+        }
         switch (componentTypes.length) {
             case 0:
                 return null;
@@ -263,6 +269,10 @@ public final class CompositionRepository implements AutoCloseable {
 
     public NodeCache getNodeCache() {
         return nodeCache;
+    }
+
+    public LoggingSystem.Context getLoggingContext() {
+        return loggingContext;
     }
 
     @Override
