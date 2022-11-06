@@ -220,6 +220,10 @@ public final class IntEntity implements Entity, Item {
             chunk.getTenant().freeId(id);
             flagDetachedId();
             chunk = null;
+            if(stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
+            }
             shelf = null;
             return true;
         }
