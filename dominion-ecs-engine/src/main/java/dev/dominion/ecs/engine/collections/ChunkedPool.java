@@ -97,6 +97,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         int setId(int id);
 
+//        int getStateId();
+
+        int setStateId(int id);
+
         Item getPrev();
 
         void setPrev(Item prev);
@@ -105,32 +109,31 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         void setNext(Item next);
 
+        LinkedChunk<? extends Item> getChunk();
+
         void setChunk(LinkedChunk<? extends Item> chunk);
+
+        void setStateChunk(LinkedChunk<? extends Item> chunk);
 
         boolean isEnabled();
     }
 
     // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|
-    public record IdSchema(int chunkBit, int chunkCountBit
+    public record IdSchema(int chunkBit
             , int chunkCount, int chunkIdBitMask, int chunkIdBitMaskShifted
             , int chunkCapacity, int objectIdBitMask
     ) {
-        public static final int BIT_LENGTH = 30;
-        public static final int MIN_CHUNK_BIT = 10;
-        public static final int MIN_CHUNK_COUNT_BIT = 6;
-        public static final int MAX_CHUNK_BIT = BIT_LENGTH - MIN_CHUNK_COUNT_BIT;
-        public static final int MAX_CHUNK_COUNT_BIT = BIT_LENGTH - MIN_CHUNK_BIT;
+        public static final int TOTAL_BIT = 31;
+        public static final int MIN_CHUNK_BIT = 8;
+        public static final int MAX_CHUNK_BIT = 16;
         public static final int DETACHED_BIT_IDX = 31;
         public static final int DETACHED_BIT = 1 << DETACHED_BIT_IDX;
-        public static final int LOCK_BIT_IDX = 30;
-        public static final int LOCK_BIT = 1 << LOCK_BIT_IDX;
 
-        public IdSchema(int chunkBit, int chunkCountBit) {
+        public IdSchema(int chunkBit) {
             this(chunkBit
-                    , chunkCountBit
-                    , 1 << chunkCountBit
-                    , (1 << (BIT_LENGTH - chunkBit)) - 1
-                    , ((1 << (BIT_LENGTH - chunkBit)) - 1) << chunkBit
+                    , 1 << (TOTAL_BIT - chunkBit)
+                    , (1 << (TOTAL_BIT - chunkBit)) - 1
+                    , ((1 << (TOTAL_BIT - chunkBit)) - 1) << chunkBit
                     , 1 << Math.min(chunkBit, MAX_CHUNK_BIT)
                     , (1 << chunkBit) - 1
             );
@@ -138,7 +141,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public String idToString(int id) {
             return "|" + ((id & DETACHED_BIT) >>> DETACHED_BIT_IDX)
-                    + ":" + ((id & LOCK_BIT) >>> LOCK_BIT_IDX)
                     + ":" + (fetchChunkId(id))
                     + ":" + (fetchObjectId(id))
                     + "|";
@@ -183,18 +185,18 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.dataLength = dataLength;
             this.owner = owner;
             this.loggingContext = loggingContext;
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-                LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                                , "Creating " + getClass().getSimpleName()
-                        )
-                );
-            }
             idStack = new IdStack(ID_STACK_CAPACITY, idSchema, loggingContext);
             while ((currentChunk = pool.newChunk(this, null, pool.chunkIndex.get())) == null) {
             }
             firstChunk = currentChunk;
             nextId();
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                LOGGER.log(
+                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                , "Creating " + this
+                        )
+                );
+            }
         }
 
         @Override
@@ -261,10 +263,14 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int freeId(int id) {
-            return freeId(id, true);
+            return freeId(id, true, false);
         }
 
-        public int freeId(int id, boolean check) {
+        public int freeStateId(int stateId) {
+            return freeId(stateId, true, true);
+        }
+
+        public int freeId(int id, boolean check, boolean isState) {
             LinkedChunk<T> chunk = pool.getChunk(id);
             if (check && (chunk == null || chunk.tenant != this)) {
                 throw new IllegalArgumentException("Invalid chunk [" + chunk + "] retrieved by [" + id + "]");
@@ -274,11 +280,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 return id;
             }
             boolean notCurrentChunk = chunk != currentChunk;
-            int reusableId = chunk.remove(id, notCurrentChunk);
+            int reusableId = chunk.remove(id, notCurrentChunk, isState);
             if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
                 LOGGER.log(
                         System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
-                                , "Freeing id=" + idSchema.idToString(id)
+                                , "Freeing " + (isState ? "stateId" : "id") + "=" + idSchema.idToString(id)
                                         + " > reusableId=" + idSchema.idToString(reusableId)
                                         + " having current " + currentChunk
 
@@ -295,18 +301,45 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         public PoolDataIterator<T> iterator() {
             return dataLength == 1 ?
-                    new PoolDataIterator<>(firstChunk) :
-                    new PoolMultiDataIterator<>(firstChunk);
+                    new PoolDataIterator<>(firstChunk, idSchema) :
+                    new PoolMultiDataIterator<>(firstChunk, idSchema);
         }
 
         public PoolDataIterator<T> noItemIterator() {
             return dataLength == 1 ?
-                    new PoolDataNoItemIterator<>(firstChunk) :
-                    new PoolMultiDataNoItemIterator<>(firstChunk);
+                    new PoolDataNoItemIterator<>(firstChunk, idSchema) :
+                    new PoolMultiDataNoItemIterator<>(firstChunk, idSchema);
         }
+
+        public PoolDataIterator<T> iteratorWithState(boolean multiData) {
+            return multiData ?
+                    new PoolMultiDataIteratorWithState<>(firstChunk, idSchema) :
+                    new PoolDataIteratorWithState<>(firstChunk, idSchema);
+        }
+
+        public PoolDataIterator<T> noItemIteratorWithState(boolean multiData) {
+            return multiData ?
+                    new PoolMultiDataNoItemIteratorWithState<>(firstChunk, idSchema) :
+                    new PoolDataNoItemIteratorWithState<>(firstChunk, idSchema);
+        }
+
 
         public T register(int id, T entry, Object[] data) {
             return pool.getChunk(id).set(id, entry, data);
+        }
+
+        public LinkedChunk<T> registerState(T entry) {
+            int stateId = nextId();
+            LinkedChunk<T> stateChunk = pool.getChunk(stateId);
+            stateChunk.setState(stateId, entry);
+            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
+                LOGGER.log(
+                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                                , "Setting state to " + entry
+                        )
+                );
+            }
+            return stateChunk;
         }
 
         public T migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
@@ -349,12 +382,17 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    // ROOT iterator
+
     public static class PoolIterator<T extends Item> implements Iterator<T> {
         protected int next = 0;
         protected LinkedChunk<T> currentChunk;
 
-        public PoolIterator(LinkedChunk<T> currentChunk) {
+        protected IdSchema idSchema;
+
+        public PoolIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             this.currentChunk = currentChunk;
+            this.idSchema = idSchema;
         }
 
         @SuppressWarnings("ConstantConditions")
@@ -371,10 +409,12 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    // SINGLE data iterator
+
     public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
 
-        public PoolDataIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+        public PoolDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         public Object data(int i) {
@@ -382,20 +422,66 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
-    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
-        public PoolMultiDataIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+    public static class PoolDataEmptyIterator<T extends Item> extends PoolDataIterator<T> {
+
+        public PoolDataEmptyIterator() {
+            super(null, null);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public T next() {
+            return null;
         }
 
         @Override
         public Object data(int i) {
-            return currentChunk.multiDataArray[i][next];
+            return null;
         }
     }
 
+
+    public static class PoolDataIteratorWithState<T extends Item> extends PoolDataIterator<T> {
+
+        private final int begin;
+        protected LinkedChunk<? extends Item> itemChunk;
+        protected int itemIdx;
+
+        public PoolDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+            next = (begin = currentChunk.size() - 1);
+        }
+
+        @SuppressWarnings("ConstantConditions")
+        @Override
+        public boolean hasNext() {
+            return next > -1
+                    || ((next = begin) == begin && (currentChunk = currentChunk.next) != null);
+        }
+
+        @Override
+        public Object data(int i) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            var itemIdx = idSchema.fetchObjectId(item.getId());
+            return itemChunk.dataArray != null ? itemChunk.dataArray[itemIdx] : itemChunk.multiDataArray[i][itemIdx];
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            return (T) currentChunk.itemArray[next--];
+        }
+    }
+
+
     public static final class PoolDataNoItemIterator<T extends Item> extends PoolDataIterator<T> {
-        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+        public PoolDataNoItemIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         @Override
@@ -405,14 +491,75 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
     }
 
+    public static final class PoolDataNoItemIteratorWithState<T extends Item> extends PoolDataIteratorWithState<T> {
+        public PoolDataNoItemIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public T next() {
+            next--;
+            return null;
+        }
+    }
+
+    // MULTI data iterator
+
+    public static class PoolMultiDataIterator<T extends Item> extends PoolDataIterator<T> {
+        public PoolMultiDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public Object data(int i) {
+            return currentChunk.multiDataArray[i][next];
+        }
+    }
+
+    public static class PoolMultiDataIteratorWithState<T extends Item> extends PoolDataIteratorWithState<T> {
+        public PoolMultiDataIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public Object data(int i) {
+            if (itemChunk == null) {
+                var item = currentChunk.itemArray[next];
+                itemChunk = item.getChunk();
+                itemIdx = idSchema.fetchObjectId(item.getId());
+            }
+            return itemChunk.multiDataArray[i][itemIdx];
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            itemChunk = null;
+            return (T) currentChunk.itemArray[next--];
+        }
+    }
+
     public static final class PoolMultiDataNoItemIterator<T extends Item> extends PoolMultiDataIterator<T> {
-        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk) {
-            super(currentChunk);
+        public PoolMultiDataNoItemIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
         }
 
         @Override
         public T next() {
             next++;
+            return null;
+        }
+    }
+
+    public static final class PoolMultiDataNoItemIteratorWithState<T extends Item> extends PoolMultiDataIteratorWithState<T> {
+        public PoolMultiDataNoItemIteratorWithState(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public T next() {
+            next--;
+            itemChunk = null;
             return null;
         }
     }
@@ -454,7 +601,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return index.incrementAndGet();
         }
 
-        public int remove(int id, boolean doNotUpdateIndex) {
+        public int remove(int id, boolean doNotUpdateIndex, boolean isState) {
             int capacity = idSchema.chunkCapacity;
             int removedIndex = idSchema.fetchObjectId(id);
             boolean recheck = false;
@@ -472,7 +619,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 Item removed = itemArray[removedIndex];
                 if (last != null && last != removed) {
                     synchronized (itemArray[lastIndex]) {
-                        if (last.setId(id) != id) {
+                        if (!isState && last.setId(id) != id) {
+                            recheck = true;
+                            continue;
+                        }
+                        if (isState && last.setStateId(id) != id) {
                             recheck = true;
                             continue;
                         }
@@ -500,6 +651,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         }
                     }
                 }
+                if (isState) removed.setStateId(IdSchema.DETACHED_BIT_IDX);
                 return idSchema.mergeId(id, lastIndex);
             }
         }
@@ -523,6 +675,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             value.setId(id);
             value.setChunk(this);
             return (T) (itemArray[idx] = value);
+        }
+
+        public void setState(int stateId, T value) {
+            int idx = idSchema.fetchObjectId(stateId);
+            value.setStateId(stateId);
+            value.setStateChunk(this);
+            itemArray[idx] = value;
         }
 
         @SuppressWarnings("unchecked")
@@ -576,14 +735,14 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             }
         }
 
-        public Object[] disable(T value) {
+        public Object[] shelve(T value) {
             int id = value.getId();
             Object[] data = getData(id);
             tenant.freeId(id);
             return data;
         }
 
-        public void renew(T value, Object[] dataArray) {
+        public void unshelve(T value, Object[] dataArray) {
             tenant.register(tenant.nextId(), value, dataArray);
         }
 

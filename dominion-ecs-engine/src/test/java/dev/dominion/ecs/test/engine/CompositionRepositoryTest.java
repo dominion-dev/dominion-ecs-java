@@ -17,36 +17,22 @@ class CompositionRepositoryTest {
     @Test
     void init() {
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 1, 1
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(1, 1, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(10, idSchema.chunkBit());
-            Assertions.assertEquals(6, idSchema.chunkCountBit());
+            Assertions.assertEquals(8, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(100, 100, 1
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(100, 100, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(24, idSchema.chunkBit());
-            Assertions.assertEquals(6, idSchema.chunkCountBit());
+            Assertions.assertEquals(16, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 22, 10
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(21, 15, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
-            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(22, idSchema.chunkBit());
-            Assertions.assertEquals(8, idSchema.chunkCountBit());
-        }
-        try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 1, 100
-                             , LoggingSystem.Context.TEST)) {
-            IdSchema idSchema = compositionRepository.getIdSchema();
-            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(10, idSchema.chunkBit());
-            Assertions.assertEquals(20, idSchema.chunkCountBit());
+            Assertions.assertEquals(21, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(15, idSchema.chunkBit());
         }
     }
 

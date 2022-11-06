@@ -21,7 +21,7 @@ import static dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 public class ChunkedPoolBenchmark extends DominionBenchmark {
     private static final IdSchema ID_SCHEMA =
-            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
@@ -190,6 +190,11 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
+            public int setStateId(int id) {
+                return 0;
+            }
+
+            @Override
             public Item getPrev() {
                 return prev;
             }
@@ -208,8 +213,16 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+            public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
+                return null;
+            }
 
+            @Override
+            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+            }
+
+            @Override
+            public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
             }
 
             @Override

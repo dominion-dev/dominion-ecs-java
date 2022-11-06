@@ -178,6 +178,12 @@ public final class ClassIndex implements AutoCloseable {
         return new IndexKey(checkArray, min, max, length);
     }
 
+    public <E extends Enum<E>> IndexKey getIndexKeyByEnum(E enumValue) {
+        int cIndex = getIndex(enumValue.getClass());
+        cIndex = cIndex == 0 ? getIndexOrAddClass(enumValue.getClass()) : cIndex;
+        return new IndexKey(new int[]{cIndex, enumValue.ordinal()});
+    }
+
     private int capHashCode(int hashCode, int hashBits) {
         return hashCode >> (32 - hashBits);
     }

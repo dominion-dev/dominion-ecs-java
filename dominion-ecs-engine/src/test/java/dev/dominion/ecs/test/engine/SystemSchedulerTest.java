@@ -54,7 +54,6 @@ class SystemSchedulerTest {
         scheduler.tick();
     }
 
-
     @Test
     void parallelSchedule() {
         Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);

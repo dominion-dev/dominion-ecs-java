@@ -85,8 +85,8 @@ actions:
   data structures and algorithms to increase performances and fill the gap with ECS frameworks written in system
   languages.
 - **_reducing garbage collection activities_**: GC could affect overall performances as its activities run concurrently
-  with user code and without direct control. To reduce GC activities significantly, Dominion implements a very efficient
-  pooling system to reuse objects living in a heap and creates off-heap data structures whenever possible.
+  with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
+  structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
   Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
   as much as possible and leveraging the best available lock implementation as the

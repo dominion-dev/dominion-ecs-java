@@ -34,21 +34,14 @@ public final class CompositionRepository implements AutoCloseable {
     public CompositionRepository(LoggingSystem.Context loggingContext) {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
                 , ConfigSystem.DEFAULT_CHUNK_BIT
-                , ConfigSystem.DEFAULT_CHUNK_COUNT_BIT
                 , loggingContext
         );
     }
 
-    public CompositionRepository(
-            int classIndexBit, int chunkBit, int chunkCountBit
-            , LoggingSystem.Context loggingContext
-    ) {
+    public CompositionRepository(int classIndexBit, int chunkBit, LoggingSystem.Context loggingContext) {
         classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
-        int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
-        chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
-                Math.min(chunkCountBit, Math.min(reservedBit, IdSchema.MAX_CHUNK_COUNT_BIT)));
-        idSchema = new IdSchema(chunkBit, chunkCountBit);
+        idSchema = new IdSchema(chunkBit);
         this.loggingContext = loggingContext;
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -197,6 +190,12 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Find entities with " + Arrays.toString(componentTypes))
+            );
+        }
         switch (componentTypes.length) {
             case 0:
                 return null;
@@ -270,6 +269,10 @@ public final class CompositionRepository implements AutoCloseable {
 
     public NodeCache getNodeCache() {
         return nodeCache;
+    }
+
+    public LoggingSystem.Context getLoggingContext() {
+        return loggingContext;
     }
 
     @Override

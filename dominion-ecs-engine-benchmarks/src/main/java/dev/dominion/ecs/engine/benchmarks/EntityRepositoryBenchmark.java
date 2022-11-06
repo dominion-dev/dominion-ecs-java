@@ -353,6 +353,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         }
     }
 
+    // FIND Components
 
     public static abstract class FindComponents extends DominionBenchmark {
         EntityRepository entityRepository;
@@ -427,55 +428,54 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
 
         @Override
         public void iterateImpl(Blackhole bh) {
-            var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+            var iterator = entityRepository.findCompositionsWith(C1.class).iterator();
             while (iterator.hasNext()) {
-                bh.consume(iterator.next().comp());
+                bh.consume(iterator.next());
             }
         }
 
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
-            var iterator =
-                    entityRepository.findEntitiesWith(C1.class).withState(State1.ONE).iterator();
+            var iterator = entityRepository.findCompositionsWith(C1.class).withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
-                bh.consume(iterator.next().comp());
+                bh.consume(iterator.next());
             }
         }
 
         @Override
         public void streamImpl(Blackhole bh) {
-            var stream = entityRepository.findEntitiesWith(C1.class).stream();
+            var stream = entityRepository.findCompositionsWith(C1.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class).withState(State1.ONE).stream();
+                    entityRepository.findCompositionsWith(C1.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents1FromMoreCompositions extends FindComponents1 {
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents1FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Object[] comps2 = new Object[]{new C1(0), new C2(0)};
-            C1 comp = new C1(0);
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comp).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents1FromMoreCompositions extends FindComponents1 {
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents1FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            Object[] comps2 = new Object[]{new C1(0), new C2(0)};
+//            C1 comp = new C1(0);
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comp).setState(State1.ONE);
+//            }
+//        }
+//    }
 
     // 2
 
@@ -498,7 +498,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
 
         @Override
         public void iterateImpl(Blackhole bh) {
-            var iterator = entityRepository.findEntitiesWith(C1.class, C2.class).iterator();
+            var iterator = entityRepository.findCompositionsWith(C1.class, C2.class).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp2());
             }
@@ -506,8 +506,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
 
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
-            var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class).withState(State1.ONE).iterator();
+            var iterator = entityRepository.findCompositionsWith(C1.class, C2.class).withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp2());
             }
@@ -516,38 +515,38 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void streamImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class).withState(State1.ONE).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents2FromMoreCompositions extends FindComponents2 {
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents2FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Object[] comps = new Object[]{new C1(0), new C2(0)};
-            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0)};
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps).setState(State1.ONE);
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents2FromMoreCompositions extends FindComponents2 {
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents2FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            Object[] comps = new Object[]{new C1(0), new C2(0)};
+//            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0)};
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps).setState(State1.ONE);
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//        }
+//    }
 
     // 3
 
@@ -571,7 +570,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).iterator();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp3());
             }
@@ -580,7 +579,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).withState(State1.ONE).iterator();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp3());
             }
@@ -589,39 +588,39 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void streamImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).withState(State1.ONE).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents3FromMoreCompositions extends FindComponents3 {
-        Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0)};
-        Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents3FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps).setState(State1.ONE);
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents3FromMoreCompositions extends FindComponents3 {
+//        Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0)};
+//        Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+//
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents3FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps).setState(State1.ONE);
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//        }
+//    }
 
     // 4
 
@@ -645,7 +644,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).iterator();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp4());
             }
@@ -654,7 +653,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class)
                             .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp4());
@@ -664,40 +663,40 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void streamImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class)
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents4FromMoreCompositions extends FindComponents4 {
-        Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
-        Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0)};
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents4FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps).setState(State1.ONE);
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents4FromMoreCompositions extends FindComponents4 {
+//        Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+//        Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0)};
+//
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents4FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps).setState(State1.ONE);
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//        }
+//    }
 
     // 5
 
@@ -724,7 +723,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp5());
             }
@@ -733,7 +732,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class)
                             .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp5());
@@ -743,39 +742,39 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void streamImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class)
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents5FromMoreCompositions extends FindComponents5 {
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents5FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0)};
-            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps).setState(State1.ONE);
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents5FromMoreCompositions extends FindComponents5 {
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents5FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0)};
+//            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps).setState(State1.ONE);
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//        }
+//    }
 
     // 6
 
@@ -802,7 +801,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp6());
             }
@@ -811,7 +810,7 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void iterateWithStateImpl(Blackhole bh) {
             var iterator =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
                             .withState(State1.ONE).iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp6());
@@ -821,38 +820,38 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         @Override
         public void streamImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).stream();
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).stream();
             stream.forEach(bh::consume);
         }
 
         @Override
         public void streamWithStateImpl(Blackhole bh) {
             var stream =
-                    entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
+                    entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
     }
-
-    public static class FindComponents6FromMoreCompositions extends FindComponents6 {
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(FindComponents6FromMoreCompositions.class)}
-            );
-        }
-
-        @Override
-        public void setupImpl() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
-            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0), new C7(0)};
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps).setState(State1.ONE);
-
-            }
-            for (int i = 0; i < size >> 1; i++) {
-                entityRepository.createEntity(comps2).setState(State1.ONE);
-            }
-        }
-    }
+//
+//    public static class FindComponents6FromMoreCompositions extends FindComponents6 {
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(FindComponents6FromMoreCompositions.class)}
+//            );
+//        }
+//
+//        @Override
+//        public void setupImpl() {
+//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+//            Object[] comps = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0)};
+//            Object[] comps2 = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0), new C7(0)};
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps).setState(State1.ONE);
+//
+//            }
+//            for (int i = 0; i < size >> 1; i++) {
+//                entityRepository.createEntity(comps2).setState(State1.ONE);
+//            }
+//        }
+//    }
 }
