@@ -64,7 +64,7 @@ class ChunkedPoolTest {
                 Assertions.assertEquals(1, tenant.currentChunkSize());
                 Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(2, tenant.currentChunkSize()); // ready nextId == 2
-                tenant.freeId(0); // 1 -> 0 : ready nextId == 1
+                Assertions.assertEquals(1, tenant.freeId(0) & ID_SCHEMA.objectIdBitMask()); // 1 -> 0 : ready nextId == 1
                 Assertions.assertEquals(1, tenant.currentChunkSize());
                 Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(2, tenant.currentChunkSize());
@@ -75,7 +75,7 @@ class ChunkedPoolTest {
                 }
                 Assertions.assertEquals(3, tenant.currentChunkSize());
                 Assertions.assertEquals(3, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
-                tenant.freeId(1);
+                Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.freeId(1) & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(4, tenant.currentChunkSize());
                 Assertions.assertEquals(ID_SCHEMA.chunkCapacity() - 1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(4, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
@@ -140,17 +140,17 @@ class ChunkedPoolTest {
                     executorService.execute(tenant1::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant1.freeId(idx, false));
+                        executorService.execute(() -> tenant1.freeId(idx, false, false));
                     }
                     executorService.execute(tenant2::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant2.freeId(idx, false));
+                        executorService.execute(() -> tenant2.freeId(idx, false, false));
                     }
                     executorService.execute(tenant3::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant3.freeId(idx, false));
+                        executorService.execute(() -> tenant3.freeId(idx, false, false));
                     }
                 }
                 executorService.shutdown();
@@ -228,11 +228,6 @@ class ChunkedPoolTest {
         @Override
         public int setId(int id) {
             return id;
-        }
-
-        @Override
-        public int getStateId() {
-            return 0;
         }
 
         @Override

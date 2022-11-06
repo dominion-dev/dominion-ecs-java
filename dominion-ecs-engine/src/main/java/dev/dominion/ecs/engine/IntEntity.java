@@ -40,6 +40,7 @@ public final class IntEntity implements Entity, Item {
 
     public IntEntity(int id, String name) {
         this.id = id;
+        this.stateId = ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     @Override
@@ -51,11 +52,6 @@ public final class IntEntity implements Entity, Item {
     public int setId(int id) {
         int prev = this.id;
         return idUpdater.compareAndSet(this, prev, id) ? id : prev;
-    }
-
-    @Override
-    public int getStateId() {
-        return stateId;
     }
 
     @Override
@@ -163,7 +159,7 @@ public final class IntEntity implements Entity, Item {
         int dataLength;
         if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
         if (dataLength == 1) {
-            return chunk.getFromDataArray(getId()).getClass().equals(componentType);
+            return chunk.getFromDataArray(id).getClass().equals(componentType);
         }
         DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
         return composition.fetchComponentIndex(componentType) > -1;
@@ -174,7 +170,7 @@ public final class IntEntity implements Entity, Item {
         int dataLength;
         if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
         if (dataLength == 1) {
-            return chunk.getFromDataArray(getId()).equals(component);
+            return chunk.getFromDataArray(id).equals(component);
         }
         DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
         int idx;
@@ -235,6 +231,7 @@ public final class IntEntity implements Entity, Item {
         ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
         return "Entity={" +
                 "id=" + idSchema.idToString(id) + ", " +
+                "stateId=" + idSchema.idToString(stateId) + ", " +
                 "enabled=" + isEnabled() +
                 "}";
     }
