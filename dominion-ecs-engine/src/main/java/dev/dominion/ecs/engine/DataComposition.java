@@ -27,10 +27,7 @@ public final class DataComposition {
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
-    //    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
-    //    private final StampedLock stateLock = new StampedLock();
     private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
-
     private final LoggingSystem.Context loggingContext;
 
     public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
@@ -121,13 +118,6 @@ public final class DataComposition {
                 !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
-//    public void detachEntityAndState(IntEntity entity) {
-//        detachEntity(entity);
-//        if (entity.getPrev() != null || entity.getNext() != null) {
-//            detachEntityState(entity);
-//        }
-//    }
-
     public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -145,125 +135,6 @@ public final class DataComposition {
             );
         }
     }
-//
-//    public void attachEntity(IntEntity entity, boolean prepared, Object... components) {
-//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//            LOGGER.log(
-//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                            , "Start Attaching " + entity + " to " + this + " and  " + tenant)
-//            );
-//        }
-//        entity = tenant.register(entity.setId(tenant.nextId()), entity.setComposition(this), switch (length()) {
-//            case 0 -> null;
-//            case 1 -> components;
-//            default -> !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components;
-//        });
-//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//            LOGGER.log(
-//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                            , "Attached " + entity)
-//            );
-//        }
-//    }
-
-//    public void reEnableEntity(IntEntity entity) {
-//        tenant.register(entity.getId(), entity, null);
-//    }
-
-//    public void detachEntity(IntEntity entity) {
-//        tenant.freeId(entity.getId());
-//        entity.flagDetachedId();
-//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//            LOGGER.log(
-//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                            , "Detached: " + entity)
-//            );
-//        }
-//    }
-
-//    public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
-//        boolean detached = detachEntityState(entity);
-//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//            LOGGER.log(
-//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                            , "Detaching state from " + entity + " : " + detached)
-//            );
-//        }
-//        if (state != null) {
-//            attachEntityState(entity, state);
-//        }
-//        return entity;
-//    }
-
-//    private boolean detachEntityState(IntEntity entity) {
-//        IndexKey key = entity.getStateRoot();
-//        // if entity is root
-//        if (key != null) {
-//            // if alone: root
-//            if (entity.getPrev() == null) {
-//                if (states.remove(key) != null) {
-//                    entity.setStateRoot(null);
-//                    return true;
-//                }
-//            } else
-//            // root -> prev
-//            {
-//                IntEntity prev = (IntEntity) entity.getPrev();
-//                if (states.replace(key, entity, prev)) {
-//                    entity.setStateRoot(null);
-//                    entity.setPrev(null);
-//                    prev.setNext(null);
-//                    prev.setStateRoot(key);
-//                    return true;
-//                }
-//            }
-//        } else
-//        // next -> entity -> ?prev
-//        {
-//            long stamp = stateLock.writeLock();
-//            try {
-//                IntEntity prev, next;
-//                // recheck after lock
-//                if ((next = (IntEntity) entity.getNext()) != null) {
-//                    if ((prev = (IntEntity) entity.getPrev()) != null) {
-//                        prev.setNext(next);
-//                        next.setPrev(prev);
-//                    } else {
-//                        next.setPrev(null);
-//                    }
-//                }
-//                entity.setPrev(null);
-//                entity.setNext(null);
-//                return true;
-//            } finally {
-//                stateLock.unlockWrite(stamp);
-//            }
-//        }
-//        return false;
-//    }
-//
-//    private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
-//        IndexKey indexKey = calcIndexKey(state, classIndex);
-//        IntEntity prev = states.computeIfAbsent(indexKey
-//                , entity::setStateRoot);
-//        if (prev != entity) {
-//            states.computeIfPresent(indexKey, (k, oldEntity) -> {
-//                entity.setPrev(oldEntity);
-//                entity.setStateRoot(k);
-//                oldEntity.setNext(entity);
-//                oldEntity.setStateRoot(null);
-//                return entity;
-//            });
-//        }
-//        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-//            LOGGER.log(
-//                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-//                            , "Attaching state "
-//                                    + state.getClass().getSimpleName() + "." + state
-//                                    + " to " + entity)
-//            );
-//        }
-//    }
 
     public Class<?>[] getComponentTypes() {
         return componentTypes;
@@ -276,14 +147,6 @@ public final class DataComposition {
     public ChunkedPool.Tenant<IntEntity> getTenant() {
         return tenant;
     }
-
-    //    public Map<IndexKey, IntEntity> getStates() {
-//        return Collections.unmodifiableMap(states);
-//    }
-
-//    public IntEntity getStateRootEntity(IndexKey key) {
-//        return states.get(key);
-//    }
 
     public IdSchema getIdSchema() {
         return idSchema;
@@ -357,26 +220,6 @@ public final class DataComposition {
                 fetchComponentIndex(type6),
                 iterator, this);
     }
-
-//    public static class StateIterator implements Iterator<IntEntity> {
-//        private IntEntity next;
-//
-//        public StateIterator(IntEntity rootEntity) {
-//            next = rootEntity;
-//        }
-//
-//        @Override
-//        public boolean hasNext() {
-//            return next != null;
-//        }
-//
-//        @Override
-//        public IntEntity next() {
-//            var current = next;
-//            next = (IntEntity) next.getPrev();
-//            return current;
-//        }
-//    }
 
     record IteratorT<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator,
                         DataComposition composition) implements Iterator<T> {

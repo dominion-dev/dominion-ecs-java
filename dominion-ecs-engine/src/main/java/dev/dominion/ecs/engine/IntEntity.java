@@ -57,24 +57,6 @@ public final class IntEntity implements Entity, Item {
         return stateIdUpdater.compareAndSet(this, prev, stateId) ? stateId : prev;
     }
 
-    @Override
-    public Item getPrev() {
-        return null;
-    }
-
-    @Override
-    public void setPrev(Item prev) {
-    }
-
-    @Override
-    public Item getNext() {
-        return null;
-    }
-
-    @Override
-    public void setNext(Item next) {
-    }
-
     public DataComposition getComposition() {
         return (DataComposition) chunk.getTenant().getOwner();
     }
@@ -220,6 +202,10 @@ public final class IntEntity implements Entity, Item {
             chunk.getTenant().freeId(id);
             flagDetachedId();
             chunk = null;
+            if (stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
+            }
             shelf = null;
             return true;
         }

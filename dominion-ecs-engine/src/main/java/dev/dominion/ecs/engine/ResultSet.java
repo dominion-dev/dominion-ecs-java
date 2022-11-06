@@ -161,8 +161,12 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         Iterator<T> compositionIterator(DataComposition composition) {
-            var iterator = getPoolDataIterator(composition, composition.length() > 1);
-            return composition.selectT(type, iterator);
+            return composition.selectT(type, composition.getTenant().noItemIterator());
+        }
+
+        @Override
+        public <S extends Enum<S>> Results<T> withState(S state) {
+            throw new UnsupportedOperationException("Unsupported .findCompositionWith(Class<T> type).withState(S state) call : use .findEntitiesWith(Class<T> type).withState(S state) instead");
         }
     }
 

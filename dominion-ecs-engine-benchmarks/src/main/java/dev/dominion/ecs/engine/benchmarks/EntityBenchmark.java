@@ -343,113 +343,113 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
 
-//    // state
-//
-//    public static class SetStateWith extends DominionBenchmark {
-//        EntityRepository entityRepository;
-//        Entity[] entities;
-//
-//        @Param(value = {"1000000"})
-//        int size;
-//
-//        public static void main(String[] args) throws Exception {
-//            org.openjdk.jmh.Main.main(
-//                    new String[]{fetchBenchmarkName(SetStateWith.class)}
-//            );
-//        }
-//
-//        @Setup(Level.Iteration)
-//        public void setup() {
-//            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-//            entities = new Entity[size];
-//            for (int i = 0; i < size; i++) {
-//                entities[i] = entityRepository.createEntity(getInput());
-//                entities[i].setState(State1.ONE);
-//            }
-//        }
-//
-//        @Setup(Level.Invocation)
-//        public void setupInvocation() {
-//            for (int i = 0; i < size; i++) {
-//                entities[i].setState(State1.ONE);
-//            }
-//        }
-//
-//        public Object[] getInput() {
-//            return new Object[0];
-//        }
-//
-//        @TearDown(Level.Iteration)
-//        public void tearDown() {
-//            entityRepository.close();
-//        }
-//    }
-//
-//    public static class SetStateWith01 extends SetStateWith {
-//        Object[] input = new Object[]{new C1(0)};
-//
-//        public static void main(String[] args) throws Exception {
-//            org.openjdk.jmh.Main.main(
-//                    new String[]{fetchBenchmarkName(SetStateWith01.class)}
-//            );
-//        }
-//
-//        @Benchmark
-//        public void setState(Blackhole bh) {
-//            for (int i = 0; i < size; i++) {
-//                bh.consume(entities[i].setState(State1.TWO));
-//            }
-//        }
-//
-//        public Object[] getInput() {
-//            return input;
-//        }
-//    }
-//
-//    public static class SetStateWith02 extends SetStateWith01 {
-//        Object[] input = new Object[]{new C1(0), new C2(0)};
-//
-//        public static void main(String[] args) throws Exception {
-//            org.openjdk.jmh.Main.main(
-//                    new String[]{fetchBenchmarkName(SetStateWith02.class)}
-//            );
-//        }
-//
-//        public Object[] getInput() {
-//            return input;
-//        }
-//    }
-//
-//    public static class SetStateWith04 extends SetStateWith01 {
-//        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
-//
-//        public static void main(String[] args) throws Exception {
-//            org.openjdk.jmh.Main.main(
-//                    new String[]{fetchBenchmarkName(SetStateWith04.class)}
-//            );
-//        }
-//
-//        public Object[] getInput() {
-//            return input;
-//        }
-//    }
-//
-//    public static class SetStateWith08 extends SetStateWith01 {
-//        Object[] input = new Object[]{
-//                new C1(0), new C2(0), new C3(0), new C4(0),
-//                new C5(0), new C6(0), new C7(0), new C8(0)
-//        };
-//
-//        public static void main(String[] args) throws Exception {
-//            org.openjdk.jmh.Main.main(
-//                    new String[]{fetchBenchmarkName(SetStateWith08.class)}
-//            );
-//        }
-//
-//        public Object[] getInput() {
-//            return input;
-//        }
-//    }
+    // state
+
+    public static class SetStateWith extends DominionBenchmark {
+        EntityRepository entityRepository;
+        Entity[] entities;
+
+        @Param(value = {"1000000"})
+        int size;
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith.class)}
+            );
+        }
+
+        @Setup(Level.Iteration)
+        public void setup() {
+            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            entities = new Entity[size];
+            for (int i = 0; i < size; i++) {
+                entities[i] = entityRepository.createEntity(getInput());
+                entities[i].setState(State1.ONE);
+            }
+        }
+
+        @Setup(Level.Invocation)
+        public void setupInvocation() {
+            for (int i = 0; i < size; i++) {
+                entities[i].setState(State1.ONE);
+            }
+        }
+
+        public Object[] getInput() {
+            return new Object[0];
+        }
+
+        @TearDown(Level.Iteration)
+        public void tearDown() {
+            entityRepository.close();
+        }
+    }
+
+    public static class SetStateWith01 extends SetStateWith {
+        Object[] input = new Object[]{new C1(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith01.class)}
+            );
+        }
+
+        @Benchmark
+        public void setState(Blackhole bh) {
+            for (int i = 0; i < size; i++) {
+                bh.consume(entities[i].setState(State1.TWO));
+            }
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith02 extends SetStateWith01 {
+        Object[] input = new Object[]{new C1(0), new C2(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith02.class)}
+            );
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith04 extends SetStateWith01 {
+        Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith04.class)}
+            );
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
+
+    public static class SetStateWith08 extends SetStateWith01 {
+        Object[] input = new Object[]{
+                new C1(0), new C2(0), new C3(0), new C4(0),
+                new C5(0), new C6(0), new C7(0), new C8(0)
+        };
+
+        public static void main(String[] args) throws Exception {
+            org.openjdk.jmh.Main.main(
+                    new String[]{fetchBenchmarkName(SetStateWith08.class)}
+            );
+        }
+
+        public Object[] getInput() {
+            return input;
+        }
+    }
 
     // Others
 

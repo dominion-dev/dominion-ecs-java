@@ -5,36 +5,23 @@
 
 package dev.dominion.ecs.engine.collections;
 
-import dev.dominion.ecs.engine.system.LoggingSystem;
 import dev.dominion.ecs.engine.system.UnsafeFactory;
 import sun.misc.Unsafe;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.StampedLock;
 
-public final class IdStack implements AutoCloseable {
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+public final class IntStack implements AutoCloseable {
     private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final ChunkedPool.IdSchema idSchema;
     private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
-    private final LoggingSystem.Context loggingContext;
     private final StampedLock lock = new StampedLock();
     private long address;
     private int capacity;
 
-    public IdStack(int initialCapacity, ChunkedPool.IdSchema idSchema, LoggingSystem.Context loggingContext) {
+    public IntStack(int initialCapacity) {
         this.capacity = initialCapacity;
-        this.idSchema = idSchema;
-        this.loggingContext = loggingContext;
         address = unsafe.allocateMemory(initialCapacity);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Creating " + this
-                    )
-            );
-        }
     }
 
     public int pop() {
@@ -44,13 +31,6 @@ public final class IdStack implements AutoCloseable {
         }
         int returnValue = unsafe.getInt(address + i);
         returnValue = index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
-            LOGGER.log(
-                    System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
-                            , "Popping id=" + idSchema.idToString(returnValue)
-                    )
-            );
-        }
         return returnValue;
     }
 
@@ -72,13 +52,6 @@ public final class IdStack implements AutoCloseable {
             }
         }
         unsafe.putInt(address + offset, id);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
-            LOGGER.log(
-                    System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
-                            , "Pushing id=" + idSchema.idToString(id)
-                    )
-            );
-        }
         return true;
     }
 
@@ -93,7 +66,7 @@ public final class IdStack implements AutoCloseable {
 
     @Override
     public String toString() {
-        return "IdStack={"
+        return "IntStack={"
                 + "capacity=" + capacity + "|off-heap"
                 + '}';
     }
