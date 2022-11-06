@@ -190,11 +190,6 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public int getStateId() {
-                return 0;
-            }
-
-            @Override
             public int setStateId(int id) {
                 return 0;
             }
