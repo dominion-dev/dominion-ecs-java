@@ -95,13 +95,25 @@ public final class DataComposition {
 
     public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> fetchStateTenants(S state) {
         return stateTenants.computeIfAbsent(classIndex.getIndexKeyByEnum(state)
-                , s -> pool.newTenant());
+                , s -> {
+                    var newStateTenant = pool.newTenant();
+                    if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                        LOGGER.log(
+                                System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                        , "Adding state " + state +  " with " + newStateTenant + " to " + this)
+                        );
+                    }
+                    return newStateTenant;
+                });
+    }
+
+    public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> getStateTenant(S state) {
+        return getStateTenant(classIndex.getIndexKeyByEnum(state));
     }
 
     public ChunkedPool.Tenant<IntEntity> getStateTenant(IndexKey state) {
         return stateTenants.get(state);
     }
-
 
     public IntEntity createEntity(String name, boolean prepared, Object... components) {
         int id = tenant.nextId();
@@ -265,7 +277,7 @@ public final class DataComposition {
         return tenant;
     }
 
-//    public Map<IndexKey, IntEntity> getStates() {
+    //    public Map<IndexKey, IntEntity> getStates() {
 //        return Collections.unmodifiableMap(states);
 //    }
 
@@ -281,12 +293,12 @@ public final class DataComposition {
     public String toString() {
         int iMax = componentTypes.length - 1;
         if (iMax == -1)
-            return "Composition=[]";
+            return "Composition=[] with " + tenant;
         StringBuilder b = new StringBuilder("Composition=[");
         for (int i = 0; ; i++) {
             b.append(componentTypes[i].getSimpleName());
             if (i == iMax)
-                return b.append(']').toString();
+                return b.append("] with ").append(tenant).toString();
             b.append(", ");
         }
     }
@@ -346,25 +358,25 @@ public final class DataComposition {
                 iterator, this);
     }
 
-    public static class StateIterator implements Iterator<IntEntity> {
-        private IntEntity next;
-
-        public StateIterator(IntEntity rootEntity) {
-            next = rootEntity;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        @Override
-        public IntEntity next() {
-            var current = next;
-            next = (IntEntity) next.getPrev();
-            return current;
-        }
-    }
+//    public static class StateIterator implements Iterator<IntEntity> {
+//        private IntEntity next;
+//
+//        public StateIterator(IntEntity rootEntity) {
+//            next = rootEntity;
+//        }
+//
+//        @Override
+//        public boolean hasNext() {
+//            return next != null;
+//        }
+//
+//        @Override
+//        public IntEntity next() {
+//            var current = next;
+//            next = (IntEntity) next.getPrev();
+//            return current;
+//        }
+//    }
 
     record IteratorT<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator,
                         DataComposition composition) implements Iterator<T> {
