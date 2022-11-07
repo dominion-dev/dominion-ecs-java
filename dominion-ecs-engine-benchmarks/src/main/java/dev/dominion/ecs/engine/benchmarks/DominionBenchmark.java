@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine.benchmarks;
 
 import dev.dominion.ecs.engine.benchmarks.others.CreatingEntityBenchmark;
+import dev.dominion.ecs.engine.benchmarks.others.OthersBenchmark;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,7 @@ public class DominionBenchmark {
     public static final class OthersBenchmarks {
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
-                    new String[]{CreatingEntityBenchmark.class.getPackageName()}
+                    new String[]{OthersBenchmark.class.getPackageName()}
             );
         }
     }
