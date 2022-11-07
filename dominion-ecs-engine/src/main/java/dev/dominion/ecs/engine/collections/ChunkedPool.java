@@ -13,6 +13,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+/**
+ * The ChunkedPool class is the real engine behind Dominion.
+ * This custom data structure implements multi-tenant management of a pool of items organized in linked chunks to better
+ * meet the need for dynamic capacity.
+ *
+ * @param <T> the managed type that must implement the ChunkedPool.Item interface
+ */
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
