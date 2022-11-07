@@ -58,7 +58,7 @@ public class EntityBenchmark extends DominionBenchmark {
         public static void main(String[] args) {
             System.out.println(VM.current().details());
             System.out.println(ClassLayout.parseClass(IntEntity.class).toPrintable());
-            System.out.println(ClassLayout.parseInstance(new IntEntity(0, null)).toPrintable());
+            System.out.println(ClassLayout.parseInstance(new IntEntity(0)).toPrintable());
         }
     }
 
