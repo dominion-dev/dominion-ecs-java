@@ -40,24 +40,9 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public Entity createEntity(Object... components) {
-        return createEntity(null, components);
-    }
-
-    @Override
-    public Entity createPreparedEntity(Composition.OfTypes withValues) {
-        return createPreparedEntity(null, withValues);
-    }
-
-    @Override
-    public Entity createEntityAs(Entity prefab, Object... components) {
-        return createEntityAs(null, prefab, components);
-    }
-
-    @Override
-    public Entity createEntity(String name, Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
         DataComposition composition = compositions.getOrCreate(componentArray);
-        IntEntity entity = composition.createEntity(name, false, componentArray);
+        IntEntity entity = composition.createEntity(false, componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -68,21 +53,21 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
+    public Entity createPreparedEntity(Composition.OfTypes withValues) {
         DataComposition composition = (DataComposition) withValues.getContext();
-        return composition.createEntity(name, true, withValues.getComponents());
+        return composition.createEntity(true, withValues.getComponents());
     }
 
     @Override
-    public Entity createEntityAs(String name, Entity prefab, Object... components) {
+    public Entity createEntityAs(Entity prefab, Object... components) {
         IntEntity origin = (IntEntity) prefab;
         int originArrayLength;
         if (origin.getComponentArray() == null || (originArrayLength = origin.getArrayLength()) == 0) {
-            return createEntity(name, components);
+            return createEntity(components);
         }
         Object[] targetComponents = Arrays.copyOf(components, originArrayLength + components.length);
         System.arraycopy(origin.getComponentArray(), 0, targetComponents, components.length, originArrayLength);
-        return createEntity(name, targetComponents);
+        return createEntity(targetComponents);
     }
 
     @Override

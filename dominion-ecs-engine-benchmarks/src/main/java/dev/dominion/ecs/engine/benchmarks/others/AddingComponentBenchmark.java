@@ -23,7 +23,7 @@ public class AddingComponentBenchmark {
         org.openjdk.jmh.Main.main(
                 new String[]{
                         DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Dominion.class),
-//                        DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Artemis.class)
+                        DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Artemis.class)
                 }
         );
     }

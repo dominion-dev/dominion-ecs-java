@@ -10,6 +10,8 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
+import java.util.Arrays;
+
 public final class IntEntity implements Entity, Item {
     private static final UncheckedUpdater.Int<IntEntity> idUpdater;
     private static final UncheckedUpdater.Int<IntEntity> stateIdUpdater;
@@ -35,7 +37,7 @@ public final class IntEntity implements Entity, Item {
     private volatile int stateId;
     private Object[] shelf;
 
-    public IntEntity(int id, String name) {
+    public IntEntity(int id) {
         this.id = id;
         this.stateId = ChunkedPool.IdSchema.DETACHED_BIT;
     }
@@ -224,7 +226,7 @@ public final class IntEntity implements Entity, Item {
     public String toString() {
         ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
         return "Entity={" +
-                "id=" + idSchema.idToString(id) + ", " +
+                "id=" + idSchema.idToString(id) + "-> " + Arrays.toString(getComponentArray()) + ", " +
                 "stateId=" + idSchema.idToString(stateId) + ", " +
                 "enabled=" + isEnabled() +
                 "}";

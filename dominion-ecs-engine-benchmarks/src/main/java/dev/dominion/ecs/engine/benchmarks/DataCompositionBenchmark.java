@@ -123,7 +123,7 @@ public class DataCompositionBenchmark extends DominionBenchmark {
             composition = new DataComposition(null, new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST), classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
-                composition.createEntity(null, false, c1);
+                composition.createEntity(false, c1);
             }
         }
 

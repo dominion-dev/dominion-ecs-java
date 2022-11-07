@@ -112,9 +112,8 @@ public final class DataComposition {
         return stateTenants.get(state);
     }
 
-    public IntEntity createEntity(String name, boolean prepared, Object... components) {
-        int id = tenant.nextId();
-        return tenant.register(id, new IntEntity(id, name),
+    public IntEntity createEntity(boolean prepared, Object... components) {
+        return tenant.register(new IntEntity(tenant.nextId()),
                 !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
