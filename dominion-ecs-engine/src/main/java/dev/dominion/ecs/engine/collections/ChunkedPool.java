@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  * This custom data structure implements multi-tenant management of a pool of items organized in linked chunks to better
  * meet the need for dynamic capacity.
  *
- * @param <T> the managed type that must implement the ChunkedPool.Item interface
+ * @param <T> the managed type that must implement the {@link Item} interface
  */
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
