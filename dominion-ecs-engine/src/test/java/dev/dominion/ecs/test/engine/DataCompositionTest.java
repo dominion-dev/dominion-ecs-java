@@ -19,7 +19,7 @@ class DataCompositionTest {
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
             DataComposition composition =
                     new DataComposition(null, chunkedPool, null, ID_SCHEMA, LoggingSystem.Context.TEST);
-            IntEntity entity = composition.createEntity(null, false);
+            IntEntity entity = composition.createEntity(false);
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
             IntEntity entry = chunkedPool.getEntry(entity.getId());
@@ -74,7 +74,7 @@ class DataCompositionTest {
                     , LoggingSystem.Context.TEST
                     , C1.class);
             for (int i = 0; i < 1_000_000; i++) {
-                composition.createEntity(null, false, new C1(i));
+                composition.createEntity(false, new C1(i));
             }
             var iterator = composition.selectT(C1.class, composition.getTenant().noItemIterator());
             int i = 0;
@@ -101,7 +101,7 @@ class DataCompositionTest {
                     , LoggingSystem.Context.VERBOSE_TEST
                     , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
-                composition.createEntity(null, false, new C1(i), new C2(i + 1));
+                composition.createEntity(false, new C1(i), new C2(i + 1));
             }
             ChunkedPool.Tenant<IntEntity> tenant = composition.getTenant();
             var iterator = composition.select(C1.class, C2.class, tenant.noItemIterator());
@@ -131,7 +131,7 @@ class DataCompositionTest {
         try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
             DataComposition composition =
                     new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
-            IntEntity entity = composition.createEntity(null, false);
+            IntEntity entity = composition.createEntity(false);
             entity.setState(State1.ONE);
             Assertions.assertEquals(entity.getStateChunk().getTenant(), composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)));
 
