@@ -70,6 +70,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
         @Param(value = {"1000000"})
         int size;
+        boolean started;
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -81,10 +82,12 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            started = false;
         }
 
         @Setup(Level.Invocation)
         public void setupInvocation() {
+            if(!started) return;
             for (int i = 0; i < size; i++) {
                 tenant.freeId(i);
             }
@@ -95,6 +98,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             for (int i = 0; i < size; i++) {
                 bh.consume(tenant.nextId());
             }
+            started = true;
         }
 
         @TearDown(Level.Iteration)
@@ -161,7 +165,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         public void setupInvocation() {
             tenant = new ChunkedPool<TestItem>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
-                tenant.register(tenant.nextId(), new TestItem(i, null, null), null);
+                tenant.register(new TestItem(tenant.nextId(), null, null), null);
             }
         }
 

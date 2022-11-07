@@ -30,7 +30,7 @@ class ChunkedPoolTest {
         try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
             ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
             TestEntity entry = new TestEntity(1, null, null);
-            Assertions.assertEquals(entry, tenant.register(1, entry, null));
+            Assertions.assertEquals(entry, tenant.register(entry, null));
             Assertions.assertEquals(entry, chunkedPool.getEntry(1));
         }
     }
@@ -199,8 +199,7 @@ class ChunkedPoolTest {
                 Iterator<TestEntity> iterator = tenant.iterator();
                 Assertions.assertFalse(iterator.hasNext());
                 for (int i = 0; i < 1_000_000; i++) {
-                    int nextId = tenant.nextId();
-                    tenant.register(nextId, new TestEntity(i, null, null), null);
+                    tenant.register(new TestEntity(tenant.nextId(), null, null), null);
                 }
                 iterator = tenant.iterator();
                 int i = 0;
@@ -243,8 +242,8 @@ class ChunkedPoolTest {
             ChunkedPool.LinkedChunk<TestEntity> chunk =
                     new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, previous, 0, null, LoggingSystem.Context.TEST);
             var entity = new TestEntity(1, null, null);
-            chunk.set(10, entity, null);
-            Assertions.assertEquals(entity, chunk.get(10));
+            chunk.set(entity, null);
+            Assertions.assertEquals(entity, chunk.get(1));
             Assertions.assertEquals(previous, chunk.getPrevious());
         }
     }
