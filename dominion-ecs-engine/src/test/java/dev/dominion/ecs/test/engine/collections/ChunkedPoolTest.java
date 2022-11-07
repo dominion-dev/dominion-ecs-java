@@ -63,11 +63,6 @@ class ChunkedPoolTest {
         @Override
         public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
         }
-
-        @Override
-        public boolean isEnabled() {
-            return false;
-        }
     }
 
     @Nested

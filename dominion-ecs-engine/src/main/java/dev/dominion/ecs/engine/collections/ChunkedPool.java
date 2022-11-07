@@ -104,8 +104,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         void setChunk(LinkedChunk<? extends Item> chunk);
 
         void setStateChunk(LinkedChunk<? extends Item> chunk);
-
-        boolean isEnabled();
     }
 
     // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|

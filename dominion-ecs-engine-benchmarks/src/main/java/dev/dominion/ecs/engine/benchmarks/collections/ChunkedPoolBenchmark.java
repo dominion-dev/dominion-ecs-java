@@ -145,7 +145,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
 
     public static class TenantIterator extends DominionBenchmark {
-        ChunkedPool.Tenant<Id> tenant;
+        ChunkedPool.Tenant<TestItem> tenant;
 
         @Param(value = {"100000000"})
         int size;
@@ -159,15 +159,15 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setupInvocation() {
-            tenant = new ChunkedPool<Id>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<TestItem>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
-                tenant.register(tenant.nextId(), new Id(i, null, null), null);
+                tenant.register(tenant.nextId(), new TestItem(i, null, null), null);
             }
         }
 
         @Benchmark
         public void iterator(Blackhole bh) {
-            Iterator<Id> iterator = tenant.iterator();
+            Iterator<TestItem> iterator = tenant.iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next());
             }
@@ -178,7 +178,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             tenant.close();
         }
 
-        public record Id(int id, Item prev, Item next) implements Item {
+        public record TestItem(int id, Item prev, Item next) implements Item {
             @Override
             public int getId() {
                 return id;
@@ -205,11 +205,6 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
             @Override
             public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-            }
-
-            @Override
-            public boolean isEnabled() {
-                return false;
             }
         }
     }
