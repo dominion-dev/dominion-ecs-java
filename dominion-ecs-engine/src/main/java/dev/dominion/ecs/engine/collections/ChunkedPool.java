@@ -161,7 +161,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final LinkedChunk<T> firstChunk;
         private final LoggingSystem.Context loggingContext;
         private final int dataLength;
-
         private final Object owner;
         private volatile LinkedChunk<T> currentChunk;
         private int newId = Integer.MIN_VALUE;
@@ -223,7 +222,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 int objectId;
                 LinkedChunk<T> chunk = currentChunk;
                 int currentChunkIndex = pool.chunkIndex.get();
-
                 // try to get a newId from the current chunk
                 if (chunk == null) {
                     continue;
@@ -234,7 +232,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         return returnValue;
                     }
                 }
-
                 // current chunk is over
                 currentChunk = null;
                 while (currentChunk == null) {
@@ -244,7 +241,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         objectId = chunk.incrementIndex();
                         newId = idSchema.createId(chunk.id, objectId);
                         return returnValue;
-
                     }
                     currentChunkIndex = pool.chunkIndex.get();
                     // try to get the chunk at the current index created by other threads
@@ -334,7 +330,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     new PoolDataNoItemIteratorWithState<>(firstChunk, idSchema);
         }
 
-
         public T register(T entry, Object[] data) {
             return pool.getChunk(entry.getId()).set(entry, data);
         }
@@ -398,7 +393,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     public static class PoolIterator<T extends Item> implements Iterator<T> {
         protected int next = 0;
         protected LinkedChunk<T> currentChunk;
-
         protected IdSchema idSchema;
 
         public PoolIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
@@ -423,7 +417,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     // SINGLE data iterator
 
     public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
-
         public PoolDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             super(currentChunk, idSchema);
         }
@@ -434,7 +427,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     public static class PoolDataEmptyIterator<T extends Item> extends PoolDataIterator<T> {
-
         public PoolDataEmptyIterator() {
             super(null, null);
         }
@@ -454,7 +446,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return null;
         }
     }
-
 
     public static class PoolDataIteratorWithState<T extends Item> extends PoolDataIterator<T> {
         protected LinkedChunk<? extends Item> itemChunk;
@@ -487,7 +478,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return (T) currentChunk.itemArray[next--];
         }
     }
-
 
     public static final class PoolDataNoItemIterator<T extends Item> extends PoolDataIterator<T> {
         public PoolDataNoItemIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
@@ -585,7 +575,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final int id;
         private final AtomicInteger index = new AtomicInteger(-1);
         private final int dataLength;
-
         private LinkedChunk<T> next;
         private int sizeOffset = 0;
 
