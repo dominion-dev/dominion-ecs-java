@@ -37,6 +37,9 @@ public class AddingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
+        Object[] input3 = {new C1(), new C2(), new C3()};
+        Object[] input5 = {new C1(), new C2(), new C3(), new C4(), new C5()};
+
         @Param(value = {"1000000"})
         int size;
 
@@ -50,8 +53,8 @@ public class AddingComponentBenchmark {
             for (int i = 0; i < size; i++) {
                 entities0[i] = entityRepository.createEntity();
                 entities1[i] = entityRepository.createEntity(new C1());
-                entities3[i] = entityRepository.createEntity(new C1(), new C2(), new C3());
-                entities5[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5());
+                entities3[i] = entityRepository.createEntity(input3);
+                entities5[i] = entityRepository.createEntity(input5);
             }
         }
 
@@ -77,7 +80,7 @@ public class AddingComponentBenchmark {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities3[i]);
-                    entities3[i] = entityRepository.createEntity(new C1(), new C2(), new C3());
+                    entities3[i] = entityRepository.createEntity(input3);
                 }
             }
 
@@ -85,7 +88,7 @@ public class AddingComponentBenchmark {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities5[i]);
-                    entities5[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5());
+                    entities5[i] = entityRepository.createEntity(input5);
                 }
             }
         }
