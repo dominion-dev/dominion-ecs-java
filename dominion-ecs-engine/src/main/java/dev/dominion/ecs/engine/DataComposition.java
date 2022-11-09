@@ -118,21 +118,7 @@ public final class DataComposition {
     }
 
     public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Start Attaching " + entity + " to " + this + " and  " + tenant)
-            );
-        }
-
-        entity = tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
-
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attached " + entity)
-            );
-        }
+        tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
     }
 
     public Class<?>[] getComponentTypes() {

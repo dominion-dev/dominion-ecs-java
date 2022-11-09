@@ -146,7 +146,6 @@ public final class CompositionRepository implements AutoCloseable {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
-
             );
         }
         int prevId = entity.getId();
