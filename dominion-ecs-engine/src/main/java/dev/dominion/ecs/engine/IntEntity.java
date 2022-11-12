@@ -53,6 +53,10 @@ public final class IntEntity implements Entity, Item {
         return idUpdater.compareAndSet(this, prev, id) ? id : prev;
     }
 
+    public int getStateId() {
+        return stateId;
+    }
+
     @Override
     public int setStateId(int stateId) {
         int prev = this.stateId;
