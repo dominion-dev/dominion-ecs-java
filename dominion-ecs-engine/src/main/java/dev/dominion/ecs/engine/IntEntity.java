@@ -170,6 +170,11 @@ public final class IntEntity implements Entity, Item {
             if (!isEnabled()) {
                 return this;
             }
+            if (state == null && stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
+                return this;
+            }
             DataComposition composition = getComposition();
             if (stateChunk != null) {
                 var tenant = stateChunk.getTenant();

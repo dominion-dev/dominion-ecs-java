@@ -134,10 +134,17 @@ class DataCompositionTest {
             IntEntity entity = composition.createEntity(false);
             entity.setState(State1.ONE);
             Assertions.assertEquals(entity.getStateChunk().getTenant(), composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)));
+            Assertions.assertEquals(1, composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)).currentChunkSize());
 
             entity.setState(State1.TWO);
             Assertions.assertNotEquals(entity.getStateChunk().getTenant(), composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)));
             Assertions.assertEquals(entity.getStateChunk().getTenant(), composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.TWO)));
+            Assertions.assertEquals(1, composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.TWO)).currentChunkSize());
+            Assertions.assertEquals(0, composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)).currentChunkSize());
+
+            entity.setState(null);
+            Assertions.assertNull(entity.getStateChunk());
+            Assertions.assertEquals(0, composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.TWO)).currentChunkSize());
         }
     }
 
