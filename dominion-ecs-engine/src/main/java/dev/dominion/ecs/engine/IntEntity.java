@@ -53,6 +53,10 @@ public final class IntEntity implements Entity, Item {
         return idUpdater.compareAndSet(this, prev, id) ? id : prev;
     }
 
+    public int getStateId() {
+        return stateId;
+    }
+
     @Override
     public int setStateId(int stateId) {
         int prev = this.stateId;
@@ -168,6 +172,11 @@ public final class IntEntity implements Entity, Item {
     public <S extends Enum<S>> Entity setState(S state) {
         synchronized (this) {
             if (!isEnabled()) {
+                return this;
+            }
+            if (state == null && stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
                 return this;
             }
             DataComposition composition = getComposition();

@@ -19,7 +19,6 @@ import java.io.IOException;
 
 public class RemovingComponentBenchmark {
 
-
     public static void main(String[] args) throws IOException {
         org.openjdk.jmh.Main.main(
                 new String[]{
@@ -38,6 +37,10 @@ public class RemovingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
+        Object[] input2 = {new C1(), new C2()};
+        Object[] input4 = {new C1(), new C2(), new C3(), new C4()};
+        Object[] input6 = {new C1(), new C2(), new C3(), new C4(), new C5(), new C6()};
+
         @Param(value = {"1000000"})
         int size;
 
@@ -50,9 +53,9 @@ public class RemovingComponentBenchmark {
             entities6 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities1[i] = entityRepository.createEntity(new C1());
-                entities2[i] = entityRepository.createEntity(new C1(), new C2());
-                entities4[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4());
-                entities6[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5(), new C6());
+                entities2[i] = entityRepository.createEntity(input2);
+                entities4[i] = entityRepository.createEntity(input4);
+                entities6[i] = entityRepository.createEntity(input6);
             }
         }
 
@@ -70,7 +73,7 @@ public class RemovingComponentBenchmark {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities2[i]);
-                    entities2[i] = entityRepository.createEntity(new C1(), new C2());
+                    entities2[i] = entityRepository.createEntity(input2);
                 }
             }
 
@@ -78,7 +81,7 @@ public class RemovingComponentBenchmark {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities4[i]);
-                    entities4[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4());
+                    entities4[i] = entityRepository.createEntity(input4);
                 }
             }
 
@@ -86,7 +89,7 @@ public class RemovingComponentBenchmark {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities6[i]);
-                    entities6[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5(), new C6());
+                    entities6[i] = entityRepository.createEntity(input6);
                 }
             }
         }

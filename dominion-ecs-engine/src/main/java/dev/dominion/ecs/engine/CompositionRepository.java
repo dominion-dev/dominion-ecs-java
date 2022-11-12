@@ -141,18 +141,23 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
+    @SuppressWarnings("resource")
     public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
-
             );
         }
         int prevId = entity.getId();
         ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
         targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponents);
         prevTenant.freeId(prevId);
+        if (entity.stateChunk != null) {
+            ChunkedPool.Tenant<IntEntity> prevStateTenant = entity.stateChunk.getTenant();
+            prevStateTenant.freeStateId(entity.getStateId());
+            entity.stateChunk = targetComposition.target().fetchStateTenants((IndexKey) prevStateTenant.getSubject()).registerState(entity);
+        }
     }
 
     public Entity addComponent(IntEntity entity, Object component) {

@@ -35,7 +35,7 @@ public final class DataComposition {
             , Class<?>... componentTypes) {
         this.repository = repository;
         this.pool = pool;
-        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this);
+        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this, "root");
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
@@ -91,13 +91,17 @@ public final class DataComposition {
     }
 
     public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> fetchStateTenants(S state) {
-        return stateTenants.computeIfAbsent(classIndex.getIndexKeyByEnum(state)
-                , s -> {
-                    var newStateTenant = pool.newTenant();
+        return fetchStateTenants(classIndex.getIndexKeyByEnum(state));
+    }
+
+    public ChunkedPool.Tenant<IntEntity> fetchStateTenants(IndexKey key) {
+        return stateTenants.computeIfAbsent(key,
+                s -> {
+                    var newStateTenant = pool.newTenant(0, this, key);
                     if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(
                                 System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                                        , "Adding state " + state + " with " + newStateTenant + " to " + this)
+                                        , "Adding state " + newStateTenant + " to " + this)
                         );
                     }
                     return newStateTenant;
@@ -118,21 +122,7 @@ public final class DataComposition {
     }
 
     public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Start Attaching " + entity + " to " + this + " and  " + tenant)
-            );
-        }
-
-        entity = tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
-
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attached " + entity)
-            );
-        }
+        tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
     }
 
     public Class<?>[] getComponentTypes() {

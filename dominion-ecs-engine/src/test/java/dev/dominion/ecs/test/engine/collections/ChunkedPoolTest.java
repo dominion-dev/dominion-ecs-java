@@ -162,9 +162,9 @@ class ChunkedPoolTest {
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
-                final ChunkedPool.Tenant<TestEntity> tenant1 = chunkedPool.newTenant(1, null);
-                final ChunkedPool.Tenant<TestEntity> tenant2 = chunkedPool.newTenant(2, null);
-                final ChunkedPool.Tenant<TestEntity> tenant3 = chunkedPool.newTenant(3, null);
+                final ChunkedPool.Tenant<TestEntity> tenant1 = chunkedPool.newTenant(1, null, 1);
+                final ChunkedPool.Tenant<TestEntity> tenant2 = chunkedPool.newTenant(2, null, 2);
+                final ChunkedPool.Tenant<TestEntity> tenant3 = chunkedPool.newTenant(3, null, 3);
 
                 for (int i = 0; i < capacity; i++) {
                     executorService.execute(tenant1::nextId);

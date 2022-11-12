@@ -136,11 +136,13 @@ class EntityRepositoryTest {
     void deleteEntity() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             C1 c10 = new C1(0);
-            IntEntity entity1 = (IntEntity) entityRepository.createEntity(c10);
-            Assertions.assertTrue(entityRepository.deleteEntity(entity1));
-            Assertions.assertTrue(entity1.isDeleted());
-            Assertions.assertFalse(entity1.isEnabled());
-            Assertions.assertArrayEquals(null, entity1.getComponentArray());
+            IntEntity entity = (IntEntity) entityRepository.createEntity(c10);
+            Assertions.assertTrue(entityRepository.deleteEntity(entity));
+            Assertions.assertTrue(entity.isDeleted());
+            Assertions.assertFalse(entity.isEnabled());
+            Assertions.assertArrayEquals(null, entity.getComponentArray());
+            Assertions.assertNull(entity.getChunk());
+            Assertions.assertNull(entity.getStateChunk());
         }
     }
 
@@ -173,9 +175,16 @@ class EntityRepositoryTest {
             Assertions.assertThrows(IllegalArgumentException.class,
                     () -> composition.byAdding1AndRemoving(C1.class).withValue(entity, c1));
 
+            entity.setState(DataCompositionTest.State1.ONE);
+            ChunkedPool.Tenant<IntEntity> firstTenant = entity.getStateChunk().getTenant();
+            Assertions.assertEquals(1, firstTenant.currentChunkSize());
             modifier = composition.byAdding2AndRemoving(C2.class, C3.class).withValue(entity, c2, c3);
             Assertions.assertTrue(entityRepository.modifyEntity(modifier));
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());
+            ChunkedPool.Tenant<IntEntity> secondTenant = entity.getStateChunk().getTenant();
+            Assertions.assertNotEquals(firstTenant, secondTenant);
+            Assertions.assertEquals(0, firstTenant.currentChunkSize());
+            Assertions.assertEquals(1, secondTenant.currentChunkSize());
         }
     }
 
