@@ -37,13 +37,14 @@ public class AddingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
+        Object[] input1 = {new C1()};
         Object[] input3 = {new C1(), new C2(), new C3()};
         Object[] input5 = {new C1(), new C2(), new C3(), new C4(), new C5()};
 
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             entities0 = new Entity[size];
@@ -52,7 +53,7 @@ public class AddingComponentBenchmark {
             entities5 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities0[i] = entityRepository.createEntity();
-                entities1[i] = entityRepository.createEntity(new C1());
+                entities1[i] = entityRepository.createEntity(input1);
                 entities3[i] = entityRepository.createEntity(input3);
                 entities5[i] = entityRepository.createEntity(input5);
             }
@@ -72,7 +73,7 @@ public class AddingComponentBenchmark {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createEntity(new C1());
+                    entities1[i] = entityRepository.createEntity(input1);
                 }
             }
 
