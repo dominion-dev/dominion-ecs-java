@@ -121,8 +121,8 @@ public final class DataComposition {
                 !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
     }
 
-    public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
-        tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponents);
+    public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object addedComponent, Object[] addedComponents) {
+        tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponent, addedComponents);
     }
 
     public Class<?>[] getComponentTypes() {

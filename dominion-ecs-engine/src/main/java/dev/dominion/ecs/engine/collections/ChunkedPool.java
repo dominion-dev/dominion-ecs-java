@@ -359,12 +359,12 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return stateChunk;
         }
 
-        public void migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object[] addedComponents) {
+        public void migrate(T entry, int newId, int[] indexMapping, int[] addedIndexMapping, Object addedComponent, Object[] addedComponents) {
             LinkedChunk<T> prevChunk = pool.getChunk(entry.getId());
             LinkedChunk<T> newChunk = pool.getChunk(newId);
             newChunk.copy(entry, prevChunk, newId, indexMapping);
             if (addedIndexMapping != null) {
-                newChunk.add(newId, addedIndexMapping, addedComponents);
+                newChunk.add(newId, addedIndexMapping, addedComponent, addedComponents);
             }
         }
 
@@ -728,16 +728,18 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             itemArray[newIdx] = value;
         }
 
-        public void add(int id, int[] addedIndexMapping, Object[] addedComponents) {
+        public void add(int id, int[] addedIndexMapping, Object addedComponent, Object[] addedComponents) {
             int idx = idSchema.fetchObjectId(id);
             if (dataLength == 1) { // add to dataArray
-                for (int i = 0; i < addedIndexMapping.length; i++) {
+                if (addedComponent != null) dataArray[idx] = addedComponent;
+                else for (int i = 0; i < addedIndexMapping.length; i++) {
                     if (addedIndexMapping[i] == 0) {
                         dataArray[idx] = addedComponents[i];
                     }
                 }
             } else if (dataLength > 1) { // add to multiDataArray
-                for (int i = 0; i < addedIndexMapping.length; i++) {
+                if (addedComponent != null) multiDataArray[addedIndexMapping[0]][idx] = addedComponent;
+                else for (int i = 0; i < addedIndexMapping.length; i++) {
                     if (addedIndexMapping[i] > -1) {
                         multiDataArray[addedIndexMapping[i]][idx] = addedComponents[i];
                     }

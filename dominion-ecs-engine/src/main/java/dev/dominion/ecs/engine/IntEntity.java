@@ -123,12 +123,13 @@ public final class IntEntity implements Entity, Item {
         }
     }
 
-    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
+    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
+                          Object addedComponent, Object[] addedComponents) {
         synchronized (this) {
             if (!isEnabled()) {
                 return false;
             }
-            compositions.modifyComponents(this, targetComposition, addedComponents);
+            compositions.modifyComponents(this, targetComposition, addedComponent, addedComponents);
             return true;
         }
     }

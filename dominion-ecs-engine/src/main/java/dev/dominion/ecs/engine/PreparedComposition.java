@@ -156,6 +156,7 @@ public class PreparedComposition implements Composition {
 
     public record NewEntityComposition(IntEntity entity,
                                        TargetComposition targetComposition,
+                                       Object addedComponent,
                                        Object[] addedComponents) implements Modifier {
     }
 
@@ -177,61 +178,50 @@ public class PreparedComposition implements Composition {
             return fetchModifier(entity);
         }
 
+        protected NewEntityComposition fetchModifier(Entity entity) {
+            return fetchModifier(entity, (Object) null);
+        }
+
+        protected NewEntityComposition fetchModifier(Entity entity, Object addedComponent) {
+            var intEntity = (IntEntity) entity;
+            var composition = intEntity.getComposition();
+            TargetComposition targetComposition = fetchTargetComposition(composition);
+            return !targetComposition.target.equals(composition) ?
+                    new NewEntityComposition(intEntity, targetComposition, addedComponent, null) :
+                    null;
+        }
+
         protected NewEntityComposition fetchModifier(Entity entity, Object... addedComponents) {
             var intEntity = (IntEntity) entity;
             var composition = intEntity.getComposition();
             TargetComposition targetComposition = fetchTargetComposition(composition);
             return !targetComposition.target.equals(composition) ?
-                    new NewEntityComposition(intEntity, targetComposition, addedComponents) :
-//                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, addedComponents)) :
+                    new NewEntityComposition(intEntity, targetComposition, null, addedComponents) :
                     null;
         }
 
-        private Object[] fetchComponentArray(IntEntity entity, TargetComposition targetComposition, Object... addedComponents) {
-            int length = targetComposition.target.getComponentTypes().length;
-            if (length == 0) {
-                return new Object[0];
-            }
-            Object[] componentArray = new Object[length];
-            Object[] prevComponentArray = entity.getComponentArray();
-            int prevComponentArrayLength = entity.getArrayLength();
-            if (prevComponentArray != null && prevComponentArrayLength > 0) {
-                populateComponentArray(componentArray, prevComponentArray, prevComponentArrayLength, targetComposition.indexMapping);
-            }
-            if (addedComponents.length > 0) {
-                populateComponentArray(componentArray, addedComponents, addedComponents.length, targetComposition.addedIndexMapping);
-            }
-            return componentArray;
-        }
-
-        private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int otherComponentArrayLength, int[] indexMapping) {
-            for (int i = 0; i < otherComponentArrayLength; i++) {
-                int index = indexMapping[i];
-                if (index < 0) continue;
-                componentArray[index] = otherComponentArray[i];
-            }
-        }
-
         private TargetComposition fetchTargetComposition(DataComposition composition) {
-            return cache.computeIfAbsent(composition, prevComposition -> {
-                Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
-                int newLength = prevComponentTypes.length + (addedComponentTypes == null ? 0 : addedComponentTypes.length);
-                List<Class<?>> typeList = new ArrayList<>(newLength);
-                populateTypeList(typeList, prevComponentTypes);
-                if (addedComponentTypes != null) {
-                    populateTypeList(typeList, addedComponentTypes);
-                }
-                Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
-                DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
-                int[] indexMapping = new int[prevComponentTypes.length];
-                populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
-                int[] addedIndexMapping = null;
-                if (addedComponentTypes != null) {
-                    addedIndexMapping = new int[addedComponentTypes.length];
-                    populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
-                }
-                return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
-            });
+            return cache.computeIfAbsent(composition, this::getTargetComposition);
+        }
+
+        private TargetComposition getTargetComposition(DataComposition prevComposition) {
+            Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
+            int newLength = prevComponentTypes.length + (addedComponentTypes == null ? 0 : addedComponentTypes.length);
+            List<Class<?>> typeList = new ArrayList<>(newLength);
+            populateTypeList(typeList, prevComponentTypes);
+            if (addedComponentTypes != null) {
+                populateTypeList(typeList, addedComponentTypes);
+            }
+            Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
+            DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
+            int[] indexMapping = new int[prevComponentTypes.length];
+            populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
+            int[] addedIndexMapping = null;
+            if (addedComponentTypes != null) {
+                addedIndexMapping = new int[addedComponentTypes.length];
+                populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
+            }
+            return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
         }
 
         private void populateTypeList(List<Class<?>> typeList, Class<?>[] componentTypes) {

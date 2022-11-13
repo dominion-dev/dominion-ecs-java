@@ -142,7 +142,7 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     @SuppressWarnings("resource")
-    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
+    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object addedComponent, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -151,7 +151,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         int prevId = entity.getId();
         ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
-        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponents);
+        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
         prevTenant.freeId(prevId);
         if (entity.stateChunk != null) {
             ChunkedPool.Tenant<IntEntity> prevStateTenant = entity.stateChunk.getTenant();
@@ -170,7 +170,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         var modifier = fetchAddingTypeModifier(component.getClass());
         var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component);
-        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return entity;
     }
 
@@ -189,7 +189,7 @@ public final class CompositionRepository implements AutoCloseable {
         if (mod == null) {
             return false;
         }
-        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return true;
     }
 
