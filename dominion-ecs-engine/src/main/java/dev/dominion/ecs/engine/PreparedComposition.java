@@ -201,7 +201,9 @@ public class PreparedComposition implements Composition {
         }
 
         private TargetComposition fetchTargetComposition(DataComposition composition) {
-            return cache.computeIfAbsent(composition, this::getTargetComposition);
+            TargetComposition targetComposition = cache.get(composition);
+            return targetComposition == null ?
+                    cache.computeIfAbsent(composition, this::getTargetComposition): targetComposition;
         }
 
         private TargetComposition getTargetComposition(DataComposition prevComposition) {

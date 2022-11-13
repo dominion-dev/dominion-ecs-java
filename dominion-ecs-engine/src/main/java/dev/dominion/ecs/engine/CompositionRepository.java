@@ -66,13 +66,19 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     public Composition.ByAdding1AndRemoving<Object> fetchAddingTypeModifier(Class<?> compType) {
-        return (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byAdding1AndRemoving(compType));
+        Composition.ByAdding1AndRemoving<Object> byAdding1AndRemoving = (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.get(compType);
+        return byAdding1AndRemoving == null ?
+                (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byAdding1AndRemoving(compType)) :
+                byAdding1AndRemoving;
     }
 
     public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
-        return removingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byRemoving(compType));
+        Composition.ByRemoving byRemoving = removingTypeModifiers.get(compType);
+        return byRemoving == null ?
+                removingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byRemoving(compType)) :
+                byRemoving;
     }
 
     public DataComposition getOrCreate(Object[] components) {
