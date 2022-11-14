@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
@@ -30,6 +31,9 @@ public class AddingComponentBenchmark {
 
     public static class Dominion extends OthersBenchmark {
         EntityRepository entityRepository;
+        Composition.Of1<C1> composition1;
+        Composition.Of3<C1, C2, C3> composition3;
+        Composition.Of5<C1, C2, C3, C4, C5> composition5;
         Entity[] entities0;
         Entity[] entities1;
         Entity[] entities3;
@@ -37,25 +41,25 @@ public class AddingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
-        Object[] input1 = {new C1()};
-        Object[] input3 = {new C1(), new C2(), new C3()};
-        Object[] input5 = {new C1(), new C2(), new C3(), new C4(), new C5()};
-
         @Param(value = {"1000000"})
         int size;
 
         @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            Composition composition = entityRepository.composition();
+            composition1 = composition.of(C1.class);
+            composition3 = composition.of(C1.class, C2.class, C3.class);
+            composition5 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class);
             entities0 = new Entity[size];
             entities1 = new Entity[size];
             entities3 = new Entity[size];
             entities5 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities0[i] = entityRepository.createEntity();
-                entities1[i] = entityRepository.createEntity(input1);
-                entities3[i] = entityRepository.createEntity(input3);
-                entities5[i] = entityRepository.createEntity(input5);
+                entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
+                entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
+                entities5[i] = entityRepository.createPreparedEntity(composition5.withValue(new C1(), new C2(), new C3(), new C4(), new C5()));
             }
         }
 
@@ -73,7 +77,7 @@ public class AddingComponentBenchmark {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createEntity(input1);
+                    entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
                 }
             }
 
@@ -81,7 +85,7 @@ public class AddingComponentBenchmark {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities3[i]);
-                    entities3[i] = entityRepository.createEntity(input3);
+                    entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
                 }
             }
 
@@ -89,7 +93,7 @@ public class AddingComponentBenchmark {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities5[i]);
-                    entities5[i] = entityRepository.createEntity(input5);
+                    entities5[i] = entityRepository.createPreparedEntity(composition5.withValue(new C1(), new C2(), new C3(), new C4(), new C5()));
                 }
             }
         }
@@ -145,7 +149,7 @@ public class AddingComponentBenchmark {
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
             world = new World(worldConfiguration);

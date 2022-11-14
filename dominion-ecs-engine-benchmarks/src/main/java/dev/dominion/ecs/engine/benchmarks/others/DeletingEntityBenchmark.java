@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
@@ -30,6 +31,10 @@ public class DeletingEntityBenchmark {
 
     public static class Dominion extends OthersBenchmark {
         EntityRepository entityRepository;
+        Composition.Of1<C1> composition1;
+        Composition.Of2<C1, C2> composition2;
+        Composition.Of4<C1, C2, C3, C4> composition4;
+        Composition.Of6<C1, C2, C3, C4, C5, C6> composition6;
         Entity[] entities1;
         Entity[] entities2;
         Entity[] entities4;
@@ -40,18 +45,23 @@ public class DeletingEntityBenchmark {
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            Composition composition = entityRepository.composition();
+            composition1 = composition.of(C1.class);
+            composition2 = composition.of(C1.class, C2.class);
+            composition4 = composition.of(C1.class, C2.class, C3.class, C4.class);
+            composition6 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class);
             entities1 = new Entity[size];
             entities2 = new Entity[size];
             entities4 = new Entity[size];
             entities6 = new Entity[size];
             for (int i = 0; i < size; i++) {
-                entities1[i] = entityRepository.createEntity(new C1());
-                entities2[i] = entityRepository.createEntity(new C1(), new C2());
-                entities4[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4());
-                entities6[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5(), new C6());
+                entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
+                entities2[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2()));
+                entities4[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4()));
+                entities6[i] = entityRepository.createPreparedEntity(composition6.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6()));
             }
         }
 
@@ -60,28 +70,28 @@ public class DeletingEntityBenchmark {
             if (run1) {
                 run1 = false;
                 for (int i = 0; i < size; i++) {
-                    entities1[i] = entityRepository.createEntity(new C1());
+                    entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
                 }
             }
 
             if (run2) {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
-                    entities2[i] = entityRepository.createEntity(new C1(), new C2());
+                    entities2[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2()));
                 }
             }
 
             if (run4) {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
-                    entities4[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4());
+                    entities4[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4()));
                 }
             }
 
             if (run6) {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
-                    entities6[i] = entityRepository.createEntity(new C1(), new C2(), new C3(), new C4(), new C5(), new C6());
+                    entities6[i] = entityRepository.createPreparedEntity(composition6.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6()));
                 }
             }
         }
@@ -142,7 +152,7 @@ public class DeletingEntityBenchmark {
             );
         }
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
             world = new World(worldConfiguration);
