@@ -37,6 +37,7 @@ public class RemovingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
+        Object input1 = new C1();
         Object[] input2 = {new C1(), new C2()};
         Object[] input4 = {new C1(), new C2(), new C3(), new C4()};
         Object[] input6 = {new C1(), new C2(), new C3(), new C4(), new C5(), new C6()};
@@ -44,7 +45,7 @@ public class RemovingComponentBenchmark {
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             entities1 = new Entity[size];
@@ -52,11 +53,12 @@ public class RemovingComponentBenchmark {
             entities4 = new Entity[size];
             entities6 = new Entity[size];
             for (int i = 0; i < size; i++) {
-                entities1[i] = entityRepository.createEntity(new C1());
+                entities1[i] = entityRepository.createEntity(input1);
                 entities2[i] = entityRepository.createEntity(input2);
                 entities4[i] = entityRepository.createEntity(input4);
                 entities6[i] = entityRepository.createEntity(input6);
             }
+            run1 = run2 = run4 = run6 = false;
         }
 
         @Setup(Level.Invocation)
@@ -65,7 +67,7 @@ public class RemovingComponentBenchmark {
                 run1 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createEntity(new C1());
+                    entities1[i] = entityRepository.createEntity(input1);
                 }
             }
 

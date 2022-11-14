@@ -66,13 +66,19 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     public Composition.ByAdding1AndRemoving<Object> fetchAddingTypeModifier(Class<?> compType) {
-        return (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byAdding1AndRemoving(compType));
+        Composition.ByAdding1AndRemoving<Object> byAdding1AndRemoving = (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.get(compType);
+        return byAdding1AndRemoving == null ?
+                (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byAdding1AndRemoving(compType)) :
+                byAdding1AndRemoving;
     }
 
     public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
-        return removingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byRemoving(compType));
+        Composition.ByRemoving byRemoving = removingTypeModifiers.get(compType);
+        return byRemoving == null ?
+                removingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byRemoving(compType)) :
+                byRemoving;
     }
 
     public DataComposition getOrCreate(Object[] components) {
@@ -142,7 +148,7 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     @SuppressWarnings("resource")
-    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object[] addedComponents) {
+    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object addedComponent, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -151,7 +157,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         int prevId = entity.getId();
         ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
-        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponents);
+        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
         prevTenant.freeId(prevId);
         if (entity.stateChunk != null) {
             ChunkedPool.Tenant<IntEntity> prevStateTenant = entity.stateChunk.getTenant();
@@ -170,7 +176,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
         var modifier = fetchAddingTypeModifier(component.getClass());
         var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component);
-        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return entity;
     }
 
@@ -189,7 +195,7 @@ public final class CompositionRepository implements AutoCloseable {
         if (mod == null) {
             return false;
         }
-        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponents());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return true;
     }
 

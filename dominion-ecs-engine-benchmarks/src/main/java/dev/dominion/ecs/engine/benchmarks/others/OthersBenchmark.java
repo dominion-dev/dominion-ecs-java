@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.Throughput)
 //@BenchmarkMode(Mode.AverageTime)
 @Warmup(iterations = 3)
+//@Warmup(iterations = 300)
 @Measurement(iterations = 3)
 @Fork(value = 1, warmups = 1)
 @State(Scope.Thread)
