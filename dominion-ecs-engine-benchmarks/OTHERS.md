@@ -15,35 +15,35 @@ natively with JDK Azul-17 aarch64:
 
 | 10,000,000 Entities                            | Dominion Throughput | Artemis Throughput |
 |------------------------------------------------|:-------------------:|:------------------:|
-| **Iterate** entities unpacking **1** component |    104.082 ops/s    |    70.131 ops/s    |
-| **Iterate** entities unpacking **2** component |    43.999 ops/s     |    35.388 ops/s    |
-| **Iterate** entities unpacking **3** component |    35.979 ops/s     |    27.062 ops/s    |
-| **Iterate** entities unpacking **4** component |    30.366 ops/s     |    20.480 ops/s    |
-| **Iterate** entities unpacking **5** component |    26.466 ops/s     |    15.306 ops/s    |
-| **Iterate** entities unpacking **6** component |    23.123 ops/s     |    11.595 ops/s    |
+| **Iterate** entities unpacking **1** component |    104.579 ops/s    |    81.437 ops/s    |
+| **Iterate** entities unpacking **2** component |    44.330 ops/s     |    36.314 ops/s    |
+| **Iterate** entities unpacking **3** component |    36.032 ops/s     |    27.062 ops/s    |
+| **Iterate** entities unpacking **4** component |    30.401 ops/s     |    20.480 ops/s    |
+| **Iterate** entities unpacking **5** component |    26.466 ops/s     |    15.617 ops/s    |
+| **Iterate** entities unpacking **6** component |    23.168 ops/s     |    11.651 ops/s    |
 |                                                |                     |                    |
 
 | 1,000,000 Entities                        | Dominion Throughput | Artemis Throughput |
 |:------------------------------------------|:-------------------:|:------------------:|
-| **Create** entities with **1** component  |    38.144 ops/s     |    37.009 ops/s    |
-| **Create** entities with **2** components |    32.125 ops/s     |    23.717 ops/s    |
-| **Create** entities with **4** components |    26.034 ops/s     |    12.592 ops/s    |
-| **Create** entities with **6** components |    19.119 ops/s     |    9.020 ops/s     |
+| **Create** entities with **1** component  |    38.144 ops/s     |    38.026 ops/s    |
+| **Create** entities with **2** components |    35.134 ops/s     |    27.151 ops/s    |
+| **Create** entities with **4** components |    26.034 ops/s     |    13.536 ops/s    |
+| **Create** entities with **6** components |    19.119 ops/s     |    9.936 ops/s     |
 |                                           |                     |                    |
-| **Add** up to **1** component             |    19.432 ops/s     |    17.450 ops/s    |
-| **Add** up to **2** components            |    17.843 ops/s     |    17.692 ops/s    |
-| **Add** up to **4** components            |    13.896 ops/s     |    16.101 ops/s    |
-| **Add** up to **6** components            |    11.959 ops/s     |    15.778 ops/s    |
+| **Add** up to **1** component             |    19.432 ops/s     |    18.831 ops/s    |
+| **Add** up to **2** components            |    18.075 ops/s     |    18.421 ops/s    |
+| **Add** up to **4** components            |    13.896 ops/s     |    18.974 ops/s    |
+| **Add** up to **6** components            |    11.959 ops/s     |    17.357 ops/s    |
 |                                           |                     |                    |
-| **Remove** from **1** component           |    20.708 ops/s     |    22.791 ops/s    |
-| **Remove** from **2** components          |    17.518 ops/s     |    22.838 ops/s    |
-| **Remove** from **4** components          |    14.832 ops/s     |    22.451 ops/s    |
-| **Remove** from **6** components          |    12.907 ops/s     |    21.920 ops/s    |
+| **Remove** from **1** component           |    20.708 ops/s     |    25.869 ops/s    |
+| **Remove** from **2** components          |    17.518 ops/s     |    26.799 ops/s    |
+| **Remove** from **4** components          |    14.832 ops/s     |    27.352 ops/s    |
+| **Remove** from **6** components          |    12.907 ops/s     |    27.302 ops/s    |
 |                                           |                     |                    |
-| **Delete** entities with **1** component  |    55.367 ops/s     |    46.641 ops/s    |
-| **Delete** entities with **2** component  |    44.740 ops/s     |    39.685 ops/s    |
-| **Delete** entities with **4** component  |    34.187 ops/s     |    29.393 ops/s    |
-| **Delete** entities with **6** component  |    21.613 ops/s     |    25.729 ops/s    |
+| **Delete** entities with **1** component  |    56.367 ops/s     |    48.193 ops/s    |
+| **Delete** entities with **2** component  |    45.702 ops/s     |    40.987 ops/s    |
+| **Delete** entities with **4** component  |    40.462 ops/s     |    31.064 ops/s    |
+| **Delete** entities with **6** component  |    34.012 ops/s     |    26.456 ops/s    |
 |                                           |                     |                    |
 
 ## Support Dominion
