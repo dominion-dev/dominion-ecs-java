@@ -136,7 +136,13 @@ class IntEntityTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
-            IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
+            entity.add(c1);
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponentArray());
+            entity.remove(c1);
+            Assertions.assertNull(entity.getComponentArray());
+
+            entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             DataComposition compositionV3 = entity.getComposition();
             entity.remove(c2);
             Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponentArray());
@@ -146,6 +152,7 @@ class IntEntityTest {
             DataComposition compositionV1 = entity.getComposition();
             entity.remove(c3);
             Assertions.assertNull(entity.getComponentArray());
+
             entity.add(c3);
             Assertions.assertEquals(c3, Objects.requireNonNull(entity.getComponentArray())[0]);
             Assertions.assertEquals(compositionV1, entity.getComposition());
@@ -170,8 +177,8 @@ class IntEntityTest {
             Assertions.assertTrue(entity.isEnabled());
             entity.setEnabled(false);
             Assertions.assertFalse(entity.isEnabled());
-            Assertions.assertNotNull(entity.getComponentArray());
-            Assertions.assertArrayEquals(new Object[]{null, null, null}, entity.getComponentArray());
+//            Assertions.assertNotNull(entity.getComponentArray());
+//            Assertions.assertArrayEquals(new Object[]{null, null, null}, entity.getComponentArray());
             entity.setEnabled(true);
             Assertions.assertTrue(entity.isEnabled());
             Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());

@@ -642,12 +642,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         }
                         if (dataLength == 1) {
                             dataArray[removedIndex] = dataArray[lastIndex];
-                            dataArray[lastIndex] = null;
                         }
                         if (dataLength > 1) {
                             for (int i = 0; i < dataLength; i++) {
                                 multiDataArray[i][removedIndex] = multiDataArray[i][lastIndex];
-                                multiDataArray[i][lastIndex] = null;
                             }
                         }
                         itemArray[removedIndex] = last;
@@ -655,14 +653,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     }
                 } else {
                     itemArray[removedIndex] = null;
-                    if (dataLength == 1) {
-                        dataArray[removedIndex] = null;
-                    }
-                    if (dataLength > 1) {
-                        for (int i = 0; i < dataLength; i++) {
-                            multiDataArray[i][removedIndex] = null;
-                        }
-                    }
                 }
                 return idSchema.mergeId(id, lastIndex);
             }
@@ -695,6 +685,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             itemArray[idx] = value;
         }
 
+        @SuppressWarnings("StatementWithEmptyBody")
         public void copy(T value, LinkedChunk<T> prevChunk, int newId, int[] indexMapping) {
             int prevIdx = idSchema.fetchObjectId(value.getId());
             int newIdx = idSchema.fetchObjectId(newId);
@@ -702,23 +693,22 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 if (dataLength == 1) { // copy to new dataArray
                     if (prevChunk.dataLength == 1) { // copy from prev.dataArray
                         dataArray[newIdx] = prevChunk.dataArray[prevIdx];
-                    } else if (prevChunk.dataLength > 1) { // copy from prev.multiDataArray
-                        for (int i = 0; i < indexMapping.length; i++) {
-                            if (indexMapping[i] == 0) {
-                                dataArray[newIdx] = prevChunk.multiDataArray[i][prevIdx];
-                            }
-                        }
+                    } else  { // copy from prev.multiDataArray
+                        int i = -1;
+                        while (indexMapping[++i] != 0) ;
+                        dataArray[newIdx] = prevChunk.multiDataArray[i][prevIdx];
                     }
-                } else if (dataLength > 1) { // copy to new multiDataArray
+                } else { // copy to new multiDataArray
                     if (prevChunk.dataLength == 1) { // copy from prev.dataArray
                         if (indexMapping[0] > -1) {
                             multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx];
                         }
-                    } else if (prevChunk.dataLength > 1) {  // copy from prev.multiDataArray
-                        for (int i = 0; i < indexMapping.length; i++) {
-                            if (indexMapping[i] > -1) {
-                                multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
-                            }
+                    } else  {  // copy from prev.multiDataArray
+                        int i = -1;
+                        while(indexMapping[++i] < 0) ;
+                        i--;
+                        while (++i < indexMapping.length) {
+                            if (indexMapping[i] > -1) multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
                         }
                     }
                 }
