@@ -35,10 +35,10 @@ natively with JDK Azul-17 aarch64:
 | **Add** up to **4** components            |    13.896 ops/s     |    18.974 ops/s    |
 | **Add** up to **6** components            |    11.959 ops/s     |    17.357 ops/s    |
 |                                           |                     |                    |
-| **Remove** from **1** component           |    20.708 ops/s     |    25.869 ops/s    |
-| **Remove** from **2** components          |    17.518 ops/s     |    26.799 ops/s    |
-| **Remove** from **4** components          |    14.832 ops/s     |    27.352 ops/s    |
-| **Remove** from **6** components          |    12.907 ops/s     |    27.302 ops/s    |
+| **Remove** from **1** component           |    20.906 ops/s     |    25.101 ops/s    |
+| **Remove** from **2** components          |    19.354 ops/s     |    23.838 ops/s    |
+| **Remove** from **4** components          |    17.082 ops/s     |    24.717 ops/s    |
+| **Remove** from **6** components          |    14.105 ops/s     |    24.944 ops/s    |
 |                                           |                     |                    |
 | **Delete** entities with **1** component  |    56.367 ops/s     |    48.193 ops/s    |
 | **Delete** entities with **2** component  |    45.702 ops/s     |    40.987 ops/s    |

@@ -45,6 +45,8 @@ public class RemovingComponentBenchmark {
         @Param(value = {"1000000"})
         int size;
 
+        private final C1 comp = new C1();
+
         @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
@@ -95,8 +97,7 @@ public class RemovingComponentBenchmark {
             if (run6) {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities6[i]);
-                    entities6[i] = entityRepository.createPreparedEntity(composition6.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6()));
+                    entities6[i].add(comp);
                 }
             }
         }
@@ -152,6 +153,8 @@ public class RemovingComponentBenchmark {
         @Param(value = {"1000000"})
         int size;
 
+        private final C1 comp = new C1();
+
         @Setup(Level.Trial)
         public void setup() {
             WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
@@ -181,11 +184,7 @@ public class RemovingComponentBenchmark {
             if (run1) {
                 run1 = false;
                 for (int i = 0; i < size; i++) {
-                    world.delete(entities1[i]);
-                }
-                world.process();
-                for (int i = 0; i < size; i++) {
-                    entities1[i] = world.create(archetype1);
+                    world.edit(entities1[i]).add(comp);
                 }
                 world.process();
             }
@@ -193,11 +192,7 @@ public class RemovingComponentBenchmark {
             if (run2) {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
-                    world.delete(entities2[i]);
-                }
-                world.process();
-                for (int i = 0; i < size; i++) {
-                    entities2[i] = world.create(archetype2);
+                    world.edit(entities2[i]).add(comp);
                 }
                 world.process();
             }
@@ -205,11 +200,7 @@ public class RemovingComponentBenchmark {
             if (run4) {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
-                    world.delete(entities4[i]);
-                }
-                world.process();
-                for (int i = 0; i < size; i++) {
-                    entities4[i] = world.create(archetype4);
+                    world.edit(entities4[i]).add(comp);
                 }
                 world.process();
             }
@@ -217,11 +208,7 @@ public class RemovingComponentBenchmark {
             if (run6) {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
-                    world.delete(entities6[i]);
-                }
-                world.process();
-                for (int i = 0; i < size; i++) {
-                    entities6[i] = world.create(archetype6);
+                    world.edit(entities6[i]).add(comp);
                 }
                 world.process();
             }
@@ -230,7 +217,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities1[i]).remove(new C1()));
+                bh.consume(world.edit(entities1[i]).remove(comp));
             }
             world.process();
             run1 = true;
@@ -239,7 +226,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities2[i]).remove(new C1()));
+                bh.consume(world.edit(entities2[i]).remove(comp));
             }
             world.process();
             run2 = true;
@@ -248,7 +235,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities4[i]).remove(new C1()));
+                bh.consume(world.edit(entities4[i]).remove(comp));
             }
             world.process();
             run4 = true;
@@ -257,7 +244,7 @@ public class RemovingComponentBenchmark {
         @Benchmark
         public void removeComponentFrom06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities6[i]).remove(new C1()));
+                bh.consume(world.edit(entities6[i]).remove(comp));
             }
             world.process();
             run6 = true;
