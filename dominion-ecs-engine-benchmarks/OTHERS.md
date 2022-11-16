@@ -32,8 +32,8 @@ natively with JDK Azul-17 aarch64:
 |                                           |                     |                    |
 | **Add** up to **1** component             |    19.798 ops/s     |    18.831 ops/s    |
 | **Add** up to **2** components            |    18.566 ops/s     |    18.421 ops/s    |
-| **Add** up to **4** components            |    14.731 ops/s     |    18.974 ops/s    |
-| **Add** up to **6** components            |    12.786 ops/s     |    17.357 ops/s    |
+| **Add** up to **4** components            |    15.688 ops/s     |    18.974 ops/s    |
+| **Add** up to **6** components            |    14.362 ops/s     |    17.357 ops/s    |
 |                                           |                     |                    |
 | **Remove** from **1** component           |    20.906 ops/s     |    25.101 ops/s    |
 | **Remove** from **2** components          |    19.354 ops/s     |    23.838 ops/s    |

@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 @OutputTimeUnit(TimeUnit.SECONDS)
 @BenchmarkMode(Mode.AverageTime)
+//@BenchmarkMode(Mode.Throughput)
 @Warmup(iterations = 3)
 @Measurement(iterations = 3)
 @Fork(value = 1, warmups = 1)

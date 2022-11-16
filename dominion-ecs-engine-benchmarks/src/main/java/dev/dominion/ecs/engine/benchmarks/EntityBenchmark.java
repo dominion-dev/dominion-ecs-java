@@ -63,11 +63,11 @@ public class EntityBenchmark extends DominionBenchmark {
     }
 
     public static class EntityMethodBenchmark extends DominionBenchmark {
-        EntityRepository entityRepository;
-        Entity[] entities;
+        protected EntityRepository entityRepository;
+        protected Entity[] entities;
 
         @Param(value = {"1000000"})
-        int size;
+        protected int size;
 
         @Setup(Level.Iteration)
         public void setup() {
@@ -117,6 +117,7 @@ public class EntityBenchmark extends DominionBenchmark {
 
     public static class AddUpTo01 extends AddUpTo {
         Object[] input = new Object[]{};
+        C0 c0 = new C0(0);
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -126,7 +127,6 @@ public class EntityBenchmark extends DominionBenchmark {
 
         @Benchmark
         public void add(Blackhole bh) {
-            var c0 = new C0(0);
             for (int i = 0; i < size; i++) {
                 bh.consume(entities[i].add(c0));
             }
@@ -244,7 +244,8 @@ public class EntityBenchmark extends DominionBenchmark {
     public static class RemoveFrom08 extends RemoveFrom01 {
         Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0), new C7(0), new C8(0)
+                new C5(0), new C6(0)
+//                , new C7(0), new C8(0)
         };
 
         public static void main(String[] args) throws Exception {
