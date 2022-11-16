@@ -41,7 +41,7 @@ public class CreatingEntityBenchmark {
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
             Composition composition = entityRepository.composition();
@@ -101,7 +101,7 @@ public class CreatingEntityBenchmark {
         @Param(value = {"1000000"})
         int size;
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
             world = new World(worldConfiguration);

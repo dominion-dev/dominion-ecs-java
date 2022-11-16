@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
+import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
@@ -30,6 +31,9 @@ public class AddingComponentBenchmark {
 
     public static class Dominion extends OthersBenchmark {
         EntityRepository entityRepository;
+        Composition.Of1<C1> composition1;
+        Composition.Of3<C1, C2, C3> composition3;
+        Composition.Of5<C1, C2, C3, C4, C5> composition5;
         Entity[] entities0;
         Entity[] entities1;
         Entity[] entities3;
@@ -37,25 +41,27 @@ public class AddingComponentBenchmark {
 
         boolean run1, run2, run4, run6;
 
-        Object[] input1 = {new C1()};
-        Object[] input3 = {new C1(), new C2(), new C3()};
-        Object[] input5 = {new C1(), new C2(), new C3(), new C4(), new C5()};
-
         @Param(value = {"1000000"})
         int size;
+
+        private final C0 comp = new C0();
 
         @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
+            Composition composition = entityRepository.composition();
+            composition1 = composition.of(C1.class);
+            composition3 = composition.of(C1.class, C2.class, C3.class);
+            composition5 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class);
             entities0 = new Entity[size];
             entities1 = new Entity[size];
             entities3 = new Entity[size];
             entities5 = new Entity[size];
             for (int i = 0; i < size; i++) {
                 entities0[i] = entityRepository.createEntity();
-                entities1[i] = entityRepository.createEntity(input1);
-                entities3[i] = entityRepository.createEntity(input3);
-                entities5[i] = entityRepository.createEntity(input5);
+                entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
+                entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
+                entities5[i] = entityRepository.createPreparedEntity(composition5.withValue(new C1(), new C2(), new C3(), new C4(), new C5()));
             }
         }
 
@@ -73,7 +79,7 @@ public class AddingComponentBenchmark {
                 run2 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createEntity(input1);
+                    entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
                 }
             }
 
@@ -81,15 +87,14 @@ public class AddingComponentBenchmark {
                 run4 = false;
                 for (int i = 0; i < size; i++) {
                     entityRepository.deleteEntity(entities3[i]);
-                    entities3[i] = entityRepository.createEntity(input3);
+                    entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
                 }
             }
 
             if (run6) {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities5[i]);
-                    entities5[i] = entityRepository.createEntity(input5);
+                    entities5[i].remove(comp);
                 }
             }
         }
@@ -97,7 +102,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities0[i].add(new C0()));
+                bh.consume(entities0[i].add(comp));
             }
             run1 = true;
         }
@@ -105,7 +110,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities1[i].add(new C0()));
+                bh.consume(entities1[i].add(comp));
             }
             run2 = true;
         }
@@ -113,7 +118,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities3[i].add(new C0()));
+                bh.consume(entities3[i].add(comp));
             }
             run4 = true;
         }
@@ -121,7 +126,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities5[i].add(new C0()));
+                bh.consume(entities5[i].add(comp));
             }
             run6 = true;
         }
@@ -144,8 +149,9 @@ public class AddingComponentBenchmark {
 
         @Param(value = {"1000000"})
         int size;
+        private final C0 comp = new C0();
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void setup() {
             WorldConfiguration worldConfiguration = new WorldConfigurationBuilder().build();
             world = new World(worldConfiguration);
@@ -223,7 +229,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities0[i]).add(new C0()));
+                bh.consume(world.edit(entities0[i]).add(comp));
             }
             world.process();
             run1 = true;
@@ -232,7 +238,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities1[i]).add(new C0()));
+                bh.consume(world.edit(entities1[i]).add(comp));
             }
             world.process();
             run2 = true;
@@ -241,7 +247,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities3[i]).add(new C0()));
+                bh.consume(world.edit(entities3[i]).add(comp));
             }
             world.process();
             run4 = true;
@@ -250,7 +256,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities5[i]).add(new C0()));
+                bh.consume(world.edit(entities5[i]).add(comp));
             }
             world.process();
             run6 = true;
