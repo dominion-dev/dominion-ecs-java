@@ -44,6 +44,8 @@ public class AddingComponentBenchmark {
         @Param(value = {"1000000"})
         int size;
 
+        private final C0 comp = new C0();
+
         @Setup(Level.Trial)
         public void setup() {
             entityRepository = (EntityRepository) new EntityRepository.Factory().create();
@@ -92,8 +94,7 @@ public class AddingComponentBenchmark {
             if (run6) {
                 run6 = false;
                 for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities5[i]);
-                    entities5[i] = entityRepository.createPreparedEntity(composition5.withValue(new C1(), new C2(), new C3(), new C4(), new C5()));
+                    entities5[i].remove(comp);
                 }
             }
         }
@@ -101,7 +102,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities0[i].add(new C0()));
+                bh.consume(entities0[i].add(comp));
             }
             run1 = true;
         }
@@ -109,7 +110,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities1[i].add(new C0()));
+                bh.consume(entities1[i].add(comp));
             }
             run2 = true;
         }
@@ -117,7 +118,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities3[i].add(new C0()));
+                bh.consume(entities3[i].add(comp));
             }
             run4 = true;
         }
@@ -125,7 +126,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(entities5[i].add(new C0()));
+                bh.consume(entities5[i].add(comp));
             }
             run6 = true;
         }
@@ -148,6 +149,7 @@ public class AddingComponentBenchmark {
 
         @Param(value = {"1000000"})
         int size;
+        private final C0 comp = new C0();
 
         @Setup(Level.Trial)
         public void setup() {
@@ -227,7 +229,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo01(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities0[i]).add(new C0()));
+                bh.consume(world.edit(entities0[i]).add(comp));
             }
             world.process();
             run1 = true;
@@ -236,7 +238,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo02(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities1[i]).add(new C0()));
+                bh.consume(world.edit(entities1[i]).add(comp));
             }
             world.process();
             run2 = true;
@@ -245,7 +247,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo04(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities3[i]).add(new C0()));
+                bh.consume(world.edit(entities3[i]).add(comp));
             }
             world.process();
             run4 = true;
@@ -254,7 +256,7 @@ public class AddingComponentBenchmark {
         @Benchmark
         public void addComponentUpTo06(Blackhole bh) {
             for (int i = 0; i < size; i++) {
-                bh.consume(world.edit(entities5[i]).add(new C0()));
+                bh.consume(world.edit(entities5[i]).add(comp));
             }
             world.process();
             run6 = true;
