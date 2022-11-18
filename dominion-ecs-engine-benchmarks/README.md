@@ -9,6 +9,7 @@ natively with JDK Azul-17 aarch64:
 | 1,000,000 Entities                                 | Average Time |
 |:---------------------------------------------------|:------------:|
 | **Create** entities with **no** component          |   0.021 s    |
+|                                                    |              |
 | **Create** entities with **1** component           |   0.034 s    |
 | **Create** entities with **2** components          |   0.047 s    |
 | **Create** entities with **4** components          |   0.077 s    |
@@ -68,7 +69,7 @@ natively with JDK Azul-17 aarch64:
 | **Contains** with **8** components         |   0.025 s    |
 |                                            |              |
 
-| 10,000,000 Entities                             | Average Time | using _State_ - Average Time |
+| 10,000,000 Entities                             | Average Time | Using _State_ - Average Time |
 |-------------------------------------------------|:------------:|:----------------------------:|
 | **Iterate** entities unpacking **1** component  |   0.010 s    |           0.050 s            |
 | **Iterate** entities unpacking **2** components |   0.023 s    |           0.060 s            |
@@ -77,16 +78,13 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **5** components |   0.038 s    |           0.179 s            |
 | **Iterate** entities unpacking **6** components |   0.043 s    |           0.206 s            |
 |                                                 |              |                              |
-
-| 10,000,000 Entities                            | Average Time | using _State_ - Average Time |
-|------------------------------------------------|:------------:|:----------------------------:|
-| **Stream** entities unpacking **1** component  |   0.025 s    |           0.061 s            |
-| **Stream** entities unpacking **2** components |   0.045 s    |           0.090 s            |
-| **Stream** entities unpacking **3** components |   0.056 s    |           0.124 s            |
-| **Stream** entities unpacking **4** components |   0.066 s    |           0.147 s            |
-| **Stream** entities unpacking **5** components |   0.079 s    |           0.181 s            |
-| **Stream** entities unpacking **6** components |   0.104 s    |           0.209 s            |
-|                                                |              |                              |
+| **Stream** entities unpacking **1** component   |   0.025 s    |           0.061 s            |
+| **Stream** entities unpacking **2** components  |   0.045 s    |           0.090 s            |
+| **Stream** entities unpacking **3** components  |   0.056 s    |           0.124 s            |
+| **Stream** entities unpacking **4** components  |   0.066 s    |           0.147 s            |
+| **Stream** entities unpacking **5** components  |   0.079 s    |           0.181 s            |
+| **Stream** entities unpacking **6** components  |   0.104 s    |           0.209 s            |
+|                                                 |              |                              |
 
 ## Java and benchmarks
 
