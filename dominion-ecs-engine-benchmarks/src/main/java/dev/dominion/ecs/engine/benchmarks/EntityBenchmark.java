@@ -244,8 +244,7 @@ public class EntityBenchmark extends DominionBenchmark {
     public static class RemoveFrom08 extends RemoveFrom01 {
         Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0),
-                new C5(0), new C6(0)
-//                , new C7(0), new C8(0)
+                new C5(0), new C6(0), new C7(0), new C8(0)
         };
 
         public static void main(String[] args) throws Exception {
