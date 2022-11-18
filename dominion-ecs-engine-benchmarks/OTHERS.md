@@ -32,7 +32,7 @@ natively with JDK Azul-17 aarch64:
 |                                           |                     |                    |
 | **Add** up to **1** component             |    19.798 ops/s     |    18.831 ops/s    |
 | **Add** up to **2** components            |    18.566 ops/s     |    18.421 ops/s    |
-| **Add** up to **4** components            |    15.688 ops/s     |    18.974 ops/s    |
+| **Add** up to **4** components            |    16.171 ops/s     |    18.974 ops/s    |
 | **Add** up to **6** components            |    14.362 ops/s     |    17.357 ops/s    |
 |                                           |                     |                    |
 | **Remove** from **1** component           |    20.906 ops/s     |    25.101 ops/s    |
@@ -40,10 +40,10 @@ natively with JDK Azul-17 aarch64:
 | **Remove** from **4** components          |    17.082 ops/s     |    24.717 ops/s    |
 | **Remove** from **6** components          |    15.006 ops/s     |    24.944 ops/s    |
 |                                           |                     |                    |
-| **Delete** entities with **1** component  |    56.367 ops/s     |    48.193 ops/s    |
-| **Delete** entities with **2** component  |    45.702 ops/s     |    40.987 ops/s    |
-| **Delete** entities with **4** component  |    40.462 ops/s     |    31.064 ops/s    |
-| **Delete** entities with **6** component  |    34.012 ops/s     |    26.456 ops/s    |
+| **Delete** entities with **1** component  |    62.208 ops/s     |    48.193 ops/s    |
+| **Delete** entities with **2** component  |    61.933 ops/s     |    40.987 ops/s    |
+| **Delete** entities with **4** component  |    62.270 ops/s     |    31.064 ops/s    |
+| **Delete** entities with **6** component  |    62.004 ops/s     |    26.456 ops/s    |
 |                                           |                     |                    |
 
 ## Support Dominion
