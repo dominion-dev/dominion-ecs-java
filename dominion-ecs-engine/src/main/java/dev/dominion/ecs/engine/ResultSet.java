@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine;
 
+import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.IndexKey;
@@ -189,6 +190,7 @@ public abstract class ResultSet<T> implements Results<T> {
     public final static class With2<T1, T2> extends ResultSet<Results.With2<T1, T2>> {
         private final Class<T1> type1;
         private final Class<T2> type2;
+        private final NextWith2<T1, T2> nextWith2 = new NextWith2<>();
 
         public With2(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      boolean withEntity, Class<T1> type1, Class<T2> type2) {
@@ -200,7 +202,8 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With2<T1, T2>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, true);
-            return composition.select(type1, type2, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith2 : null;
+            return composition.select(type1, type2, iterator, fetcher);
         }
     }
 
@@ -208,6 +211,7 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T1> type1;
         private final Class<T2> type2;
         private final Class<T3> type3;
+        private final NextWith3<T1, T2, T3> nextWith3 = new NextWith3<>();
 
         public With3(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3) {
@@ -220,7 +224,8 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With3<T1, T2, T3>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, true);
-            return composition.select(type1, type2, type3, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith3 : null;
+            return composition.select(type1, type2, type3, iterator, fetcher);
         }
     }
 
@@ -229,6 +234,7 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T2> type2;
         private final Class<T3> type3;
         private final Class<T4> type4;
+        private final NextWith4<T1, T2, T3, T4> nextWith4 = new NextWith4<>();
 
         public With4(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
@@ -242,7 +248,8 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With4<T1, T2, T3, T4>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, true);
-            return composition.select(type1, type2, type3, type4, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith4 : null;
+            return composition.select(type1, type2, type3, type4, iterator, fetcher);
         }
     }
 
@@ -252,6 +259,7 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T3> type3;
         private final Class<T4> type4;
         private final Class<T5> type5;
+        private final NextWith5<T1, T2, T3, T4, T5> nextWith5 = new NextWith5<>();
 
         public With5(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
@@ -266,7 +274,8 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With5<T1, T2, T3, T4, T5>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, true);
-            return composition.select(type1, type2, type3, type4, type5, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith5 : null;
+            return composition.select(type1, type2, type3, type4, type5, iterator, fetcher);
         }
     }
 
@@ -277,6 +286,7 @@ public abstract class ResultSet<T> implements Results<T> {
         private final Class<T4> type4;
         private final Class<T5> type5;
         private final Class<T6> type6;
+        private final NextWith6<T1, T2, T3, T4, T5, T6> nextWith6 = new NextWith6<>();
 
         public With6(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      boolean withEntity, Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
@@ -292,7 +302,73 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, true);
-            return composition.select(type1, type2, type3, type4, type5, type6, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith6 : null;
+            return composition.select(type1, type2, type3, type4, type5, type6, iterator, fetcher);
+        }
+    }
+
+    public final static class NextWith2<T1, T2> implements ChunkedPool.PoolIteratorNextWith2 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int i2, int next, ChunkedPool.Item item) {
+            return new Results.With2<>(
+                    (T1) multiDataArray[i1][next],
+                    (T2) multiDataArray[i2][next],
+                    (Entity) item);
+        }
+    }
+
+    public final static class NextWith3<T1, T2, T3> implements ChunkedPool.PoolIteratorNextWith3 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int next, ChunkedPool.Item item) {
+            return new Results.With3<>(
+                    (T1) multiDataArray[i1][next],
+                    (T2) multiDataArray[i2][next],
+                    (T3) multiDataArray[i3][next],
+                    (Entity) item);
+        }
+    }
+
+    public final static class NextWith4<T1, T2, T3, T4> implements ChunkedPool.PoolIteratorNextWith4 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int next, ChunkedPool.Item item) {
+            return new Results.With4<>(
+                    (T1) multiDataArray[i1][next],
+                    (T2) multiDataArray[i2][next],
+                    (T3) multiDataArray[i3][next],
+                    (T4) multiDataArray[i4][next],
+                    (Entity) item);
+        }
+    }
+
+    public final static class NextWith5<T1, T2, T3, T4, T5> implements ChunkedPool.PoolIteratorNextWith5 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int i5, int next, ChunkedPool.Item item) {
+            return new Results.With5<>(
+                    (T1) multiDataArray[i1][next],
+                    (T2) multiDataArray[i2][next],
+                    (T3) multiDataArray[i3][next],
+                    (T4) multiDataArray[i4][next],
+                    (T5) multiDataArray[i5][next],
+                    (Entity) item);
+        }
+    }
+
+    public final static class NextWith6<T1, T2, T3, T4, T5, T6> implements ChunkedPool.PoolIteratorNextWith6 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int i5, int i6, int next, ChunkedPool.Item item) {
+            return new Results.With6<>(
+                    (T1) multiDataArray[i1][next],
+                    (T2) multiDataArray[i2][next],
+                    (T3) multiDataArray[i3][next],
+                    (T4) multiDataArray[i4][next],
+                    (T5) multiDataArray[i5][next],
+                    (T6) multiDataArray[i6][next],
+                    (Entity) item);
         }
     }
 }

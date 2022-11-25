@@ -113,6 +113,26 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         void setStateChunk(LinkedChunk<? extends Item> chunk);
     }
 
+    public interface PoolIteratorNextWith2 {
+        Object fetchNext(Object[][] multiDataArray, int i1, int i2, int next, Item item);
+    }
+
+    public interface PoolIteratorNextWith3 {
+        Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int next, Item item);
+    }
+
+    public interface PoolIteratorNextWith4 {
+        Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int next, Item item);
+    }
+
+    public interface PoolIteratorNextWith5 {
+        Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int i5, int next, Item item);
+    }
+
+    public interface PoolIteratorNextWith6 {
+        Object fetchNext(Object[][] multiDataArray, int i1, int i2, int i3, int i4, int i5, int i6, int next, Item item);
+    }
+
     // |--FLAGS--|--CHUNK_ID--|--OBJECT_ID--|
     public record IdSchema(int chunkBit
             , int chunkCount, int chunkIdBitMask, int chunkIdBitMaskShifted
@@ -438,6 +458,26 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public Object data(int i) {
             return currentChunk.dataArray[next];
         }
+
+        public Object next(PoolIteratorNextWith2 nextWith2, int i1, int i2) {
+            return null;
+        }
+
+        public Object next(PoolIteratorNextWith3 nextWith3, int i1, int i2, int i3) {
+            return null;
+        }
+
+        public Object next(PoolIteratorNextWith4 nextWith4, int i1, int i2, int i3, int i4) {
+            return null;
+        }
+
+        public Object next(PoolIteratorNextWith5 nextWith5, int i1, int i2, int i3, int i4, int i5) {
+            return null;
+        }
+
+        public Object next(PoolIteratorNextWith6 nextWith6, int i1, int i2, int i3, int i4, int i5, int i6) {
+            return null;
+        }
     }
 
     public static class PoolDataEmptyIterator<T extends Item> extends PoolDataIterator<T> {
@@ -543,6 +583,46 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 itemIdx = idSchema.fetchObjectId(item.getId());
             }
             return itemChunk.multiDataArray[i][itemIdx];
+        }
+
+        @Override
+        public Object next(PoolIteratorNextWith2 nextWith2, int i1, int i2) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            int itemIdx = idSchema.fetchObjectId(item.getId());
+            return nextWith2.fetchNext(itemChunk.multiDataArray, i1, i2, itemIdx, next());
+        }
+
+        @Override
+        public Object next(PoolIteratorNextWith3 nextWith3, int i1, int i2, int i3) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            int itemIdx = idSchema.fetchObjectId(item.getId());
+            return nextWith3.fetchNext(itemChunk.multiDataArray, i1, i2, i3, itemIdx, next());
+        }
+
+        @Override
+        public Object next(PoolIteratorNextWith4 nextWith4, int i1, int i2, int i3, int i4) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            int itemIdx = idSchema.fetchObjectId(item.getId());
+            return nextWith4.fetchNext(itemChunk.multiDataArray, i1, i2, i3, i4, itemIdx, next());
+        }
+
+        @Override
+        public Object next(PoolIteratorNextWith5 nextWith5, int i1, int i2, int i3, int i4, int i5) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            int itemIdx = idSchema.fetchObjectId(item.getId());
+            return nextWith5.fetchNext(itemChunk.multiDataArray, i1, i2, i3, i4, i5, itemIdx, next());
+        }
+
+        @Override
+        public Object next(PoolIteratorNextWith6 nextWith6, int i1, int i2, int i3, int i4, int i5, int i6) {
+            var item = currentChunk.itemArray[next];
+            var itemChunk = item.getChunk();
+            int itemIdx = idSchema.fetchObjectId(item.getId());
+            return nextWith6.fetchNext(itemChunk.multiDataArray, i1, i2, i3, i4, i5, i6, itemIdx, next());
         }
 
         @SuppressWarnings({"unchecked"})
@@ -693,7 +773,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 if (dataLength == 1) { // copy to new dataArray
                     if (prevChunk.dataLength == 1) { // copy from prev.dataArray
                         dataArray[newIdx] = prevChunk.dataArray[prevIdx];
-                    } else  { // copy from prev.multiDataArray
+                    } else { // copy from prev.multiDataArray
                         int i = -1;
                         while (indexMapping[++i] != 0) ;
                         dataArray[newIdx] = prevChunk.multiDataArray[i][prevIdx];
@@ -703,12 +783,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         if (indexMapping[0] > -1) {
                             multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx];
                         }
-                    } else  {  // copy from prev.multiDataArray
+                    } else {  // copy from prev.multiDataArray
                         int i = -1;
-                        while(indexMapping[++i] < 0) ;
+                        while (indexMapping[++i] < 0) ;
                         i--;
                         while (++i < indexMapping.length) {
-                            if (indexMapping[i] > -1) multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
+                            if (indexMapping[i] > -1)
+                                multiDataArray[indexMapping[i]][newIdx] = prevChunk.multiDataArray[i][prevIdx];
                         }
                     }
                 }

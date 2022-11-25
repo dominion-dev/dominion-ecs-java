@@ -203,7 +203,7 @@ public class PreparedComposition implements Composition {
         private TargetComposition fetchTargetComposition(DataComposition composition) {
             TargetComposition targetComposition = cache.get(composition);
             return targetComposition == null ?
-                    cache.computeIfAbsent(composition, this::getTargetComposition): targetComposition;
+                    cache.computeIfAbsent(composition, this::getTargetComposition) : targetComposition;
         }
 
         private TargetComposition getTargetComposition(DataComposition prevComposition) {

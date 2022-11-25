@@ -104,7 +104,7 @@ class DataCompositionTest {
                 composition.createEntity(false, new C1(i), new C2(i + 1));
             }
             ChunkedPool.Tenant<IntEntity> tenant = composition.getTenant();
-            var iterator = composition.select(C1.class, C2.class, tenant.noItemIterator());
+            var iterator = composition.select(C1.class, C2.class, tenant.noItemIterator(), null);
             int i = 0;
             while (iterator.hasNext()) {
                 var next = iterator.next();
@@ -113,7 +113,7 @@ class DataCompositionTest {
                 Assertions.assertEquals(i++, id1);
                 Assertions.assertEquals(i, id2);
             }
-            var iteratorE = composition.select(C1.class, C2.class, tenant.iterator());
+            var iteratorE = composition.select(C1.class, C2.class, tenant.iterator(), null);
             i = 0;
             while (iteratorE.hasNext()) {
                 var next = iteratorE.next();
