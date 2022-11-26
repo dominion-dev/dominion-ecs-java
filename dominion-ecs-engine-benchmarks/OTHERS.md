@@ -35,7 +35,7 @@ natively with JDK Azul-17 aarch64:
 | **Create** entities with **4** components |    26.034 ops/s     |    13.536 ops/s    |
 | **Create** entities with **6** components |    19.119 ops/s     |    9.936 ops/s     |
 
-<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Create+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,40&chxr=0,0,40&chd=t:38.144,35.134,26.034,19.119|38.026,27.151,13.536,9.936">
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Create+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,40&chxr=0,0,40&chd=t:38.144,35.134,26.034,19.119|38.026,27.151,13.536,9.936">
 
 ---
 
@@ -46,7 +46,7 @@ natively with JDK Azul-17 aarch64:
 | **Add** up to **4** components            |    16.171 ops/s     |    18.974 ops/s    |
 | **Add** up to **6** components            |    14.362 ops/s     |    17.357 ops/s    |
 
-<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Add+Components+to+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,20&chxr=0,0,20&chd=t:19.798,18.566,16.171,14.362|18.831,18.421,18.974,17.357">
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Add+Component+to+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,20&chxr=0,0,20&chd=t:19.798,18.566,16.171,14.362|18.831,18.421,18.974,17.357">
 
 ---
 
@@ -56,6 +56,8 @@ natively with JDK Azul-17 aarch64:
 | **Remove** from **2** components          |    19.354 ops/s     |    23.838 ops/s    |
 | **Remove** from **4** components          |    17.082 ops/s     |    24.717 ops/s    |
 | **Remove** from **6** components          |    15.006 ops/s     |    24.944 ops/s    |
+
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Remove+Component+from+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,26&chxr=0,0,26&chd=t:20.906,19.354,17.082,15.006|25.101,23.838,24.717,24.944">
 
 ---
 
