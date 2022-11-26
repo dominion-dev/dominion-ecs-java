@@ -6,14 +6,9 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
-import dev.dominion.ecs.api.Composition;
-import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
+import dev.dominion.ecs.engine.benchmarks.EntityBenchmark;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
@@ -24,136 +19,90 @@ public class RemovingComponentBenchmark {
         org.openjdk.jmh.Main.main(
                 new String[]{
                         DominionBenchmark.fetchBenchmarkName(RemovingComponentBenchmark.Dominion.class),
+//                        DominionBenchmark.fetchBenchmarkName(RemovingComponentBenchmark.Dominion.RemoveFrom06.class),
                         DominionBenchmark.fetchBenchmarkName(RemovingComponentBenchmark.Artemis.class)
                 }
         );
     }
 
-    public static class Dominion extends OthersBenchmark {
-        EntityRepository entityRepository;
-        Composition.Of1<C1> composition1;
-        Composition.Of2<C1, C2> composition2;
-        Composition.Of4<C1, C2, C3, C4> composition4;
-        Composition.Of6<C1, C2, C3, C4, C5, C6> composition6;
-        Entity[] entities1;
-        Entity[] entities2;
-        Entity[] entities4;
-        Entity[] entities6;
-
-        boolean run1, run2, run4, run6;
-
-        @Param(value = {"1000000"})
-        int size;
-
-        private final C1 comp = new C1();
-
-        @Setup(Level.Trial)
-        public void setup() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Composition composition = entityRepository.composition();
-            composition1 = composition.of(C1.class);
-            composition2 = composition.of(C1.class, C2.class);
-            composition4 = composition.of(C1.class, C2.class, C3.class, C4.class);
-            composition6 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class);
-            entities1 = new Entity[size];
-            entities2 = new Entity[size];
-            entities4 = new Entity[size];
-            entities6 = new Entity[size];
-            for (int i = 0; i < size; i++) {
-                entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
-                entities2[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2()));
-                entities4[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4()));
-                entities6[i] = entityRepository.createPreparedEntity(composition6.withValue(new C1(), new C2(), new C3(), new C4(), new C5(), new C6()));
-            }
-            run1 = run2 = run4 = run6 = false;
+    public static class Dominion {
+        record C1(int id) {
         }
 
-        @Setup(Level.Invocation)
-        public void setupInvocation() {
-            if (run1) {
-                run1 = false;
+        record C2(int id) {
+        }
+
+        record C3(int id) {
+        }
+
+        record C4(int id) {
+        }
+
+        record C5(int id) {
+        }
+
+        record C6(int id) {
+        }
+
+        @BenchmarkMode(Mode.Throughput)
+        public static class RemoveFrom01 extends EntityBenchmark.EntityMethodBenchmark {
+            Object[] input = new Object[]{new C1(0)};
+
+            @Benchmark
+            public void remove(Blackhole bh) {
                 for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
+                    bh.consume(entities[i].removeType(C1.class));
                 }
             }
 
-            if (run2) {
-                run2 = false;
-                for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities2[i]);
-                    entities2[i] = entityRepository.createPreparedEntity(composition2.withValue(new C1(), new C2()));
-                }
-            }
-
-            if (run4) {
-                run4 = false;
-                for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities4[i]);
-                    entities4[i] = entityRepository.createPreparedEntity(composition4.withValue(new C1(), new C2(), new C3(), new C4()));
-                }
-            }
-
-            if (run6) {
-                run6 = false;
-                for (int i = 0; i < size; i++) {
-                    entities6[i].add(comp);
-                }
+            public Object[] getInput() {
+                return input;
             }
         }
 
-        @Benchmark
-        public void removeComponentFrom01(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities1[i].removeType(C1.class));
+        public static class RemoveFrom02 extends RemoveFrom01 {
+            Object[] input = new Object[]{new C1(0), new C2(0)};
+
+            public Object[] getInput() {
+                return input;
             }
-            run1 = true;
         }
 
-        @Benchmark
-        public void removeComponentFrom02(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities2[i].removeType(C1.class));
+        public static class RemoveFrom04 extends RemoveFrom01 {
+            Object[] input = new Object[]{new C1(0), new C2(0), new C3(0), new C4(0)};
+
+            public Object[] getInput() {
+                return input;
             }
-            run2 = true;
         }
 
-        @Benchmark
-        public void removeComponentFrom04(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities4[i].removeType(C1.class));
-            }
-            run4 = true;
-        }
+        public static class RemoveFrom06 extends RemoveFrom01 {
+            Object[] input = new Object[]{
+                    new C1(0), new C2(0), new C3(0), new C4(0),
+                    new C5(0), new C6(0)
+            };
 
-        @Benchmark
-        public void removeComponentFrom06(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities6[i].removeType(C1.class));
+            public Object[] getInput() {
+                return input;
             }
-            run6 = true;
         }
     }
 
     public static class Artemis extends OthersBenchmark {
 
+        private final C1 comp = new C1();
         World world;
         Archetype archetype1;
         Archetype archetype2;
         Archetype archetype4;
         Archetype archetype6;
-
         int[] entities1;
         int[] entities2;
         int[] entities4;
         int[] entities6;
-
         boolean run1, run2, run4, run6;
-
         @Param(value = {"1000000"})
         int size;
-
-        private final C1 comp = new C1();
 
         @Setup(Level.Trial)
         public void setup() {

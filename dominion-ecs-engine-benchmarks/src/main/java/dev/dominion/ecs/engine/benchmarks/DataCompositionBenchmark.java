@@ -129,7 +129,7 @@ public class DataCompositionBenchmark extends DominionBenchmark {
 
         @Benchmark
         public void iterate1Comp(Blackhole bh) {
-            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator());
+            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator(), null);
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp());
             }

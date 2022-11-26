@@ -192,36 +192,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         }
     }
 
-    public static class CreateEntityWith06Component extends CreateEntity {
-        private final Object[] input = new Object[]{
-                new C1(0), new C2(0), new C3(0), new C4(0)
-                , new C5(0), new C6(0)
-        };
-
-        Composition.Of6<C1, C2, C3, C4, C5, C6> composition;
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(CreateEntityWith06Component.class)}
-            );
-        }
-
-        @Override
-        public void onSetup() {
-            composition = entityRepository.composition().of(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class);
-        }
-
-        @Override
-        public Object[] getInput() {
-            return input;
-        }
-
-        @Override
-        public Composition.OfTypes getPreparedInput() {
-            return composition.withValue(new C1(0), new C2(0), new C3(0), new C4(0), new C5(0), new C6(0));
-        }
-    }
-
     public static class CreateEntityWith08Component extends CreateEntity {
         private final Object[] input = new Object[]{
                 new C1(0), new C2(0), new C3(0), new C4(0)
@@ -276,7 +246,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         Entity[] entities1;
         Entity[] entities2;
         Entity[] entities4;
-        Entity[] entities6;
         Entity[] entities8;
         @Param(value = {"1000000"})
         int size;
@@ -293,7 +262,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             entities1 = new Entity[size];
             entities2 = new Entity[size];
             entities4 = new Entity[size];
-            entities6 = new Entity[size];
             entities8 = new Entity[size];
         }
 
@@ -305,8 +273,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                 for (int i = 0; i < size; i++) entities2[i] = entityRepository.createEntity(input2);
             if (entities4[0] == null || entities4[0].isDeleted())
                 for (int i = 0; i < size; i++) entities4[i] = entityRepository.createEntity(input4);
-            if (entities6[0] == null || entities6[0].isDeleted())
-                for (int i = 0; i < size; i++) entities6[i] = entityRepository.createEntity(input6);
             if (entities8[0] == null || entities8[0].isDeleted())
                 for (int i = 0; i < size; i++) entities8[i] = entityRepository.createEntity(input8);
 
@@ -330,13 +296,6 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         public void deleteEntityOf4(Blackhole bh) {
             for (int i = 0; i < size; i++) {
                 bh.consume(entityRepository.deleteEntity(entities4[i]));
-            }
-        }
-
-        @Benchmark
-        public void deleteEntityOf6(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entityRepository.deleteEntity(entities6[i]));
             }
         }
 

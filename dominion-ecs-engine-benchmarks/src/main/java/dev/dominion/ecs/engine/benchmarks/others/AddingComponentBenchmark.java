@@ -6,14 +6,9 @@
 package dev.dominion.ecs.engine.benchmarks.others;
 
 import com.artemis.*;
-import dev.dominion.ecs.api.Composition;
-import dev.dominion.ecs.api.Entity;
-import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Setup;
+import dev.dominion.ecs.engine.benchmarks.EntityBenchmark;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
@@ -24,132 +19,91 @@ public class AddingComponentBenchmark {
         org.openjdk.jmh.Main.main(
                 new String[]{
                         DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Dominion.class),
-                        DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Artemis.class)
+//                        DominionBenchmark.fetchBenchmarkName(AddingComponentBenchmark.Artemis.class)
                 }
         );
     }
 
-    public static class Dominion extends OthersBenchmark {
-        EntityRepository entityRepository;
-        Composition.Of1<C1> composition1;
-        Composition.Of3<C1, C2, C3> composition3;
-        Composition.Of5<C1, C2, C3, C4, C5> composition5;
-        Entity[] entities0;
-        Entity[] entities1;
-        Entity[] entities3;
-        Entity[] entities5;
+    public static class Dominion {
 
-        boolean run1, run2, run4, run6;
-
-        @Param(value = {"1000000"})
-        int size;
-
-        private final C0 comp = new C0();
-
-        @Setup(Level.Trial)
-        public void setup() {
-            entityRepository = (EntityRepository) new EntityRepository.Factory().create();
-            Composition composition = entityRepository.composition();
-            composition1 = composition.of(C1.class);
-            composition3 = composition.of(C1.class, C2.class, C3.class);
-            composition5 = composition.of(C1.class, C2.class, C3.class, C4.class, C5.class);
-            entities0 = new Entity[size];
-            entities1 = new Entity[size];
-            entities3 = new Entity[size];
-            entities5 = new Entity[size];
-            for (int i = 0; i < size; i++) {
-                entities0[i] = entityRepository.createEntity();
-                entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
-                entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
-                entities5[i] = entityRepository.createPreparedEntity(composition5.withValue(new C1(), new C2(), new C3(), new C4(), new C5()));
-            }
+        record C0(int id) {
         }
 
-        @Setup(Level.Invocation)
-        public void setupInvocation() {
-            if (run1) {
-                run1 = false;
+        record C1(int id) {
+        }
+
+        record C2(int id) {
+        }
+
+        record C3(int id) {
+        }
+
+        record C4(int id) {
+        }
+
+        record C5(int id) {
+        }
+
+        @BenchmarkMode(Mode.Throughput)
+        public static class AddUpTo01 extends EntityBenchmark.EntityMethodBenchmark {
+            Object[] input = new Object[]{};
+            C0 c0 = new C0(0);
+
+            @Benchmark
+            public void add(Blackhole bh) {
                 for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities0[i]);
-                    entities0[i] = entityRepository.createEntity();
+                    bh.consume(entities[i].add(c0));
                 }
             }
 
-            if (run2) {
-                run2 = false;
-                for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities1[i]);
-                    entities1[i] = entityRepository.createPreparedEntity(composition1.withValue(new C1()));
-                }
-            }
-
-            if (run4) {
-                run4 = false;
-                for (int i = 0; i < size; i++) {
-                    entityRepository.deleteEntity(entities3[i]);
-                    entities3[i] = entityRepository.createPreparedEntity(composition3.withValue(new C1(), new C2(), new C3()));
-                }
-            }
-
-            if (run6) {
-                run6 = false;
-                for (int i = 0; i < size; i++) {
-                    entities5[i].remove(comp);
-                }
+            public Object[] getInput() {
+                return input;
             }
         }
 
-        @Benchmark
-        public void addComponentUpTo01(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities0[i].add(comp));
+        public static class AddUpTo02 extends AddUpTo01 {
+            Object[] input = new Object[]{new C1(0)};
+
+            public Object[] getInput() {
+                return input;
             }
-            run1 = true;
         }
 
-        @Benchmark
-        public void addComponentUpTo02(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities1[i].add(comp));
+        public static class AddUpTo04 extends AddUpTo01 {
+            Object[] input = new Object[]{new C1(0), new C2(0), new C3(0)};
+
+            public Object[] getInput() {
+                return input;
             }
-            run2 = true;
         }
 
-        @Benchmark
-        public void addComponentUpTo04(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities3[i].add(comp));
-            }
-            run4 = true;
-        }
+        public static class AddUpTo06 extends AddUpTo01 {
+            Object[] input = new Object[]{
+                    new C1(0), new C2(0), new C3(0), new C4(0),
+                    new C5(0)
+            };
 
-        @Benchmark
-        public void addComponentUpTo06(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(entities5[i].add(comp));
+            public Object[] getInput() {
+                return input;
             }
-            run6 = true;
         }
     }
 
     public static class Artemis extends OthersBenchmark {
 
+        private final C0 comp = new C0();
         World world;
         Archetype archetype0;
         Archetype archetype1;
         Archetype archetype3;
         Archetype archetype5;
-
         int[] entities0;
         int[] entities1;
         int[] entities3;
         int[] entities5;
-
         boolean run1, run2, run4, run6;
-
         @Param(value = {"1000000"})
         int size;
-        private final C0 comp = new C0();
 
         @Setup(Level.Trial)
         public void setup() {
@@ -179,49 +133,33 @@ public class AddingComponentBenchmark {
         public void setupInvocation() {
             if (run1) {
                 run1 = false;
-                for (int i = 0; i < size; i++) {
-                    world.delete(entities0[i]);
-                }
+                for (int i = 0; i < size; i++) world.delete(entities0[i]);
                 world.process();
-                for (int i = 0; i < size; i++) {
-                    entities0[i] = world.create(archetype0);
-                }
+                for (int i = 0; i < size; i++) entities0[i] = world.create(archetype0);
                 world.process();
             }
 
             if (run2) {
                 run2 = false;
-                for (int i = 0; i < size; i++) {
-                    world.delete(entities1[i]);
-                }
+                for (int i = 0; i < size; i++) world.delete(entities1[i]);
                 world.process();
-                for (int i = 0; i < size; i++) {
-                    entities1[i] = world.create(archetype1);
-                }
+                for (int i = 0; i < size; i++) entities1[i] = world.create(archetype1);
                 world.process();
             }
 
             if (run4) {
                 run4 = false;
-                for (int i = 0; i < size; i++) {
-                    world.delete(entities3[i]);
-                }
+                for (int i = 0; i < size; i++) world.delete(entities3[i]);
                 world.process();
-                for (int i = 0; i < size; i++) {
-                    entities3[i] = world.create(archetype3);
-                }
+                for (int i = 0; i < size; i++) entities3[i] = world.create(archetype3);
                 world.process();
             }
 
             if (run6) {
                 run6 = false;
-                for (int i = 0; i < size; i++) {
-                    world.delete(entities5[i]);
-                }
+                for (int i = 0; i < size; i++) world.delete(entities5[i]);
                 world.process();
-                for (int i = 0; i < size; i++) {
-                    entities5[i] = world.create(archetype5);
-                }
+                for (int i = 0; i < size; i++) entities5[i] = world.create(archetype5);
                 world.process();
             }
         }
