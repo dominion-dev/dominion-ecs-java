@@ -24,7 +24,7 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **5** component |    26.466 ops/s     |    15.617 ops/s    |
 | **Iterate** entities unpacking **6** component |    23.168 ops/s     |    11.651 ops/s    |
 
-<img width="600" src="https://chart.googleapis.com/chart?cht=bvg&chs=600x300&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=16.66,0&chma=50&chtt=Iterate+10M+Entities+-+ops/s&chl=unpack-1|unpack-2|unpack-3|unpack-4|unpack-5|unpack-6|&chd=t:104.579,44.330,36.032,30.401,26.466,23.168|81.437,36.314,27.062,20.480,15.617,11.651">
+<img width="600" src="https://chart.googleapis.com/chart?cht=bvg&chs=600x300&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=16.66,0&chma=100&chtt=Iterate+10M+Entities+-+ops/s&chl=unpack-1|unpack-2|unpack-3|unpack-4|unpack-5|unpack-6|&chd=t:104.579,44.330,36.032,30.401,26.466,23.168|81.437,36.314,27.062,20.480,15.617,11.651">
 
 ---
 
