@@ -14,9 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
- * The ChunkedPool class is the real engine behind Dominion.
- * This custom data structure implements multi-tenant management of a pool of items organized in linked chunks to better
- * meet the need for dynamic capacity.
+ * The ChunkedPool class is the core of the Dominion project.
+ * This custom data structure implements multi-tenant management of a pool of items organized into linked
+ * chunks to better meet the need for performance and dynamic capacity.
  *
  * @param <T> the managed type that must implement the {@link Item} interface
  */
