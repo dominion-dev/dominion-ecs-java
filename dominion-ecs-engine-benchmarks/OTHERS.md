@@ -12,6 +12,7 @@ ECS frameworks tested:
 
 These single-threaded benchmarks were run on a notebook, a MacBook Pro 2021 with M1 Pro 10 core, compiled and executed
 natively with JDK Azul-17 aarch64:
+
 ---
 
 | 10,000,000 Entities                            | Dominion Throughput | Artemis Throughput |
