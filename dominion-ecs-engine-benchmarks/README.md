@@ -110,6 +110,11 @@ If you want to run all the benchmarks on your local hardware, feel free to clone
 and a JDK 17 of your choice, and run the `DominionBenchmark.All` main class (Dominion engine must be already built in
 your local repository).
 
+## Dominion VS Others
+
+[Here](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmarks/OTHERS.md) you can
+find a performance comparison between Dominion and other ECS implementations (like Artemis)
+
 ## Support Dominion
 
 If you want to support Dominion project, consider giving it a **Star** ⭐️
