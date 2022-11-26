@@ -160,9 +160,11 @@ public final class DataComposition {
         return new IteratorT<>(idx, iterator);
     }
 
-    public <T> Iterator<Results.With1<T>> select(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
+    public <T> Iterator<Results.With1<T>> select(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith1<T> nextWith1) {
         int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
-        return new IteratorWith1<>(idx, iterator);
+        return nextWith1 == null ?
+                new IteratorWith1<>(idx, iterator) :
+                new IteratorWith1Next<>(idx, iterator, nextWith1);
     }
 
     public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith2<T1, T2> nextWith2) {
@@ -286,6 +288,22 @@ public final class DataComposition {
         }
     }
 
+    record IteratorWith1Next<T1>(int idx1,
+                                 ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                 ChunkedPool.PoolIteratorNextWith1 nextWith1
+    ) implements Iterator<Results.With1<T1>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With1<T1> next() {
+            return (Results.With1<T1>) iterator.next(nextWith1, idx1);
+        }
+    }
+
     record IteratorWith2<T1, T2>(int idx1, int idx2,
                                  ChunkedPool.PoolDataIterator<IntEntity> iterator
     ) implements Iterator<Results.With2<T1, T2>> {
@@ -316,7 +334,6 @@ public final class DataComposition {
 
         @SuppressWarnings({"unchecked"})
         @Override
-
         public Results.With2<T1, T2> next() {
             return (Results.With2<T1, T2>) iterator.next(nextWith2, idx1, idx2);
         }

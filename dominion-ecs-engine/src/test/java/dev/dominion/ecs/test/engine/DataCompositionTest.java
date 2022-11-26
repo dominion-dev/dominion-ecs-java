@@ -82,7 +82,7 @@ class DataCompositionTest {
                 long id = iterator.next().id;
                 Assertions.assertEquals(i++, id);
             }
-            var iteratorE = composition.select(C1.class, composition.getTenant().iterator());
+            var iteratorE = composition.select(C1.class, composition.getTenant().iterator(), null);
             i = 0;
             while (iteratorE.hasNext()) {
                 long id = iteratorE.next().comp().id;

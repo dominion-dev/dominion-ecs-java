@@ -173,6 +173,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
     public final static class With1<T> extends ResultSet<Results.With1<T>> {
         private final Class<T> type;
+        private final NextWith1<T> nextWith1 = new NextWith1<>();
 
         public With1(CompositionRepository compositionRepository, Map<IndexKey, CompositionRepository.Node> nodeMap,
                      Class<T> type) {
@@ -183,7 +184,8 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         Iterator<Results.With1<T>> compositionIterator(DataComposition composition) {
             var iterator = getPoolDataIterator(composition, composition.length() > 1);
-            return composition.select(type, iterator);
+            var fetcher = iterator instanceof ChunkedPool.PoolDataIteratorWithState<IntEntity> ? nextWith1 : null;
+            return composition.select(type, iterator, fetcher);
         }
     }
 
@@ -304,6 +306,24 @@ public abstract class ResultSet<T> implements Results<T> {
             var iterator = getPoolDataIterator(composition, true);
             var fetcher = iterator instanceof ChunkedPool.PoolMultiDataIteratorWithState<IntEntity> ? nextWith6 : null;
             return composition.select(type1, type2, type3, type4, type5, type6, iterator, fetcher);
+        }
+    }
+
+    public final static class NextWith1<T1> implements ChunkedPool.PoolIteratorNextWith1 {
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[] dataArray, int next, ChunkedPool.Item item) {
+            return new Results.With1<>(
+                    (T1) dataArray[next],
+                    (Entity) item);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object fetchNext(Object[][] multiDataArray, int i1, int next, ChunkedPool.Item item) {
+            return new Results.With1<>(
+                    (T1) multiDataArray[i1][next],
+                    (Entity) item);
         }
     }
 
