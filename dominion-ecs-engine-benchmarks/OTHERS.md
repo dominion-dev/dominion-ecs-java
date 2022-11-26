@@ -24,7 +24,7 @@ natively with JDK Azul-17 aarch64:
 | **Iterate** entities unpacking **5** components |    26.466 ops/s     |    15.617 ops/s    |
 | **Iterate** entities unpacking **6** components |    23.168 ops/s     |    11.651 ops/s    |
 
-<img width="600" src="https://chart.googleapis.com/chart?cht=bvg&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=16.66,0&chma=50&chtt=Iterate+10M+Entities+-+ops/s&chl=1+comp|2+comp|3+comp|4+comp|5+comp|6+comp&chd=t:104.579,44.330,36.032,30.401,26.466,23.168|81.437,36.314,27.062,20.480,15.617,11.651">
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=16.66,0&chma=50&chtt=Iterate+10M+Entities+-+ops/s&chl=1+comp|2+comp|3+comp|4+comp|5+comp|6+comp&chds=0,110&chxr=0,0,110&chd=t:104.579,44.330,36.032,30.401,26.466,23.168|81.437,36.314,27.062,20.480,15.617,11.651">
 
 ---
 
@@ -34,6 +34,8 @@ natively with JDK Azul-17 aarch64:
 | **Create** entities with **2** components |    35.134 ops/s     |    27.151 ops/s    |
 | **Create** entities with **4** components |    26.034 ops/s     |    13.536 ops/s    |
 | **Create** entities with **6** components |    19.119 ops/s     |    9.936 ops/s     |
+
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Create+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,40&chxr=0,0,40&chd=t:38.144,35.134,26.034,19.119|38.026,27.151,13.536,9.936">
 
 ---
 
