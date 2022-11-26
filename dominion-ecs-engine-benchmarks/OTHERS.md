@@ -46,6 +46,8 @@ natively with JDK Azul-17 aarch64:
 | **Add** up to **4** components            |    16.171 ops/s     |    18.974 ops/s    |
 | **Add** up to **6** components            |    14.362 ops/s     |    17.357 ops/s    |
 
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,20&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Add+Components+to+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,20&chxr=0,0,20&chd=t:19.798,18.566,16.171,14.362|18.831,18.421,18.974,17.357">
+
 ---
 
 | 1,000,000 Entities                        | Dominion Throughput | Artemis Throughput |
