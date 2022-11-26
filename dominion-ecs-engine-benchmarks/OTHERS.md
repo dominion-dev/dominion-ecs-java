@@ -68,6 +68,8 @@ natively with JDK Azul-17 aarch64:
 | **Delete** entities with **4** component  |    62.270 ops/s     |    31.064 ops/s    |
 | **Delete** entities with **6** component  |    62.004 ops/s     |    26.456 ops/s    |
 
+<img src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Delete+1M+Entities+-+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,65&chxr=0,0,65&chd=t:62.208,61.933,62.270,62.004|48.193,40.987,31.064,26.456">
+
 ---
 
 ## Support Dominion
