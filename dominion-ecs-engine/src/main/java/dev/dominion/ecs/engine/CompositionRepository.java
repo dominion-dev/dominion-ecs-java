@@ -9,7 +9,6 @@ import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.IndexKey;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-    private final ObjectArrayPool arrayPool;
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
@@ -36,21 +34,14 @@ public final class CompositionRepository implements AutoCloseable {
     public CompositionRepository(LoggingSystem.Context loggingContext) {
         this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
                 , ConfigSystem.DEFAULT_CHUNK_BIT
-                , ConfigSystem.DEFAULT_CHUNK_COUNT_BIT
                 , loggingContext
         );
     }
 
-    public CompositionRepository(
-            int classIndexBit, int chunkBit, int chunkCountBit
-            , LoggingSystem.Context loggingContext
-    ) {
+    public CompositionRepository(int classIndexBit, int chunkBit, LoggingSystem.Context loggingContext) {
         classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
-        int reservedBit = IdSchema.BIT_LENGTH - chunkBit;
-        chunkCountBit = Math.max(IdSchema.MIN_CHUNK_COUNT_BIT,
-                Math.min(chunkCountBit, Math.min(reservedBit, IdSchema.MAX_CHUNK_COUNT_BIT)));
-        idSchema = new IdSchema(chunkBit, chunkCountBit);
+        idSchema = new IdSchema(chunkBit);
         this.loggingContext = loggingContext;
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
@@ -62,8 +53,7 @@ public final class CompositionRepository implements AutoCloseable {
         pool = new ChunkedPool<>(idSchema, loggingContext);
         preparedComposition = new PreparedComposition(this);
         root = new Node();
-        arrayPool = new ObjectArrayPool(loggingContext);
-        root.composition = new DataComposition(this, pool.newTenant(), arrayPool, classIndex, idSchema, loggingContext);
+        root.composition = new DataComposition(this, pool, classIndex, idSchema, loggingContext);
     }
 
     public IdSchema getIdSchema() {
@@ -76,13 +66,19 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     public Composition.ByAdding1AndRemoving<Object> fetchAddingTypeModifier(Class<?> compType) {
-        return (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byAdding1AndRemoving(compType));
+        Composition.ByAdding1AndRemoving<Object> byAdding1AndRemoving = (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.get(compType);
+        return byAdding1AndRemoving == null ?
+                (Composition.ByAdding1AndRemoving<Object>) addingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byAdding1AndRemoving(compType)) :
+                byAdding1AndRemoving;
     }
 
     public Composition.ByRemoving fetchRemovingTypeModifier(Class<?> compType) {
-        return removingTypeModifiers.computeIfAbsent(compType
-                , k -> preparedComposition.byRemoving(compType));
+        Composition.ByRemoving byRemoving = removingTypeModifiers.get(compType);
+        return byRemoving == null ?
+                removingTypeModifiers.computeIfAbsent(compType
+                        , k -> preparedComposition.byRemoving(compType)) :
+                byRemoving;
     }
 
     public DataComposition getOrCreate(Object[] components) {
@@ -151,16 +147,23 @@ public final class CompositionRepository implements AutoCloseable {
         return link.getOrCreateComposition();
     }
 
-    public void modifyComponents(IntEntity entity, DataComposition newDataComposition, Object[] newComponentArray) {
+    @SuppressWarnings("resource")
+    public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object addedComponent, Object[] addedComponents) {
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + newDataComposition)
-
+                            , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
             );
         }
-        entity.getComposition().detachEntity(entity);
-        newDataComposition.attachEntity(entity, true, newComponentArray);
+        int prevId = entity.getId();
+        ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
+        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
+        prevTenant.freeId(prevId);
+        if (entity.stateChunk != null) {
+            ChunkedPool.Tenant<IntEntity> prevStateTenant = entity.stateChunk.getTenant();
+            prevStateTenant.freeStateId(entity.getStateId());
+            entity.stateChunk = targetComposition.target().fetchStateTenants((IndexKey) prevStateTenant.getSubject()).registerState(entity);
+        }
     }
 
     public Entity addComponent(IntEntity entity, Object component) {
@@ -172,8 +175,8 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         var modifier = fetchAddingTypeModifier(component.getClass());
-        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component).getModifier();
-        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity, component);
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return entity;
     }
 
@@ -188,16 +191,22 @@ public final class CompositionRepository implements AutoCloseable {
             );
         }
         var modifier = fetchRemovingTypeModifier(componentType);
-        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity).getModifier();
-        if(mod == null) {
+        var mod = (PreparedComposition.NewEntityComposition) modifier.withValue(entity);
+        if (mod == null) {
             return false;
         }
-        modifyComponents(mod.entity(), mod.newDataComposition(), mod.newComponentArray());
+        modifyComponents(mod.entity(), mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
         return true;
     }
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
+        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            LOGGER.log(
+                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                            , "Find entities with " + Arrays.toString(componentTypes))
+            );
+        }
         switch (componentTypes.length) {
             case 0:
                 return null;
@@ -220,7 +229,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void without(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithout(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -236,7 +245,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
-    public void withAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+    public void mapWithAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
         if (componentTypes.length == 0) {
             return;
         }
@@ -271,6 +280,10 @@ public final class CompositionRepository implements AutoCloseable {
 
     public NodeCache getNodeCache() {
         return nodeCache;
+    }
+
+    public LoggingSystem.Context getLoggingContext() {
+        return loggingContext;
     }
 
     @Override
@@ -349,8 +362,8 @@ public final class CompositionRepository implements AutoCloseable {
                     if (stamp == 0L)
                         continue;
                     // exclusive access
-                    value = composition = new DataComposition(CompositionRepository.this, pool.newTenant()
-                            , arrayPool, classIndex, idSchema, loggingContext, componentTypes);
+                    value = composition = new DataComposition(CompositionRepository.this, pool,
+                            classIndex, idSchema, loggingContext, componentTypes);
                     break;
                 }
                 return value;

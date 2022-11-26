@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * ClassIndex is the cornerstone of Dominion.
- * In less than 2 nanoseconds, this class can provide a progressive int value for each different component type.
+ * The ClassIndex class is the cornerstone of Dominion.
+ * In less than 2 nanoseconds, this implementation can provide a progressive int value for each different component type.
  * This allows you to use the blazing fast counting sort algorithm - with O(n+k) time complexity - to sort component
  * types (even finding duplicates) and implement a very efficient {@link IndexKey} to represent a multi-component type
  * key for Map.
@@ -176,6 +176,12 @@ public final class ClassIndex implements AutoCloseable {
             max = Math.max(value, max);
         }
         return new IndexKey(checkArray, min, max, length);
+    }
+
+    public <E extends Enum<E>> IndexKey getIndexKeyByEnum(E enumValue) {
+        int cIndex = getIndex(enumValue.getClass());
+        cIndex = cIndex == 0 ? getIndexOrAddClass(enumValue.getClass()) : cIndex;
+        return new IndexKey(new int[]{cIndex, enumValue.ordinal()});
     }
 
     private int capHashCode(int hashCode, int hashBits) {

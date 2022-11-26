@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DataCompositionBenchmark extends DominionBenchmark {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     DataComposition composition2;
     Object[] inputArray2 = new Object[]{
@@ -64,17 +64,17 @@ public class DataCompositionBenchmark extends DominionBenchmark {
         classIndex.addClass(C6.class);
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
-        composition2 = new DataComposition(null, null, null, classIndex, null
+        composition2 = new DataComposition(null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C3.class
         );
-        composition4 = new DataComposition(null, null, null, classIndex, null
+        composition4 = new DataComposition(null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C2.class
                 , C4.class
                 , C6.class
                 , C7.class
         );
-        composition8 = new DataComposition(null, null, null, classIndex, null
+        composition8 = new DataComposition(null, null, classIndex, null
                 , LoggingSystem.Context.TEST, C1.class
                 , C2.class
                 , C3.class
@@ -118,20 +118,18 @@ public class DataCompositionBenchmark extends DominionBenchmark {
             );
         }
 
-        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
-            composition = new DataComposition(null, tenant, null, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
+            composition = new DataComposition(null, new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST), classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
-                composition.createEntity(null, false, c1);
+                composition.createEntity(false, c1);
             }
         }
 
         @Benchmark
         public void iterate1Comp(Blackhole bh) {
-            var iterator = composition.select(C1.class, composition.getTenant().iterator());
+            var iterator = composition.select(C1.class, composition.getTenant().noItemIterator(), null);
             while (iterator.hasNext()) {
                 bh.consume(iterator.next().comp());
             }

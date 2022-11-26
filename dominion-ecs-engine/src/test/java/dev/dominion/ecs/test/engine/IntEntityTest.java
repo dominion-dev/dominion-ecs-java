@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,24 +25,19 @@ class IntEntityTest {
         var c3 = new C3(0);
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             IntEntity entity = (IntEntity) entityRepository.createEntity();
-            IntEntity entityPostAdd = (IntEntity) entity.add(c1);
-            Assertions.assertEquals(entityPostAdd, entity);
-            assert entityPostAdd != null;
-            Assertions.assertEquals(c1, entityPostAdd.getComponents()[0]);
+            entity.add(c1);
+            Assertions.assertEquals(c1, Objects.requireNonNull(entity.getComponentArray())[0]);
 
-            entityPostAdd = (IntEntity) entity.add(c2);
-            assert entityPostAdd != null;
-            Assertions.assertArrayEquals(new Object[]{c1, c2}, entityPostAdd.getComponents());
+            entity.add(c2);
+            Assertions.assertArrayEquals(new Object[]{c1, c2}, entity.getComponentArray());
 
             entity = (IntEntity) entityRepository.createEntity(c1, c2);
-            entityPostAdd = (IntEntity) entity.add(c3);
-            assert entityPostAdd != null;
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+            entity.add(c3);
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());
 
             entity = (IntEntity) entityRepository.createEntity(c2, c3);
-            entityPostAdd = (IntEntity) entity.add(c1);
-            assert entityPostAdd != null;
-            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entityPostAdd.getComponents());
+            entity.add(c1);
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());
         }
     }
 
@@ -112,7 +108,7 @@ class IntEntityTest {
 
             for (int i = 0; i < capacity; i++) {
                 Assertions.assertArrayEquals(new Object[]{c1, c2, c3, c4, c5},
-                        Arrays.stream(((IntEntity) entities[i]).getComponents())
+                        Arrays.stream(Objects.requireNonNull(((IntEntity) entities[i]).getComponentArray()))
                                 .sorted(Comparator.comparing(comp -> comp.getClass().getName())).toArray());
             }
         }
@@ -126,11 +122,11 @@ class IntEntityTest {
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Assertions.assertTrue(entity.remove(c2));
-            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
+            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponentArray());
             Assertions.assertTrue(entity.remove(c1));
-            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Assertions.assertEquals(c3, Objects.requireNonNull(entity.getComponentArray())[0]);
             Assertions.assertTrue(entity.remove(c3));
-            Assertions.assertNull(entity.getComponents());
+            Assertions.assertNull(entity.getComponentArray());
         }
     }
 
@@ -140,21 +136,28 @@ class IntEntityTest {
             var c1 = new C1(0);
             var c2 = new C2(0);
             var c3 = new C3(0);
-            IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
+            IntEntity entity = (IntEntity) entityRepository.createEntity();
+            entity.add(c1);
+            Assertions.assertArrayEquals(new Object[]{c1}, entity.getComponentArray());
+            entity.remove(c1);
+            Assertions.assertNull(entity.getComponentArray());
+
+            entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             DataComposition compositionV3 = entity.getComposition();
             entity.remove(c2);
-            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponents());
+            Assertions.assertArrayEquals(new Object[]{c1, c3}, entity.getComponentArray());
             DataComposition compositionV2 = entity.getComposition();
             entity.remove(c1);
-            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Assertions.assertEquals(c3, Objects.requireNonNull(entity.getComponentArray())[0]);
             DataComposition compositionV1 = entity.getComposition();
             entity.remove(c3);
-            Assertions.assertNull(entity.getComponents());
+            Assertions.assertNull(entity.getComponentArray());
+
             entity.add(c3);
-            Assertions.assertEquals(c3, entity.getComponents()[0]);
+            Assertions.assertEquals(c3, Objects.requireNonNull(entity.getComponentArray())[0]);
             Assertions.assertEquals(compositionV1, entity.getComposition());
             entity.add(c2);
-            Assertions.assertArrayEquals(new Object[]{c3, c2}, entity.getComponents());
+            Assertions.assertArrayEquals(new Object[]{c3, c2}, entity.getComponentArray());
             Assertions.assertNotEquals(compositionV2, entity.getComposition());
             entity.remove(c2);
             entity.add(c1);
@@ -172,25 +175,13 @@ class IntEntityTest {
             var c3 = new C3(0);
             IntEntity entity = (IntEntity) entityRepository.createEntity(c1, c2, c3);
             Assertions.assertTrue(entity.isEnabled());
-            Assertions.assertTrue(entity.remove(c3));
-            Assertions.assertTrue(entity.isEnabled());
-            Assertions.assertFalse(entity.remove(c3));
-            Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
-            Assertions.assertNotNull(entity.setEnabled(false));
-            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
-            Assertions.assertFalse(entity.isEnabled());
-            Assertions.assertFalse(entity.remove(c2));
-            entity.setEnabled(true);
-            Assertions.assertTrue(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
-            Assertions.assertTrue(entity.remove(c2));
             entity.setEnabled(false);
-            Assertions.assertNull(entity.add(c2));
-            Assertions.assertFalse(entityRepository.deleteEntity(entity));
-            entity.setEnabled(true);
-            Assertions.assertTrue(entityRepository.deleteEntity(entity));
-            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
             Assertions.assertFalse(entity.isEnabled());
-            Assertions.assertFalse(entityRepository.deleteEntity(entity));
+//            Assertions.assertNotNull(entity.getComponentArray());
+//            Assertions.assertArrayEquals(new Object[]{null, null, null}, entity.getComponentArray());
+            entity.setEnabled(true);
+            Assertions.assertTrue(entity.isEnabled());
+            Assertions.assertArrayEquals(new Object[]{c1, c2, c3}, entity.getComponentArray());
         }
     }
 
@@ -203,11 +194,9 @@ class IntEntityTest {
             Assertions.assertFalse(entity.has(C1.class));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
             Assertions.assertTrue(entity2.has(C1.class));
-            entity.add(c1);
-            Assertions.assertTrue(entity.has(C1.class));
-            entity.add(c2);
-            Assertions.assertTrue(entity.has(C1.class));
-            Assertions.assertTrue(entity.has(C2.class));
+            IntEntity entity3 = (IntEntity) entityRepository.createEntity(c1, c2);
+            Assertions.assertTrue(entity3.has(C1.class));
+            Assertions.assertTrue(entity3.has(C2.class));
         }
     }
 
@@ -220,12 +209,14 @@ class IntEntityTest {
             Assertions.assertFalse(entity.contains(c1));
             IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
             Assertions.assertTrue(entity2.contains(c1));
-            entity.add(c1);
-            Assertions.assertTrue(entity.contains(c1));
-            entity.add(c2);
-            Assertions.assertTrue(entity.contains(c1));
-            Assertions.assertTrue(entity.contains(c2));
+            IntEntity entity3 = (IntEntity) entityRepository.createEntity(c1, c2);
+            Assertions.assertTrue(entity3.contains(c1));
+            Assertions.assertTrue(entity3.contains(c2));
         }
+    }
+
+    private static class IntWrapper {
+        int i;
     }
 
     record C1(int id) {

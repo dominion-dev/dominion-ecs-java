@@ -6,10 +6,10 @@
 package dev.dominion.ecs.engine.benchmarks.collections;
 
 import dev.dominion.ecs.engine.IntEntity;
+import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ConfigSystem;
 import dev.dominion.ecs.engine.system.LoggingSystem;
-import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -17,11 +17,11 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import static dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import static dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
+import static dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 public class ChunkedPoolBenchmark extends DominionBenchmark {
     private static final IdSchema ID_SCHEMA =
-            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT, ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
+            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
@@ -43,6 +43,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
@@ -69,6 +70,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
         @Param(value = {"1000000"})
         int size;
+        boolean started;
 
         public static void main(String[] args) throws Exception {
             org.openjdk.jmh.Main.main(
@@ -76,13 +78,16 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            started = false;
         }
 
         @Setup(Level.Invocation)
         public void setupInvocation() {
+            if(!started) return;
             for (int i = 0; i < size; i++) {
                 tenant.freeId(i);
             }
@@ -93,6 +98,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             for (int i = 0; i < size; i++) {
                 bh.consume(tenant.nextId());
             }
+            started = true;
         }
 
         @TearDown(Level.Iteration)
@@ -115,6 +121,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
             tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
@@ -142,7 +149,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
 
     public static class TenantIterator extends DominionBenchmark {
-        ChunkedPool.Tenant<Id> tenant;
+        ChunkedPool.Tenant<TestItem> tenant;
 
         @Param(value = {"100000000"})
         int size;
@@ -153,17 +160,18 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             );
         }
 
+        @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setupInvocation() {
-            tenant = new ChunkedPool<Id>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<TestItem>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
-                tenant.register(tenant.nextId(), new Id(i, null, null));
+                tenant.register(new TestItem(tenant.nextId(), null, null), null);
             }
         }
 
         @Benchmark
         public void iterator(Blackhole bh) {
-            Iterator<Id> iterator = tenant.iterator();
+            Iterator<TestItem> iterator = tenant.iterator();
             while (iterator.hasNext()) {
                 bh.consume(iterator.next());
             }
@@ -174,7 +182,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             tenant.close();
         }
 
-        public record Id(int id, Identifiable prev, Identifiable next) implements Identifiable {
+        public record TestItem(int id, Item prev, Item next) implements Item {
             @Override
             public int getId() {
                 return id;
@@ -186,23 +194,21 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public Identifiable getPrev() {
-                return prev;
+            public int setStateId(int id) {
+                return 0;
             }
 
             @Override
-            public Identifiable setPrev(Identifiable prev) {
-                return prev;
+            public ChunkedPool.LinkedChunk<? extends Item> getChunk() {
+                return null;
             }
 
             @Override
-            public Identifiable getNext() {
-                return next;
+            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
             }
 
             @Override
-            public Identifiable setNext(Identifiable next) {
-                return next;
+            public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
             }
         }
     }

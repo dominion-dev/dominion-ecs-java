@@ -54,7 +54,6 @@ class SystemSchedulerTest {
         scheduler.tick();
     }
 
-
     @Test
     void parallelSchedule() {
         Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
@@ -158,6 +157,6 @@ class SystemSchedulerTest {
         Thread.sleep(100);
         scheduler.tickAtFixedRate(0);
         double d = count.get();
-        Assertions.assertEquals(0.1f, d, .05);
+        Assertions.assertEquals(0.1f, d, .07);
     }
 }

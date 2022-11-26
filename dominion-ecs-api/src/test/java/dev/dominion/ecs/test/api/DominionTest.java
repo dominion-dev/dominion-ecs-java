@@ -68,21 +68,6 @@ public class DominionTest {
         }
 
         @Override
-        public Entity createEntity(String name, Object... components) {
-            return null;
-        }
-
-        @Override
-        public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
-            return null;
-        }
-
-        @Override
-        public Entity createEntityAs(String name, Entity prefab, Object... components) {
-            return null;
-        }
-
-        @Override
         public boolean deleteEntity(Entity entity) {
             return false;
         }
@@ -99,6 +84,36 @@ public class DominionTest {
 
         @Override
         public Scheduler createScheduler() {
+            return null;
+        }
+
+        @Override
+        public <T> Results<T> findCompositionsWith(Class<T> type) {
+            return null;
+        }
+
+        @Override
+        public <T1, T2> Results<Results.With2<T1, T2>> findCompositionsWith(Class<T1> type1, Class<T2> type2) {
+            return null;
+        }
+
+        @Override
+        public <T1, T2, T3> Results<Results.With3<T1, T2, T3>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+            return null;
+        }
+
+        @Override
+        public <T1, T2, T3, T4> Results<Results.With4<T1, T2, T3, T4>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+            return null;
+        }
+
+        @Override
+        public <T1, T2, T3, T4, T5> Results<Results.With5<T1, T2, T3, T4, T5>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+            return null;
+        }
+
+        @Override
+        public <T1, T2, T3, T4, T5, T6> Results<Results.With6<T1, T2, T3, T4, T5, T6>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
             return null;
         }
 

@@ -151,11 +151,13 @@ public class PreparedComposition implements Composition {
         }
     }
 
-    record TargetComposition(DataComposition target, int[] indexMapping, int[] addedIndexMapping) {
+    public record TargetComposition(DataComposition target, int[] indexMapping, int[] addedIndexMapping) {
     }
 
-    public record NewEntityComposition(IntEntity entity, DataComposition newDataComposition,
-                                       Object[] newComponentArray) {
+    public record NewEntityComposition(IntEntity entity,
+                                       TargetComposition targetComposition,
+                                       Object addedComponent,
+                                       Object[] addedComponents) implements Modifier {
     }
 
     public static class PreparedModifier implements ByRemoving {
@@ -163,7 +165,6 @@ public class PreparedComposition implements Composition {
         private final Map<DataComposition, TargetComposition> cache = new ConcurrentHashMap<>();
         private final Class<?>[] addedComponentTypes;
         private final Set<Class<?>> removedComponentTypes;
-        protected NewEntityComposition modifier;
 
         public PreparedModifier(CompositionRepository compositions, Class<?>[] addedComponentTypes, Class<?>... componentTypes) {
             this.compositions = compositions;
@@ -174,8 +175,20 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity) {
-            modifier = fetchModifier(entity);
-            return this;
+            return fetchModifier(entity);
+        }
+
+        protected NewEntityComposition fetchModifier(Entity entity) {
+            return fetchModifier(entity, (Object) null);
+        }
+
+        protected NewEntityComposition fetchModifier(Entity entity, Object addedComponent) {
+            var intEntity = (IntEntity) entity;
+            var composition = intEntity.getComposition();
+            TargetComposition targetComposition = fetchTargetComposition(composition);
+            return !targetComposition.target.equals(composition) ?
+                    new NewEntityComposition(intEntity, targetComposition, addedComponent, null) :
+                    null;
         }
 
         protected NewEntityComposition fetchModifier(Entity entity, Object... addedComponents) {
@@ -183,60 +196,34 @@ public class PreparedComposition implements Composition {
             var composition = intEntity.getComposition();
             TargetComposition targetComposition = fetchTargetComposition(composition);
             return !targetComposition.target.equals(composition) ?
-                    new NewEntityComposition(intEntity, targetComposition.target, fetchComponentArray(intEntity, targetComposition, addedComponents)) :
+                    new NewEntityComposition(intEntity, targetComposition, null, addedComponents) :
                     null;
         }
 
-        private Object[] fetchComponentArray(IntEntity entity, TargetComposition targetComposition, Object... addedComponents) {
-            int length = targetComposition.target.getComponentTypes().length;
-            if (length == 0) {
-                return new Object[0];
-            }
-            Object[] componentArray = new Object[length];
-//            Object[] componentArray = compositions.getArrayPool().pop(length);
-            Object[] prevComponentArray = entity.getComponents();
-            if (prevComponentArray != null && prevComponentArray.length > 0) {
-                populateComponentArray(componentArray, prevComponentArray, targetComposition.indexMapping);
-            }
-            if (addedComponents.length > 0) {
-                populateComponentArray(componentArray, addedComponents, targetComposition.addedIndexMapping);
-            }
-            return componentArray;
-        }
-
-        private void populateComponentArray(Object[] componentArray, Object[] otherComponentArray, int[] indexMapping) {
-            for (int i = 0; i < otherComponentArray.length; i++) {
-                int index = indexMapping[i];
-                if (index < 0) continue;
-                componentArray[index] = otherComponentArray[i];
-            }
-        }
-
-        @Override
-        public Object getModifier() {
-            return modifier;
-        }
-
         private TargetComposition fetchTargetComposition(DataComposition composition) {
-            return cache.computeIfAbsent(composition, prevComposition -> {
-                Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
-                int newLength = prevComponentTypes.length + (addedComponentTypes == null ? 0 : addedComponentTypes.length);
-                List<Class<?>> typeList = new ArrayList<>(newLength);
-                populateTypeList(typeList, prevComponentTypes);
-                if (addedComponentTypes != null) {
-                    populateTypeList(typeList, addedComponentTypes);
-                }
-                Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
-                DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
-                int[] indexMapping = new int[prevComponentTypes.length];
-                populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
-                int[] addedIndexMapping = null;
-                if (addedComponentTypes != null) {
-                    addedIndexMapping = new int[addedComponentTypes.length];
-                    populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
-                }
-                return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
-            });
+            TargetComposition targetComposition = cache.get(composition);
+            return targetComposition == null ?
+                    cache.computeIfAbsent(composition, this::getTargetComposition) : targetComposition;
+        }
+
+        private TargetComposition getTargetComposition(DataComposition prevComposition) {
+            Class<?>[] prevComponentTypes = prevComposition.getComponentTypes();
+            int newLength = prevComponentTypes.length + (addedComponentTypes == null ? 0 : addedComponentTypes.length);
+            List<Class<?>> typeList = new ArrayList<>(newLength);
+            populateTypeList(typeList, prevComponentTypes);
+            if (addedComponentTypes != null) {
+                populateTypeList(typeList, addedComponentTypes);
+            }
+            Class<?>[] newComponentTypes = typeList.toArray(new Class<?>[0]);
+            DataComposition newComposition = compositions.getOrCreateByType(newComponentTypes);
+            int[] indexMapping = new int[prevComponentTypes.length];
+            populateIndexMapping(prevComponentTypes, indexMapping, newComposition);
+            int[] addedIndexMapping = null;
+            if (addedComponentTypes != null) {
+                addedIndexMapping = new int[addedComponentTypes.length];
+                populateIndexMapping(addedComponentTypes, addedIndexMapping, newComposition);
+            }
+            return new TargetComposition(newComposition, indexMapping, addedIndexMapping);
         }
 
         private void populateTypeList(List<Class<?>> typeList, Class<?>[] componentTypes) {
@@ -256,8 +243,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T comp) {
-            modifier = fetchModifier(entity, comp);
-            return this;
+            return fetchModifier(entity, comp);
         }
     }
 
@@ -269,8 +255,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T1 comp1, T2 comp2) {
-            modifier = fetchModifier(entity, comp1, comp2);
-            return this;
+            return fetchModifier(entity, comp1, comp2);
         }
     }
 
@@ -282,8 +267,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3);
-            return this;
+            return fetchModifier(entity, comp1, comp2, comp3);
         }
     }
 
@@ -295,8 +279,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4);
-            return this;
+            return fetchModifier(entity, comp1, comp2, comp3, comp4);
         }
     }
 
@@ -308,8 +291,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5);
-            return this;
+            return fetchModifier(entity, comp1, comp2, comp3, comp4, comp5);
         }
     }
 
@@ -321,8 +303,7 @@ public class PreparedComposition implements Composition {
 
         @Override
         public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6);
-            return this;
+            return fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6);
         }
     }
 
@@ -333,9 +314,8 @@ public class PreparedComposition implements Composition {
         }
 
         @Override
-        public ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7);
-            return this;
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7) {
+            return fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7);
         }
     }
 
@@ -346,9 +326,8 @@ public class PreparedComposition implements Composition {
         }
 
         @Override
-        public ByRemoving withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8) {
-            modifier = fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7, comp8);
-            return this;
+        public Modifier withValue(Entity entity, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8) {
+            return fetchModifier(entity, comp1, comp2, comp3, comp4, comp5, comp6, comp7, comp8);
         }
     }
 

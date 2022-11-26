@@ -25,12 +25,12 @@ public final class EntityRepository implements Dominion {
     private final CompositionRepository compositions;
     private final int systemTimeoutSeconds;
 
-    public EntityRepository(String name, int classIndexBit, int chunkBit, int chunkCountBit, int systemTimeoutSeconds,
+    public EntityRepository(String name, int classIndexBit, int chunkBit, int systemTimeoutSeconds,
                             LoggingSystem.Context loggingContext) {
         this.name = name;
         this.systemTimeoutSeconds = systemTimeoutSeconds;
         this.loggingContext = loggingContext;
-        compositions = new CompositionRepository(classIndexBit, chunkBit, chunkCountBit, loggingContext);
+        compositions = new CompositionRepository(classIndexBit, chunkBit, loggingContext);
     }
 
     @Override
@@ -40,24 +40,9 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public Entity createEntity(Object... components) {
-        return createEntity(null, components);
-    }
-
-    @Override
-    public Entity createPreparedEntity(Composition.OfTypes withValues) {
-        return createPreparedEntity(null, withValues);
-    }
-
-    @Override
-    public Entity createEntityAs(Entity prefab, Object... components) {
-        return createEntityAs(null, prefab, components);
-    }
-
-    @Override
-    public Entity createEntity(String name, Object... components) {
         Object[] componentArray = components.length == 0 ? null : components;
         DataComposition composition = compositions.getOrCreate(componentArray);
-        IntEntity entity = composition.createEntity(name, false, componentArray);
+        IntEntity entity = composition.createEntity(false, componentArray);
         if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
                     System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
@@ -68,21 +53,21 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
-    public Entity createPreparedEntity(String name, Composition.OfTypes withValues) {
+    public Entity createPreparedEntity(Composition.OfTypes withValues) {
         DataComposition composition = (DataComposition) withValues.getContext();
-        return composition.createEntity(name, true, withValues.getComponents());
+        return composition.createEntity(true, withValues.getComponents());
     }
 
     @Override
-    public Entity createEntityAs(String name, Entity prefab, Object... components) {
+    public Entity createEntityAs(Entity prefab, Object... components) {
         IntEntity origin = (IntEntity) prefab;
-        Object[] originComponents = origin.getComponents();
-        if (originComponents == null || originComponents.length == 0) {
-            return createEntity(name, components);
+        int originArrayLength;
+        if (origin.getComponentArray() == null || (originArrayLength = origin.getArrayLength()) == 0) {
+            return createEntity(components);
         }
-        Object[] targetComponents = Arrays.copyOf(originComponents, originComponents.length + components.length);
-        System.arraycopy(components, 0, targetComponents, originComponents.length, components.length);
-        return createEntity(name, targetComponents);
+        Object[] targetComponents = Arrays.copyOf(components, originArrayLength + components.length);
+        System.arraycopy(origin.getComponentArray(), 0, targetComponents, components.length, originArrayLength);
+        return createEntity(targetComponents);
     }
 
     @Override
@@ -92,11 +77,11 @@ public final class EntityRepository implements Dominion {
 
     @Override
     public boolean modifyEntity(Composition.Modifier modifier) {
-        var mod = (PreparedComposition.NewEntityComposition) modifier.getModifier();
+        var mod = (PreparedComposition.NewEntityComposition) modifier;
         if (mod == null) {
             return false;
         }
-        return mod.entity().modify(compositions, mod.newDataComposition(), mod.newComponentArray());
+        return mod.entity().modify(compositions, mod.targetComposition(), mod.addedComponent(), mod.addedComponents());
     }
 
     @Override
@@ -110,6 +95,42 @@ public final class EntityRepository implements Dominion {
     }
 
     @Override
+    public <T> Results<T> findCompositionsWith(Class<T> type) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type);
+        return new ResultSet.With<>(compositions, nodes, type);
+    }
+
+    @Override
+    public <T1, T2> Results<With2<T1, T2>> findCompositionsWith(Class<T1> type1, Class<T2> type2) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2);
+        return new ResultSet.With2<>(compositions, nodes, false, type1, type2);
+    }
+
+    @Override
+    public <T1, T2, T3> Results<With3<T1, T2, T3>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3);
+        return new ResultSet.With3<>(compositions, nodes, false, type1, type2, type3);
+    }
+
+    @Override
+    public <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4);
+        return new ResultSet.With4<>(compositions, nodes, false, type1, type2, type3, type4);
+    }
+
+    @Override
+    public <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5);
+        return new ResultSet.With5<>(compositions, nodes, false, type1, type2, type3, type4, type5);
+    }
+
+    @Override
+    public <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findCompositionsWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
+        Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5, type6);
+        return new ResultSet.With6<>(compositions, nodes, false, type1, type2, type3, type4, type5, type6);
+    }
+
+    @Override
     public <T> Results<With1<T>> findEntitiesWith(Class<T> type) {
         Map<IndexKey, Node> nodes = compositions.findWith(type);
         return new ResultSet.With1<>(compositions, nodes, type);
@@ -118,31 +139,31 @@ public final class EntityRepository implements Dominion {
     @Override
     public <T1, T2> Results<With2<T1, T2>> findEntitiesWith(Class<T1> type1, Class<T2> type2) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2);
-        return new ResultSet.With2<>(compositions, nodes, type1, type2);
+        return new ResultSet.With2<>(compositions, nodes, true, type1, type2);
     }
 
     @Override
     public <T1, T2, T3> Results<With3<T1, T2, T3>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3);
-        return new ResultSet.With3<>(compositions, nodes, type1, type2, type3);
+        return new ResultSet.With3<>(compositions, nodes, true, type1, type2, type3);
     }
 
     @Override
     public <T1, T2, T3, T4> Results<With4<T1, T2, T3, T4>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4);
-        return new ResultSet.With4<>(compositions, nodes, type1, type2, type3, type4);
+        return new ResultSet.With4<>(compositions, nodes, true, type1, type2, type3, type4);
     }
 
     @Override
     public <T1, T2, T3, T4, T5> Results<With5<T1, T2, T3, T4, T5>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5);
-        return new ResultSet.With5<>(compositions, nodes, type1, type2, type3, type4, type5);
+        return new ResultSet.With5<>(compositions, nodes, true, type1, type2, type3, type4, type5);
     }
 
     @Override
     public <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6) {
         Map<IndexKey, Node> nodes = compositions.findWith(type1, type2, type3, type4, type5, type6);
-        return new ResultSet.With6<>(compositions, nodes, type1, type2, type3, type4, type5, type6);
+        return new ResultSet.With6<>(compositions, nodes, true, type1, type2, type3, type4, type5, type6);
     }
 
     @Override
@@ -176,8 +197,6 @@ public final class EntityRepository implements Dominion {
             int classIndexBit = fetchClassIndexBit.orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT);
             Optional<Integer> fetchChunkBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_BIT);
             int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
-            Optional<Integer> fetchChunkCountBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_COUNT_BIT);
-            int chunkCountBit = fetchChunkCountBit.orElse(ConfigSystem.DEFAULT_CHUNK_COUNT_BIT);
             Optional<Integer> fetchSystemTimeoutSeconds = ConfigSystem.fetchIntValue(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS);
             int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
 
@@ -193,9 +212,6 @@ public final class EntityRepository implements Dominion {
                         , "  Chunk-Bit: " + chunkBit
                                 + (fetchChunkBit.isEmpty() ? " (set sys-property '"
                                 + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_BIT) + "')" : "")
-                        , "  ChunkCount-Bit: " + chunkCountBit
-                                + (fetchChunkCountBit.isEmpty() ? " (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_COUNT_BIT) + "')" : "")
                         , "  SystemTimeout-Seconds: " + systemTimeoutSeconds
                                 + (fetchSystemTimeoutSeconds.isEmpty() ? " (set sys-property '"
                                 + ConfigSystem.getPropertyName(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
@@ -207,7 +223,6 @@ public final class EntityRepository implements Dominion {
             return new EntityRepository(name
                     , classIndexBit
                     , chunkBit
-                    , chunkCountBit
                     , systemTimeoutSeconds
                     , new LoggingSystem.Context(name, loggingLevelIndex)
             );

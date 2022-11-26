@@ -8,12 +8,9 @@ package dev.dominion.ecs.examples.hello;
 import dev.dominion.ecs.api.Dominion;
 import dev.dominion.ecs.api.Scheduler;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 public class HelloDominion {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // create your world
         Dominion hello = Dominion.create();
 
@@ -45,6 +42,12 @@ public class HelloDominion {
         scheduler.schedule(system);
         // start 3 ticks per second
         scheduler.tickAtFixedRate(3);
+
+        // wait 10 seconds
+        Thread.sleep(10000);
+        // close the dominion
+        hello.close();
+        System.out.println("the end");
     }
 
     // component types can be both classes and records

@@ -17,36 +17,22 @@ class CompositionRepositoryTest {
     @Test
     void init() {
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 1, 1
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(1, 1, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(10, idSchema.chunkBit());
-            Assertions.assertEquals(6, idSchema.chunkCountBit());
+            Assertions.assertEquals(8, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(100, 100, 1
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(100, 100, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(24, idSchema.chunkBit());
-            Assertions.assertEquals(6, idSchema.chunkCountBit());
+            Assertions.assertEquals(16, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 22, 10
-                             , LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(21, 15, LoggingSystem.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
-            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(22, idSchema.chunkBit());
-            Assertions.assertEquals(8, idSchema.chunkCountBit());
-        }
-        try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 1, 100
-                             , LoggingSystem.Context.TEST)) {
-            IdSchema idSchema = compositionRepository.getIdSchema();
-            Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
-            Assertions.assertEquals(10, idSchema.chunkBit());
-            Assertions.assertEquals(20, idSchema.chunkCountBit());
+            Assertions.assertEquals(21, compositionRepository.getClassIndex().getHashBit());
+            Assertions.assertEquals(15, idSchema.chunkBit());
         }
     }
 
@@ -157,7 +143,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.without(nodeMap, C2.class);
+            compositionRepository.mapWithout(nodeMap, C2.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(1, nodeMap.size());
             Assertions.assertEquals(compositionC1, nodeMap.get(compositionC1Key).getComposition());
@@ -183,7 +169,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.withAlso(nodeMap, C2.class);
+            compositionRepository.mapWithAlso(nodeMap, C2.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(2, nodeMap.size());
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
@@ -195,7 +181,7 @@ class CompositionRepositoryTest {
             Assertions.assertEquals(compositionC1C2, nodeMap.get(compositionC1C2Key).getComposition());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());
 
-            compositionRepository.withAlso(nodeMap, C1.class, C3.class);
+            compositionRepository.mapWithAlso(nodeMap, C1.class, C3.class);
             Assertions.assertNotNull(nodeMap);
             Assertions.assertEquals(1, nodeMap.size());
             Assertions.assertEquals(compositionC1C2C3, nodeMap.get(compositionC1C2C3Key).getComposition());

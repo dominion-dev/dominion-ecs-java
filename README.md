@@ -28,6 +28,9 @@ components' composition and subsequent addition of new systems.
   ECS for C, C++, and Rust -
   see [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmarks/README.md)
   .
+- 🚀🚀 **_FASTER_** > Dominion is on average quite faster than other ECS implemented in Java. Check out
+  this [performance comparison](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmarks/OTHERS.md)
+  .
 - 🤏 **_TINY_** > Just a high-performance and high-concurrency Java library with a minimal footprint and **no
   dependencies**. So you can easily integrate the Dominion core library into your game engine or framework or use it
   directly for your game or application without warring about the _dependency hell_.
@@ -51,7 +54,7 @@ Add the following dependency declaration in your project pom.xml:
         <dependency>
             <groupId>dev.dominion.ecs</groupId>
             <artifactId>dominion-ecs-engine</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.8.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -85,8 +88,8 @@ actions:
   data structures and algorithms to increase performances and fill the gap with ECS frameworks written in system
   languages.
 - **_reducing garbage collection activities_**: GC could affect overall performances as its activities run concurrently
-  with user code and without direct control. To reduce GC activities significantly, Dominion implements a very efficient
-  pooling system to reuse objects living in a heap and creates off-heap data structures whenever possible.
+  with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
+  structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
   Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
   as much as possible and leveraging the best available lock implementation as the

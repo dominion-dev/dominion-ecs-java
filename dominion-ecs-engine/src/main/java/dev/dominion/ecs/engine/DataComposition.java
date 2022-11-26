@@ -8,38 +8,34 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
-import dev.dominion.ecs.engine.collections.ObjectArrayPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.LoggingSystem;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.StampedLock;
 
 public final class DataComposition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
+    private final ChunkedPool<IntEntity> pool;
     private final ChunkedPool.Tenant<IntEntity> tenant;
-    private final ObjectArrayPool arrayPool;
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
-    private final Map<IndexKey, IntEntity> states = new ConcurrentHashMap<>();
-    private final StampedLock stateLock = new StampedLock();
+    private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
     private final LoggingSystem.Context loggingContext;
 
-    public DataComposition(CompositionRepository repository, ChunkedPool.Tenant<IntEntity> tenant
-            , ObjectArrayPool arrayPool, ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
+    public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
+            , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
-        this.tenant = tenant;
-        this.arrayPool = arrayPool;
+        this.pool = pool;
+        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this, "root");
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
@@ -59,12 +55,6 @@ public final class DataComposition {
                             , "Creating " + this)
             );
         }
-    }
-
-    public static <S extends Enum<S>> IndexKey calcIndexKey(S state, ClassIndex classIndex) {
-        int cIndex = classIndex.getIndex(state.getClass());
-        cIndex = cIndex == 0 ? classIndex.getIndexOrAddClass(state.getClass()) : cIndex;
-        return new IndexKey(new int[]{cIndex, state.ordinal()});
     }
 
     public int length() {
@@ -100,136 +90,39 @@ public final class DataComposition {
         components[i] = temp;
     }
 
-    public IntEntity createEntity(String name, boolean prepared, Object... components) {
-        int id = tenant.nextId();
-        return tenant.register(id, new IntEntity(id, this, name,
-                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components));
+    public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> fetchStateTenants(S state) {
+        return fetchStateTenants(classIndex.getIndexKeyByEnum(state));
     }
 
-    public boolean deleteEntity(IntEntity entity) {
-        detachEntity(entity);
-        Object[] components = entity.getComponents();
-        if (components != null && entity.isPooledArray()) {
-            arrayPool.push(components);
-        }
-        if (entity.getPrev() != null || entity.getNext() != null) {
-            detachEntityState(entity);
-        }
-        entity.setData(null);
-        return true;
-    }
-
-    public IntEntity attachEntity(IntEntity entity, boolean prepared, Object... components) {
-        entity = tenant.register(entity.setId(tenant.nextId()), switch (length()) {
-            case 0 -> entity.setData(new IntEntity.Data(this, null, entity.getData()));
-            case 1 -> entity.setData(new IntEntity.Data(this, components, entity.getData()));
-            default ->
-                    entity.setData(new IntEntity.Data(this, prepared ? components : sortComponentsInPlaceByIndex(components), entity.getData()));
-        });
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attaching " + entity)
-            );
-        }
-        return entity;
-    }
-
-    public void reattachEntity(IntEntity entity) {
-        tenant.register(entity.setId(tenant.nextId()), entity);
-    }
-
-    public IntEntity detachEntity(IntEntity entity) {
-        tenant.freeId(entity.getId());
-        entity.flagDetachedId();
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Detaching " + entity)
-            );
-        }
-        return entity;
-    }
-
-    public <S extends Enum<S>> IntEntity setEntityState(IntEntity entity, S state) {
-        boolean detached = detachEntityState(entity);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Detaching state from " + entity + " : " + detached)
-            );
-        }
-        if (state != null) {
-            attachEntityState(entity, state);
-        }
-        return entity;
-    }
-
-    private boolean detachEntityState(IntEntity entity) {
-        IndexKey key = entity.getData().stateRoot();
-        // if entity is root
-        if (key != null) {
-            // if alone
-            if (entity.getPrev() == null) {
-                if (states.remove(key) != null) {
-                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
-                    return true;
-                }
-            } else {
-                IntEntity prev = (IntEntity) entity.getPrev();
-                if (states.replace(key, entity, prev)) {
-                    prev.setNext(null);
-                    prev.setData(new IntEntity.Data(this, prev.getComponents(), entity.getData()));
-                    entity.setPrev(null);
-                    entity.setData(new IntEntity.Data(this, entity.getComponents(), null));
-                    return true;
-                }
-            }
-        } else if (entity.getNext() != null) {
-            long stamp = stateLock.writeLock();
-            try {
-                IntEntity prev, next;
-                if ((next = (IntEntity) entity.getNext()) != null) {
-                    if ((prev = (IntEntity) entity.getPrev()) != null) {
-                        prev.setNext(next);
-                        next.setPrev(prev);
-                    } else {
-                        next.setPrev(null);
+    public ChunkedPool.Tenant<IntEntity> fetchStateTenants(IndexKey key) {
+        return stateTenants.computeIfAbsent(key,
+                s -> {
+                    var newStateTenant = pool.newTenant(0, this, key);
+                    if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                        LOGGER.log(
+                                System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                        , "Adding state " + newStateTenant + " to " + this)
+                        );
                     }
-                }
-                entity.setPrev(null);
-                entity.setNext(null);
-                return true;
-            } finally {
-                stateLock.unlockWrite(stamp);
-            }
-        }
-        return false;
+                    return newStateTenant;
+                });
     }
 
-    private <S extends Enum<S>> void attachEntityState(IntEntity entity, S state) {
-        IndexKey indexKey = calcIndexKey(state, classIndex);
-        IntEntity.Data entityData = entity.getData();
-        IntEntity prev = states.computeIfAbsent(indexKey
-                , k -> entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k)));
-        if (prev != entity) {
-            states.computeIfPresent(indexKey, (k, oldEntity) -> {
-                entity.setPrev(oldEntity);
-                entity.setData(new IntEntity.Data(this, entityData.components(), entityData.name(), k));
-                oldEntity.setNext(entity);
-                IntEntity.Data oldEntityData = oldEntity.getData();
-                oldEntity.setData(new IntEntity.Data(this, oldEntityData.components(), oldEntityData.name(), null));
-                return entity;
-            });
-        }
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
-            LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
-                            , "Attaching state "
-                                    + state.getClass().getSimpleName() + "." + state
-                                    + " to " + entity)
-            );
-        }
+    public <S extends Enum<S>> ChunkedPool.Tenant<IntEntity> getStateTenant(S state) {
+        return getStateTenant(classIndex.getIndexKeyByEnum(state));
+    }
+
+    public ChunkedPool.Tenant<IntEntity> getStateTenant(IndexKey state) {
+        return stateTenants.get(state);
+    }
+
+    public IntEntity createEntity(boolean prepared, Object... components) {
+        return tenant.register(new IntEntity(tenant.nextId()),
+                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
+    }
+
+    public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object addedComponent, Object[] addedComponents) {
+        tenant.migrate(entity, tenant.nextId(), indexMapping, addedIndexMapping, addedComponent, addedComponents);
     }
 
     public Class<?>[] getComponentTypes() {
@@ -244,14 +137,6 @@ public final class DataComposition {
         return tenant;
     }
 
-    public Map<IndexKey, IntEntity> getStates() {
-        return Collections.unmodifiableMap(states);
-    }
-
-    public IntEntity getStateRootEntity(IndexKey key) {
-        return states.get(key);
-    }
-
     public IdSchema getIdSchema() {
         return idSchema;
     }
@@ -260,224 +145,344 @@ public final class DataComposition {
     public String toString() {
         int iMax = componentTypes.length - 1;
         if (iMax == -1)
-            return "Composition=[]";
+            return "Composition=[] with " + tenant;
         StringBuilder b = new StringBuilder("Composition=[");
         for (int i = 0; ; i++) {
             b.append(componentTypes[i].getSimpleName());
             if (i == iMax)
-                return b.append(']').toString();
+                return b.append("] with ").append(tenant).toString();
             b.append(", ");
         }
     }
 
-    public <T> Iterator<Results.With1<T>> select(Class<T> type, Iterator<IntEntity> iterator) {
-        int idx = componentIndex == null ? 0 : fetchComponentIndex(type);
-        return new IteratorWith1<>(idx, iterator, this);
+    public <T> Iterator<T> selectT(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator) {
+        int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
+        return new IteratorT<>(idx, iterator);
     }
 
-    public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, Iterator<IntEntity> iterator) {
-        return new IteratorWith2<>(
-                fetchComponentIndex(type1),
-                fetchComponentIndex(type2),
-                iterator, this);
+    public <T> Iterator<Results.With1<T>> select(Class<T> type, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith1<T> nextWith1) {
+        int idx = isMultiComponent() ? fetchComponentIndex(type) : 0;
+        return nextWith1 == null ?
+                new IteratorWith1<>(idx, iterator) :
+                new IteratorWith1Next<>(idx, iterator, nextWith1);
     }
 
-    public <T1, T2, T3> Iterator<Results.With3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Iterator<IntEntity> iterator) {
-        return new IteratorWith3<>(
-                fetchComponentIndex(type1),
-                fetchComponentIndex(type2),
-                fetchComponentIndex(type3),
-                iterator, this);
+    public <T1, T2> Iterator<Results.With2<T1, T2>> select(Class<T1> type1, Class<T2> type2, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith2<T1, T2> nextWith2) {
+        return nextWith2 == null ?
+                new IteratorWith2<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        iterator
+                ) :
+                new IteratorWith2Next<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        iterator,
+                        nextWith2
+                );
     }
 
-    public <T1, T2, T3, T4> Iterator<Results.With4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Iterator<IntEntity> iterator) {
-        return new IteratorWith4<>(
-                fetchComponentIndex(type1),
-                fetchComponentIndex(type2),
-                fetchComponentIndex(type3),
-                fetchComponentIndex(type4),
-                iterator, this);
+    public <T1, T2, T3> Iterator<Results.With3<T1, T2, T3>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith3<T1, T2, T3> nextWith3) {
+        return nextWith3 == null ?
+                new IteratorWith3<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        iterator) :
+                new IteratorWith3Next<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        iterator,
+                        nextWith3
+                );
     }
 
-    public <T1, T2, T3, T4, T5> Iterator<Results.With5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Iterator<IntEntity> iterator) {
-        return new IteratorWith5<>(
-                fetchComponentIndex(type1),
-                fetchComponentIndex(type2),
-                fetchComponentIndex(type3),
-                fetchComponentIndex(type4),
-                fetchComponentIndex(type5),
-                iterator, this);
+    public <T1, T2, T3, T4> Iterator<Results.With4<T1, T2, T3, T4>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith4<T1, T2, T3, T4> nextWith4) {
+        return nextWith4 == null ?
+                new IteratorWith4<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        iterator) :
+                new IteratorWith4Next<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        iterator,
+                        nextWith4
+                );
     }
 
-    public <T1, T2, T3, T4, T5, T6> Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, Iterator<IntEntity> iterator) {
-        return new IteratorWith6<>(
-                fetchComponentIndex(type1),
-                fetchComponentIndex(type2),
-                fetchComponentIndex(type3),
-                fetchComponentIndex(type4),
-                fetchComponentIndex(type5),
-                fetchComponentIndex(type6),
-                iterator, this);
+    public <T1, T2, T3, T4, T5> Iterator<Results.With5<T1, T2, T3, T4, T5>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith5<T1, T2, T3, T4, T5> nextWith5) {
+        return nextWith5 == null ?
+                new IteratorWith5<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        fetchComponentIndex(type5),
+                        iterator) :
+                new IteratorWith5Next<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        fetchComponentIndex(type5),
+                        iterator,
+                        nextWith5
+                );
     }
 
-    public static class StateIterator implements Iterator<IntEntity> {
-        private IntEntity next;
-
-        public StateIterator(IntEntity rootEntity) {
-            next = rootEntity;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-
-        @Override
-        public IntEntity next() {
-            var current = next;
-            next = (IntEntity) next.getPrev();
-            return current;
-        }
+    public <T1, T2, T3, T4, T5, T6> Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> select(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6, ChunkedPool.PoolDataIterator<IntEntity> iterator, ResultSet.NextWith6<T1, T2, T3, T4, T5, T6> nextWith6) {
+        return nextWith6 == null ?
+                new IteratorWith6<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        fetchComponentIndex(type5),
+                        fetchComponentIndex(type6),
+                        iterator
+                ) :
+                new IteratorWith6Next<>(
+                        fetchComponentIndex(type1),
+                        fetchComponentIndex(type2),
+                        fetchComponentIndex(type3),
+                        fetchComponentIndex(type4),
+                        fetchComponentIndex(type5),
+                        fetchComponentIndex(type6),
+                        iterator,
+                        nextWith6
+                );
     }
 
-    record IteratorWith1<T>(int idx, Iterator<IntEntity> iterator,
-                            DataComposition composition) implements Iterator<Results.With1<T>> {
+    record IteratorT<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator) implements Iterator<T> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public T next() {
+            T comp = (T) iterator.data(idx);
+            iterator.next();
+            return comp;
+        }
+    }
+
+    record IteratorWith1<T>(int idx, ChunkedPool.PoolDataIterator<IntEntity> iterator)
+            implements Iterator<Results.With1<T>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With1<T> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()) == null || data.composition() != composition) {
-            }
-            Object[] components = data.components();
-            return new Results.With1<>((T) components[idx], intEntity);
+            return new Results.With1<>((T) iterator.data(idx), iterator.next());
+        }
+    }
+
+    record IteratorWith1Next<T1>(int idx1,
+                                 ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                 ChunkedPool.PoolIteratorNextWith1 nextWith1
+    ) implements Iterator<Results.With1<T1>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With1<T1> next() {
+            return (Results.With1<T1>) iterator.next(nextWith1, idx1);
         }
     }
 
     record IteratorWith2<T1, T2>(int idx1, int idx2,
-                                 Iterator<IntEntity> iterator,
-                                 DataComposition composition) implements Iterator<Results.With2<T1, T2>> {
+                                 ChunkedPool.PoolDataIterator<IntEntity> iterator
+    ) implements Iterator<Results.With2<T1, T2>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With2<T1, T2> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
-            }
-            Object[] components = data.components();
-            return new Results.With2<>((T1) components[idx1], (T2) components[idx2], intEntity);
+
+            return new Results.With2<>(
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    iterator.next());
+        }
+    }
+
+    record IteratorWith2Next<T1, T2>(int idx1, int idx2,
+                                     ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                     ChunkedPool.PoolIteratorNextWith2 nextWith2
+    ) implements Iterator<Results.With2<T1, T2>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With2<T1, T2> next() {
+            return (Results.With2<T1, T2>) iterator.next(nextWith2, idx1, idx2);
         }
     }
 
     record IteratorWith3<T1, T2, T3>(int idx1, int idx2, int idx3,
-                                     Iterator<IntEntity> iterator,
-                                     DataComposition composition) implements Iterator<Results.With3<T1, T2, T3>> {
+                                     ChunkedPool.PoolDataIterator<IntEntity> iterator
+    ) implements Iterator<Results.With3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With3<T1, T2, T3> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
-            }
-            Object[] components = data.components();
             return new Results.With3<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    iterator.next());
+        }
+    }
+
+    record IteratorWith3Next<T1, T2, T3, T4>(int idx1, int idx2, int idx3,
+                                             ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                             ChunkedPool.PoolIteratorNextWith3 nextWith3
+    ) implements Iterator<Results.With3<T1, T2, T3>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With3<T1, T2, T3> next() {
+            return (Results.With3<T1, T2, T3>) iterator.next(nextWith3, idx1, idx2, idx3);
         }
     }
 
     record IteratorWith4<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
-                                         Iterator<IntEntity> iterator,
-                                         DataComposition composition) implements Iterator<Results.With4<T1, T2, T3, T4>> {
+                                         ChunkedPool.PoolDataIterator<IntEntity> iterator
+    ) implements Iterator<Results.With4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With4<T1, T2, T3, T4> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
-            }
-            Object[] components = data.components();
             return new Results.With4<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    iterator.next());
         }
     }
 
-    record IteratorWith5<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
-                                             Iterator<IntEntity> iterator,
-                                             DataComposition composition) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
+    record IteratorWith4Next<T1, T2, T3, T4>(int idx1, int idx2, int idx3, int idx4,
+                                             ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                             ChunkedPool.PoolIteratorNextWith4 nextWith4
+    ) implements Iterator<Results.With4<T1, T2, T3, T4>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With4<T1, T2, T3, T4> next() {
+            return (Results.With4<T1, T2, T3, T4>) iterator.next(nextWith4, idx1, idx2, idx3, idx4);
+        }
+    }
+
+
+    record IteratorWith5<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
+                                             ChunkedPool.PoolDataIterator<IntEntity> iterator
+    ) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With5<T1, T2, T3, T4, T5> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
-            }
-            Object[] components = data.components();
             return new Results.With5<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    (T5) iterator.data(idx5),
+                    iterator.next());
+        }
+    }
+
+    record IteratorWith5Next<T1, T2, T3, T4, T5>(int idx1, int idx2, int idx3, int idx4, int idx5,
+                                                 ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                                 ChunkedPool.PoolIteratorNextWith5 nextWith5
+    ) implements Iterator<Results.With5<T1, T2, T3, T4, T5>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With5<T1, T2, T3, T4, T5> next() {
+            return (Results.With5<T1, T2, T3, T4, T5>) iterator.next(nextWith5, idx1, idx2, idx3, idx4, idx5);
         }
     }
 
     record IteratorWith6<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
-                                                 Iterator<IntEntity> iterator,
-                                                 DataComposition composition) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
+                                                 ChunkedPool.PoolDataIterator<IntEntity> iterator
+    ) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
         @Override
         public boolean hasNext() {
             return iterator.hasNext();
         }
 
-        @SuppressWarnings({"unchecked", "StatementWithEmptyBody"})
+        @SuppressWarnings({"unchecked"})
         @Override
         public Results.With6<T1, T2, T3, T4, T5, T6> next() {
-            IntEntity intEntity;
-            IntEntity.Data data;
-            while ((data = (intEntity = iterator.next()).getData()).composition() != composition) {
-            }
-            Object[] components = data.components();
             return new Results.With6<>(
-                    (T1) components[idx1],
-                    (T2) components[idx2],
-                    (T3) components[idx3],
-                    (T4) components[idx4],
-                    (T5) components[idx5],
-                    (T6) components[idx6],
-                    intEntity);
+                    (T1) iterator.data(idx1),
+                    (T2) iterator.data(idx2),
+                    (T3) iterator.data(idx3),
+                    (T4) iterator.data(idx4),
+                    (T5) iterator.data(idx5),
+                    (T6) iterator.data(idx6),
+                    iterator.next());
+        }
+    }
+
+    record IteratorWith6Next<T1, T2, T3, T4, T5, T6>(int idx1, int idx2, int idx3, int idx4, int idx5, int idx6,
+                                                     ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                                     ChunkedPool.PoolIteratorNextWith6 nextWith6
+    ) implements Iterator<Results.With6<T1, T2, T3, T4, T5, T6>> {
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @SuppressWarnings({"unchecked"})
+        @Override
+        public Results.With6<T1, T2, T3, T4, T5, T6> next() {
+            return (Results.With6<T1, T2, T3, T4, T5, T6>) iterator.next(nextWith6, idx1, idx2, idx3, idx4, idx5, idx6);
         }
     }
 }

@@ -24,18 +24,19 @@ A **Dominion** is an independent container for all ECS data. The User Applicatio
 different names. It is the entry point for using the library and provides methods for creating, finding, and deleting
 items required by the user application.
 
-| Method                                                                                                         | Description                                                                                       |
-|----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| static [Dominion](#class-dominion) **create**()                                                                | Creates a new Dominion with an automatically assigned name.                                       |
-| static [Dominion](#class-dominion) **create**(String name)                                                     | Creates a new Dominion with the provided name.                                                    |
-| String **getName**()                                                                                           | Returns the Dominion name.                                                                        |
-| [Entity](#class-entity) **createEntity**(Object... components);                                                | Creates an Entity by adding zero or more POJO components.                                         |
-| [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);              | Creates an Entity by using another Entity as prefab and adding zero or more POJO components.      |
-| [Entity](#class-entity) **createEntity**(String name, Object... components);                                   | Creates a named Entity by adding zero or more POJO components.                                    |
-| [Entity](#class-entity) **createEntityAs**(String name, [Entity](#class-entity) prefab, Object... components); | Creates a named Entity by using another Entity as prefab and adding zero or more POJO components. |
-| boolean **deleteEntity**([Entity](#class-entity) entity);                                                      | Delete the  entity by freeing the id and canceling the reference to all components, if any        |
-| [Results](#class-results)<With1> **findEntitiesWith**(Class\<T> type);                                         | Finds all entities with a component of the specified type.                                        |
-| [Results](#class-results)<WithN> **findEntitiesWith**(Class\<T1> type1,..)                                     | Finds all entities with components of the specified types.                                        |
+| Method                                                                                                  | Description                                                                                  |
+|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| static [Dominion](#class-dominion) **create**()                                                         | Creates a new Dominion with an automatically assigned name.                                  |
+| static [Dominion](#class-dominion) **create**(String name)                                              | Creates a new Dominion with the provided name.                                               |
+| String **getName**()                                                                                    | Returns the Dominion name.                                                                   |
+| [Entity](#class-entity) **createEntity**(Object... components);                                         | Creates an Entity by adding zero or more POJO components.                                    |
+| [Entity](#class-entity) **createPreparedEntity**([Composition.OfTypes](#class-composition) withValues); | Creates a new Entity by passing a prepared composition of one or more POJO components.       |
+| [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);       | Creates an Entity by using another Entity as prefab and adding zero or more POJO components. |
+| boolean **deleteEntity**([Entity](#class-entity) entity);                                               | Delete the  entity by freeing the id and canceling the reference to all components, if any   |
+| [Results](#class-results)<EntityWith1> **findEntitiesWith**(Class\<T> type);                            | Finds all entities with a component of the specified type.                                   |
+| [Results](#class-results)<EntityWithN> **findEntitiesWith**(Class\<T1> type1,..)                        | Finds all entities with components of the specified types.                                   |
+| [Results](#class-results)<With1> **findCompositionsWith**(Class\<T> type);                              | Finds all compositions with a component of the specified type.                               |
+| [Results](#class-results)<WithN> **findCompositionsWith**(Class\<T1> type1,..)                          | Finds all compositions with components of the specified types.                               |
 
 ## Class Composition
 
@@ -88,10 +89,11 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 
 ## Class Results
 
-A **Results** instance is the output of the [Dominion](#class-dominion).**findEntitiesWith** methods and represents a 
-simple container of all entities that match a set of components and, optionally, have a specified state. Results can be 
-further filtered by specifying one or more component types to exclude. Both iterator and stream methods are available to 
-retrieve found entities in sequence.
+A **Results** instance is the output of the [Dominion](#class-dominion)::**findCompositionWith** and 
+::**findEntitiesWith** methods and represents a simple container of all compositions that match a set of components and,
+optionally, the related entities.
+Results can be filtered by specifying one or more component types to include or exclude in the select list.
+Both iterator and stream methods are available to retrieve the results.
 
 | Method                                                                   | Description                                                                            |
 |--------------------------------------------------------------------------|----------------------------------------------------------------------------------------|

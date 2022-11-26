@@ -7,35 +7,39 @@ package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.collections.ChunkedPool.Identifiable;
-import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.UncheckedReferenceUpdater;
+import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
+import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
-import java.util.concurrent.locks.StampedLock;
+import java.util.Arrays;
 
-public final class IntEntity implements Entity, Identifiable {
-    private static final UncheckedReferenceUpdater<IntEntity, StampedLock> lockUpdater;
+public final class IntEntity implements Entity, Item {
+    private static final UncheckedUpdater.Int<IntEntity> idUpdater;
+    private static final UncheckedUpdater.Int<IntEntity> stateIdUpdater;
 
     static {
-        UncheckedReferenceUpdater<IntEntity, StampedLock> updater = null;
+        UncheckedUpdater.Int<IntEntity> updater = null;
+        UncheckedUpdater.Int<IntEntity> stateUpdater = null;
         try {
-            updater = new UncheckedReferenceUpdater<>(IntEntity.class, "lock");
+            updater = new UncheckedUpdater.Int<>(IntEntity.class, "id");
+            stateUpdater = new UncheckedUpdater.Int<>(IntEntity.class, "stateId");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
-        lockUpdater = updater;
+        idUpdater = updater;
+        stateIdUpdater = stateUpdater;
     }
 
-    private int id;
-    private IntEntity prev = null;
-    private IntEntity next = null;
-    private volatile Data data;
-    @SuppressWarnings("unused")
-    private volatile StampedLock lock;
+    ChunkedPool.LinkedChunk<IntEntity> chunk;
+    ChunkedPool.LinkedChunk<IntEntity> stateChunk;
+    @SuppressWarnings("FieldMayBeFinal")
+    private volatile int id;
+    @SuppressWarnings("FieldMayBeFinal")
+    private volatile int stateId;
+    private Object[] shelf;
 
-    public IntEntity(int id, DataComposition composition, String name, Object... components) {
+    public IntEntity(int id) {
         this.id = id;
-        data = new Data(composition, components, name, null);
+        this.stateId = ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     @Override
@@ -45,209 +49,196 @@ public final class IntEntity implements Entity, Identifiable {
 
     @Override
     public int setId(int id) {
-        return this.id = id | (this.id & ChunkedPool.IdSchema.FLAG_BIT);
+        int prev = this.id;
+        return idUpdater.compareAndSet(this, prev, id) ? id : prev;
+    }
+
+    public int getStateId() {
+        return stateId;
     }
 
     @Override
-    public Identifiable getPrev() {
-        return prev;
-    }
-
-    @Override
-    public Identifiable setPrev(Identifiable prev) {
-        Identifiable old = this.prev;
-        this.prev = (IntEntity) prev;
-        return old;
-    }
-
-    @Override
-    public Identifiable getNext() {
-        return next;
-    }
-
-    @Override
-    public Identifiable setNext(Identifiable next) {
-        Identifiable old = this.next;
-        this.next = (IntEntity) next;
-        return old;
+    public int setStateId(int stateId) {
+        int prev = this.stateId;
+        return stateIdUpdater.compareAndSet(this, prev, stateId) ? stateId : prev;
     }
 
     public DataComposition getComposition() {
-        return data.composition;
+        return (DataComposition) chunk.getTenant().getOwner();
     }
 
-    public Object[] getComponents() {
-        return data.components;
+    public ChunkedPool.LinkedChunk<IntEntity> getChunk() {
+        return chunk;
     }
 
-    public Data getData() {
-        return data;
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+        this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
     }
 
-    IntEntity setData(Data data) {
-        this.data = data;
-        return this;
+    public ChunkedPool.LinkedChunk<IntEntity> getStateChunk() {
+        return stateChunk;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+        this.stateChunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+    }
+
+    public Object[] getComponentArray() {
+        if (chunk == null || getArrayLength() == 0) {
+            return null;
+        }
+        return chunk.getData(id);
+    }
+
+    public int getArrayLength() {
+        return chunk.getDataLength();
     }
 
     @Override
     public String getName() {
-        return data.name;
+        return null;
     }
 
     @Override
     public Entity add(Object component) {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (isDetachedId()) {
-                return null;
+        synchronized (this) {
+            if (!isEnabled()) {
+                return this;
             }
-            return data.composition.getRepository().addComponent(this, component);
-        } finally {
-            lock.unlockWrite(stamp);
+            return getComposition().getRepository().addComponent(this, component);
         }
     }
 
     @Override
     public boolean remove(Object component) {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (isDetachedId()) {
+        synchronized (this) {
+            if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, component.getClass());
-        } finally {
-            lock.unlockWrite(stamp);
+            return getComposition().getRepository().removeComponentType(this, component.getClass());
         }
     }
 
-    public boolean modify(CompositionRepository compositions, DataComposition newDataComposition, Object[] newComponentArray) {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (isDetachedId()) {
+    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
+                          Object addedComponent, Object[] addedComponents) {
+        synchronized (this) {
+            if (!isEnabled()) {
                 return false;
             }
-            compositions.modifyComponents(this, newDataComposition, newComponentArray);
+            compositions.modifyComponents(this, targetComposition, addedComponent, addedComponents);
             return true;
-        } finally {
-            lock.unlockWrite(stamp);
         }
     }
 
     @Override
     public boolean removeType(Class<?> componentType) {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (isDetachedId()) {
+        synchronized (this) {
+            if (!isEnabled()) {
                 return false;
             }
-            return data.composition.getRepository().removeComponentType(this, componentType);
-        } finally {
-            lock.unlockWrite(stamp);
+            return getComposition().getRepository().removeComponentType(this, componentType);
         }
     }
 
     @Override
     public boolean has(Class<?> componentType) {
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        data.composition.fetchComponentIndex(componentType) > -1 :
-                        data.components[0].getClass().equals(componentType));
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(id).getClass().equals(componentType);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+        return composition.fetchComponentIndex(componentType) > -1;
     }
 
     @Override
     public boolean contains(Object component) {
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
+        if (dataLength == 1) {
+            return chunk.getFromDataArray(id).equals(component);
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
         int idx;
-        var data = this.data;
-        return data.components != null && (
-                data.composition.isMultiComponent() ?
-                        (idx = data.composition.fetchComponentIndex(component.getClass())) > -1
-                                && data.components[idx].equals(component) :
-                        data.components[0].equals(component)
-        );
+        return (idx = composition.fetchComponentIndex(component.getClass())) > -1
+                && chunk.getData(getId())[idx].equals(component);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
-        return data.composition.setEntityState(this, state);
+        synchronized (this) {
+            if (!isEnabled()) {
+                return this;
+            }
+            if (state == null && stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
+                return this;
+            }
+            DataComposition composition = getComposition();
+            if (stateChunk != null) {
+                var tenant = stateChunk.getTenant();
+                if (tenant == composition.getStateTenant(state)) {
+                    return this;
+                }
+                tenant.freeStateId(stateId);
+            }
+            stateChunk = composition.fetchStateTenants(state).registerState(this);
+            return this;
+        }
     }
 
     @Override
     public boolean isEnabled() {
-        return !isDetachedId();
+        return !isDeleted() && shelf == null;
     }
 
     @Override
     public Entity setEnabled(boolean enabled) {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (enabled && isDetachedId()) {
-                data.composition.reattachEntity(this);
-            } else if (!enabled && isEnabled()) {
-                data.composition.detachEntity(this);
-            }
-            return this;
-        } finally {
-            lock.unlockWrite(stamp);
+        if (enabled && !isEnabled()) {
+            chunk.unshelve(this, shelf);
+            shelf = null;
+        } else if (!enabled && isEnabled()) {
+            shelf = chunk.shelve(this);
         }
+        return this;
     }
 
     boolean delete() {
-        createLock();
-        long stamp = lock.writeLock();
-        try {
-            if (isDetachedId()) {
-                return false;
+        synchronized (this) {
+            chunk.getTenant().freeId(id);
+            flagDetachedId();
+            chunk = null;
+            if (stateChunk != null) {
+                stateChunk.getTenant().freeStateId(stateId);
+                stateChunk = null;
             }
-            return data.composition.deleteEntity(this);
-        } finally {
-            lock.unlockWrite(stamp);
+            shelf = null;
+            return true;
         }
     }
 
-    private void createLock() {
-        if (lock == null) {
-            lockUpdater.compareAndSet(this, null, new StampedLock());
-        }
-    }
-
-    public boolean isPooledArray() {
-        return (id & ChunkedPool.IdSchema.FLAG_BIT) == ChunkedPool.IdSchema.FLAG_BIT;
-    }
-
-    void flagPooledArray() {
-        id |= ChunkedPool.IdSchema.FLAG_BIT;
-    }
-
-    boolean isDetachedId() {
+    @Override
+    public boolean isDeleted() {
         return (id & ChunkedPool.IdSchema.DETACHED_BIT) == ChunkedPool.IdSchema.DETACHED_BIT;
     }
 
     void flagDetachedId() {
-        id |= ChunkedPool.IdSchema.DETACHED_BIT;
+        setId(id | ChunkedPool.IdSchema.DETACHED_BIT);
     }
 
     @Override
     public String toString() {
-        ChunkedPool.IdSchema idSchema = data.composition.getIdSchema();
-        String name = data.name == null ? "Entity" : data.name;
-        return name + "={" +
-                "id=" + idSchema.idToString(id) +
-                ", " + data.composition +
-                ", stateRootKey=" + data.stateRoot +
-                ", prev.id=" + (prev == null ? null : idSchema.idToString(prev.id)) +
-                ", next.id=" + (next == null ? null : idSchema.idToString(next.id)) +
-                '}';
-    }
-
-    public record Data(DataComposition composition, Object[] components, String name, IndexKey stateRoot) {
-        public Data(DataComposition composition, Object[] components, Data other) {
-            this(composition, components, other == null ? null : other.name, other == null ? null : other.stateRoot);
-        }
+        ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
+        return "Entity={" +
+                "id=" + idSchema.idToString(id) + "-> " + Arrays.toString(getComponentArray()) + ", " +
+                "stateId=" + idSchema.idToString(stateId) + ", " +
+                "enabled=" + isEnabled() +
+                "}";
     }
 }
