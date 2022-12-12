@@ -187,7 +187,8 @@ Dominion is officially in _**Early Access**_.
 ## Credits
 
 [![Java Profiler](https://www.ej-technologies.com/images/product_banners/jprofiler_small.png)](https://www.ej-technologies.com/products/jprofiler/overview.html)
-[![IntelliJ IDEA logo](https://resources.jetbrains.com/storage/products/company/brand/logos/IntelliJ_IDEA.png)](https://www.jetbrains.com/community/opensource/#support)
+
+[<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/IntelliJ_IDEA_icon.svg" alt="IntelliJ Ultimate" width="75">](https://www.jetbrains.com/community/opensource/#support)
 
 ## Support Dominion
 
