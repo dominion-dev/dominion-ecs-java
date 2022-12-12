@@ -165,7 +165,7 @@ Dominion comes with some documented sample apps to help adopt the solution, like
 The **DarkEntities** sample app has also been added, it could inspire a turn-based rogue-like game running on a terminal
 window:
 
-<img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
+<img alt="dark-entities" src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
 
 Here
 the [Dominion Examples](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/README.md)
@@ -187,6 +187,8 @@ Dominion is officially in _**Early Access**_.
 ## Credits
 
 [![Java Profiler](https://www.ej-technologies.com/images/product_banners/jprofiler_small.png)](https://www.ej-technologies.com/products/jprofiler/overview.html)
+
+[<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/IntelliJ_IDEA_icon.svg" alt="IntelliJ Ultimate" width="75">](https://www.jetbrains.com/community/opensource/#support)
 
 ## Support Dominion
 
