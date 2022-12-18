@@ -131,6 +131,20 @@ class IntEntityTest {
     }
 
     @Test
+    void removeAll() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            var c1 = new C1(0);
+            int capacity = 1 << 10;
+            for (int i = 0; i < capacity; i++) {
+                entityRepository.createEntity(c1);
+            }
+            for (int i = 0; i < 10; i++) {
+                entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            }
+        }
+    }
+
+    @Test
     void addAndRemove() {
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
             var c1 = new C1(0);
@@ -213,10 +227,6 @@ class IntEntityTest {
             Assertions.assertTrue(entity3.contains(c1));
             Assertions.assertTrue(entity3.contains(c2));
         }
-    }
-
-    private static class IntWrapper {
-        int i;
     }
 
     record C1(int id) {
