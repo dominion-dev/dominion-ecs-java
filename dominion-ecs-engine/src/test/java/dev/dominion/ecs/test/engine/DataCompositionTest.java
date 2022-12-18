@@ -69,7 +69,7 @@ class DataCompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
                     , LoggingSystem.Context.TEST
                     , C1.class);
@@ -96,9 +96,9 @@ class DataCompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
-                    , LoggingSystem.Context.VERBOSE_TEST
+                    , LoggingSystem.Context.STRESS_TEST
                     , C1.class, C2.class);
             for (int i = 0; i < 1_000_000; i++) {
                 composition.createEntity(false, new C1(i), new C2(i + 1));
