@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class EntityRepositoryTest {
 
@@ -28,11 +32,26 @@ class EntityRepositoryTest {
         }
     }
 
-    //    @Test
-    void createEntityWithName() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            IntEntity entityWithName = (IntEntity) entityRepository.createEntity("an-entity");
-            Assertions.assertEquals("an-entity", entityWithName.getName());
+    @Test
+    public void concurrentCreateEntity() throws InterruptedException {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
+            final int capacity = 1 << 22;
+            final ExecutorService pool = Executors.newFixedThreadPool(10);
+            for (int i = 0; i < capacity; i++) {
+                pool.execute(() -> entityRepository.createEntity(new C1(0)));
+            }
+            pool.shutdown();
+            Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
+
+            var count = new AtomicInteger(0);
+            var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+            while (iterator.hasNext()) {
+                var rs = iterator.next();
+                Assertions.assertNotNull(rs.entity());
+                Assertions.assertNotNull(rs.comp());
+                count.getAndIncrement();
+            }
+            Assertions.assertEquals(capacity, count.get());
         }
     }
 
