@@ -132,15 +132,15 @@ class IntEntityTest {
 
     @Test
     void removeAll() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            var c1 = new C1(0);
-            int capacity = 1 << 10;
+        System.setProperty("dominion.stress-test.chunk-bit", "8");
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
+            int capacity = (1 << 8) + 1;
             for (int i = 0; i < capacity; i++) {
-                entityRepository.createEntity(c1);
+                entityRepository.createEntity(new C1(i));
             }
-            for (int i = 0; i < 10; i++) {
-                entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
-            }
+            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
         }
     }
 
