@@ -168,17 +168,17 @@ class ChunkedPoolTest {
                 Assertions.assertTrue(tenant.nextId() >= added - removed);
 
                 int last = -1;
-                try {
-                    for (int i = 0; i < added - removed; i++) {
-                        int id = array[i];
-                        Assertions.assertEquals(last, id - 1);
-                        last = id;
-                    }
-                } finally {
-                    for (int id : array) {
-                        System.out.print(id + ",");
-                    }
+//                try {
+                for (int i = 0; i < added - removed; i++) {
+                    int id = array[i];
+                    Assertions.assertEquals(last, id - 1);
+                    last = id;
                 }
+//                } finally {
+//                    for (int id : array) {
+//                        System.out.print(id + ",");
+//                    }
+//                }
             }
         }
 
