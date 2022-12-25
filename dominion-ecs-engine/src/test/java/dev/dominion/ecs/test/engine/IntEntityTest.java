@@ -132,9 +132,8 @@ class IntEntityTest {
 
     @Test
     void removeAll() {
-        System.setProperty("dominion.stress-test.chunk-bit", "8");
         try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
-            int capacity = (1 << 8) + 1;
+            int capacity = (1 << 20) + 1;
             for (int i = 0; i < capacity; i++) {
                 entityRepository.createEntity(new C1(i));
             }
