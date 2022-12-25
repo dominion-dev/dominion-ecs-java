@@ -8,33 +8,14 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
-import dev.dominion.ecs.engine.system.UncheckedUpdater;
 
 import java.util.Arrays;
 
 public final class IntEntity implements Entity, Item {
-    private static final UncheckedUpdater.Int<IntEntity> idUpdater;
-    private static final UncheckedUpdater.Int<IntEntity> stateIdUpdater;
-
-    static {
-        UncheckedUpdater.Int<IntEntity> updater = null;
-        UncheckedUpdater.Int<IntEntity> stateUpdater = null;
-        try {
-            updater = new UncheckedUpdater.Int<>(IntEntity.class, "id");
-            stateUpdater = new UncheckedUpdater.Int<>(IntEntity.class, "stateId");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        idUpdater = updater;
-        stateIdUpdater = stateUpdater;
-    }
-
     ChunkedPool.LinkedChunk<IntEntity> chunk;
     ChunkedPool.LinkedChunk<IntEntity> stateChunk;
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile int id;
-    @SuppressWarnings("FieldMayBeFinal")
-    private volatile int stateId;
+    private int id;
+    private int stateId;
     private Object[] shelf;
 
     public IntEntity(int id) {
@@ -48,9 +29,8 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public int setId(int id) {
-        int prev = this.id;
-        return idUpdater.compareAndSet(this, prev, id) ? id : prev;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getStateId() {
@@ -58,9 +38,8 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public int setStateId(int stateId) {
-        int prev = this.stateId;
-        return stateIdUpdater.compareAndSet(this, prev, stateId) ? stateId : prev;
+    public void setStateId(int stateId) {
+        this.stateId = stateId;
     }
 
     public DataComposition getComposition() {

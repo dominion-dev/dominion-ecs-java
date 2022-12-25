@@ -22,9 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = LoggingSystem.getLogger();
-//    private final AtomicReferenceArray<LinkedChunk<T>> chunks;
-//    private final AtomicInteger chunkIndex = new AtomicInteger(-1);
-
     private final LinkedChunk<T>[] chunks;
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
@@ -55,9 +52,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     private LinkedChunk<T> newChunk(Tenant<T> owner, LinkedChunk<T> previousChunk) {
         int id = ++chunkIndex;
-//        if (!chunkIndex.compareAndSet(currentChunkIndex, id = currentChunkIndex + 1)) {
-//            return null;
-//        }
         if (id > idSchema.chunkCount - 1) {
             throw new OutOfMemoryError(ChunkedPool.class.getName() + ": cannot create a new memory chunk");
         }
@@ -65,13 +59,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         if (previousChunk != null) {
             previousChunk.setNext(newChunk);
         }
-//        chunks.set(id, newChunk);
         chunks[id] = newChunk;
         return newChunk;
     }
 
     private LinkedChunk<T> getChunk(int id) {
-//        return chunks.getPlain(idSchema.fetchChunkId(id));
         return chunks[idSchema.fetchChunkId(id)];
     }
 
@@ -107,9 +99,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         int getId();
 
-        int setId(int id);
+        void setId(int id);
 
-        int setStateId(int id);
+        void setStateId(int id);
 
         LinkedChunk<? extends Item> getChunk();
 
@@ -234,7 +226,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     '}';
         }
 
-        //        @SuppressWarnings("StatementWithEmptyBody")
         public int nextId() {
             boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             if (loggable) {
@@ -263,7 +254,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                     return returnValue;
                 }
-
                 currentChunk = pool.newChunk(this, currentChunk);
                 nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                 return returnValue;
@@ -286,19 +276,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             synchronized (this) {
                 if (chunkById.isEmpty()) {
-//                    idStack.push(id);
-//                    if (loggable) {
-//                        LOGGER.log(
-//                                System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
-//                                        , "Pushing id: " + idSchema.idToString(id)
-//                                )
-//                        );
-//                    }
                     return id;
                 }
                 boolean doNotUpdateIndex = chunkById != currentChunk;
-                int reusableId = chunkById.remove(id, doNotUpdateIndex, isState);
-//                int reusableId = chunkById.remove(id, doNotUpdateIndex && !currentChunk.isEmpty(), isState);
+                int reusableId = chunkById.remove(id, isState);
                 if (loggable) {
                     LOGGER.log(
                             System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
@@ -388,10 +369,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return dataLength;
         }
 
-        public IntStack getIdStack() {
-            return idStack;
-        }
-
         public ChunkedPool<T> getPool() {
             return pool;
         }
@@ -427,9 +404,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @SuppressWarnings("ConstantConditions")
         @Override
         public boolean hasNext() {
-//            return currentChunk.size() > next
-//                    || ((next = 0) == 0 && (currentChunk = currentChunk.next) != null && !currentChunk.isEmpty());
-
             return next > -1
                     || ((currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
         }
@@ -437,7 +411,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @SuppressWarnings({"unchecked"})
         @Override
         public T next() {
-//            return (T) currentChunk.itemArray[next++];
             return (T) currentChunk.itemArray[next--];
         }
     }
@@ -689,23 +662,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return ++index;
         }
 
-        public int remove(int id, boolean doNotUpdateIndex, boolean isState) {
-//            int capacity = idSchema.chunkCapacity;
+        public int remove(int id, boolean isState) {
             int removedIndex = idSchema.fetchObjectId(id);
-//            boolean recheck = false;
-//            for (; ; ) {
             int lastIndex = --index + sizeOffset;
-//                int lastIndex = removedIndex == index ? --index + sizeOffset : index;
-//                int lastIndex = doNotUpdateIndex ? index : --index + sizeOffset;
-//                int lastIndex = doNotUpdateIndex || recheck ? index : --index + sizeOffset;
-//                recheck = false;
-
-//                if (lastIndex >= capacity) {
-//                    index.compareAndSet(capacity, capacity - 1);
-//                    index = capacity - 1;
-//                    continue;
-//                }
-
             if (lastIndex < 0) {
                 return 0;
             }
@@ -713,14 +672,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             Item removed = itemArray[removedIndex];
             if (last != null && last != removed) {
                 synchronized (itemArray[lastIndex]) {
-//                        if (!isState && last.setId(id) != id) {
-//                            recheck = true;
-//                            continue;
-//                        }
-//                        if (isState && last.setStateId(id) != id) {
-//                            recheck = true;
-//                            continue;
-//                        }
                     if (!isState) {
                         last.setId(id);
                     } else {
@@ -742,7 +693,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 itemArray[removedIndex] = null;
             }
             return idSchema.mergeId(id, lastIndex);
-//            }
         }
 
         @SuppressWarnings("unchecked")

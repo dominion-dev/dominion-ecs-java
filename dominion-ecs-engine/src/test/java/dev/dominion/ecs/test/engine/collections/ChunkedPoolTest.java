@@ -42,13 +42,11 @@ class ChunkedPoolTest {
         }
 
         @Override
-        public int setId(int id) {
-            return id;
+        public void setId(int id) {
         }
 
         @Override
-        public int setStateId(int id) {
-            return 0;
+        public void setStateId(int id) {
         }
 
         @Override
