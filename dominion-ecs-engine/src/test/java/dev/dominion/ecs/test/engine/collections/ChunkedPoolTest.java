@@ -185,7 +185,7 @@ class ChunkedPoolTest {
         @Test
         void concurrentTenants() throws InterruptedException {
             int capacity = 1 << 18;
-            int threadCount = 10;
+            int threadCount = 8;
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {

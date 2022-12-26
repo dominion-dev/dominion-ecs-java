@@ -193,7 +193,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final int dataLength;
         private final Object owner;
         private final Object subject;
-        private volatile LinkedChunk<T> currentChunk;
+        private LinkedChunk<T> currentChunk;
         private int nextId = IdSchema.DETACHED_BIT;
 
         private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, Object subject, LoggingSystem.Context loggingContext) {
@@ -666,30 +666,27 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public int remove(int id, boolean isState) {
             int removedIndex = idSchema.fetchObjectId(id);
             int lastIndex = --index + sizeOffset;
-            if (lastIndex < 0 || lastIndex >= itemArray.length) {
+            if (lastIndex < 0 || lastIndex >= idSchema.chunkCapacity) {
                 return IdSchema.DETACHED_BIT;
             }
             Item last = itemArray[lastIndex];
             Item removed = itemArray[removedIndex];
             if (last != null && last != removed) {
-                synchronized (itemArray[lastIndex]) {
-                    if (!isState) {
-                        last.setId(id);
-                    } else {
-                        last.setStateId(id);
-                    }
-
-                    if (dataLength == 1) {
-                        dataArray[removedIndex] = dataArray[lastIndex];
-                    }
-                    if (dataLength > 1) {
-                        for (int i = 0; i < dataLength; i++) {
-                            multiDataArray[i][removedIndex] = multiDataArray[i][lastIndex];
-                        }
-                    }
-                    itemArray[removedIndex] = last;
-                    itemArray[lastIndex] = null;
+                if (!isState) {
+                    last.setId(id);
+                } else {
+                    last.setStateId(id);
                 }
+                if (dataLength == 1) {
+                    dataArray[removedIndex] = dataArray[lastIndex];
+                }
+                if (dataLength > 1) {
+                    for (int i = 0; i < dataLength; i++) {
+                        multiDataArray[i][removedIndex] = multiDataArray[i][lastIndex];
+                    }
+                }
+                itemArray[removedIndex] = last;
+                itemArray[lastIndex] = null;
             } else {
                 itemArray[removedIndex] = null;
             }
