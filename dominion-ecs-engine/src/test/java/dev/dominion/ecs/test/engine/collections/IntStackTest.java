@@ -1,8 +1,6 @@
 package dev.dominion.ecs.test.engine.collections;
 
-import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.IntStack;
-import dev.dominion.ecs.engine.system.ConfigSystem;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -11,12 +9,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 class IntStackTest {
-    private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
-
     @Test
     void pop() {
-        try (IntStack stack = new IntStack(16)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, 16)) {
             Assertions.assertEquals(Integer.MIN_VALUE, stack.pop());
             stack.push(1);
             stack.push(2);
@@ -29,7 +24,7 @@ class IntStackTest {
 
     @Test
     void push() {
-        try (IntStack stack = new IntStack(8)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, 8)) {
             Assertions.assertTrue(stack.push(1));
             Assertions.assertTrue(stack.push(2));
             Assertions.assertTrue(stack.push(3));
@@ -41,7 +36,7 @@ class IntStackTest {
     void concurrentPush() throws InterruptedException {
         final int capacity = 1 << 10;
         final int limit = 1 << 20;
-        try (IntStack stack = new IntStack(capacity * 8)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity * 8)) {
             final ExecutorService pool = Executors.newFixedThreadPool(8);
             for (int i = 0; i < limit; i++) {
                 pool.execute(() -> stack.push(1));
@@ -55,7 +50,7 @@ class IntStackTest {
     @Test
     void concurrentPop() throws InterruptedException {
         final int capacity = 1 << 22;
-        try (IntStack stack = new IntStack(capacity * 8)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity * 8)) {
             final ExecutorService pool = Executors.newFixedThreadPool(4);
             for (int i = 0; i < capacity; i++) {
                 if (i % 10 == 0) {

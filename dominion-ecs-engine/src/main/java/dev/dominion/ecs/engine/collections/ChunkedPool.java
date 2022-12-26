@@ -194,7 +194,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final Object owner;
         private final Object subject;
         private volatile LinkedChunk<T> currentChunk;
-        private int nextId = Integer.MIN_VALUE;
+        private int nextId = IdSchema.DETACHED_BIT;
 
         private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, Object subject, LoggingSystem.Context loggingContext) {
             this.pool = pool;
@@ -203,7 +203,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.owner = owner;
             this.subject = subject;
             this.loggingContext = loggingContext;
-            idStack = new IntStack(ID_STACK_CAPACITY);
+            idStack = new IntStack(IdSchema.DETACHED_BIT, ID_STACK_CAPACITY);
             currentChunk = pool.newChunk(this, null);
             firstChunk = currentChunk;
             nextId();
@@ -245,7 +245,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                             )
                     );
                 }
-                if (returnValue != Integer.MIN_VALUE) {
+                if (returnValue != IdSchema.DETACHED_BIT) {
                     pool.getChunk(returnValue).incrementIndex();
                     return returnValue;
                 }
@@ -290,6 +290,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                             )
                     );
                 }
+                if (reusableId == IdSchema.DETACHED_BIT) return reusableId;
                 if (doNotUpdateIndex) {
                     if (loggable) {
                         LOGGER.log(
@@ -665,8 +666,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public int remove(int id, boolean isState) {
             int removedIndex = idSchema.fetchObjectId(id);
             int lastIndex = --index + sizeOffset;
-            if (lastIndex < 0) {
-                return 0;
+            if (lastIndex < 0 || lastIndex >= itemArray.length) {
+                return IdSchema.DETACHED_BIT;
             }
             Item last = itemArray[lastIndex];
             Item removed = itemArray[removedIndex];
