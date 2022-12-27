@@ -87,7 +87,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
 
         @Setup(Level.Invocation)
         public void setupInvocation() {
-            if(!started) return;
+            if (!started) return;
             for (int i = 0; i < size; i++) {
                 tenant.freeId(i);
             }
@@ -189,13 +189,11 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public int setId(int id) {
-                return id;
+            public void setId(int id) {
             }
 
             @Override
-            public int setStateId(int id) {
-                return 0;
+            public void setStateId(int id) {
             }
 
             @Override

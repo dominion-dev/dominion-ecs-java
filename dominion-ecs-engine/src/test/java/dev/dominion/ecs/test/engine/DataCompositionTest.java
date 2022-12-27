@@ -69,24 +69,27 @@ class DataCompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
                     , LoggingSystem.Context.TEST
                     , C1.class);
-            for (int i = 0; i < 1_000_000; i++) {
+            int capacity = 1 << 20;
+            for (int i = 0; i < capacity; i++) {
                 composition.createEntity(false, new C1(i));
             }
             var iterator = composition.selectT(C1.class, composition.getTenant().noItemIterator());
-            int i = 0;
+            long lastId = 0;
             while (iterator.hasNext()) {
                 long id = iterator.next().id;
-                Assertions.assertEquals(i++, id);
+                Assertions.assertTrue((id + 1) % ID_SCHEMA.chunkCapacity() == 0 || lastId - 1 == id);
+                lastId = id;
             }
             var iteratorE = composition.select(C1.class, composition.getTenant().iterator(), null);
-            i = 0;
+            lastId = 0;
             while (iteratorE.hasNext()) {
                 long id = iteratorE.next().comp().id;
-                Assertions.assertEquals(i++, id);
+                Assertions.assertTrue((id + 1) % ID_SCHEMA.chunkCapacity() == 0 || lastId - 1 == id);
+                lastId = id;
             }
         }
     }
@@ -96,31 +99,37 @@ class DataCompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
-                    , LoggingSystem.Context.VERBOSE_TEST
+                    , LoggingSystem.Context.STRESS_TEST
                     , C1.class, C2.class);
-            for (int i = 0; i < 1_000_000; i++) {
+            int capacity = 1 << 20;
+            for (int i = 0; i < capacity; i++) {
                 composition.createEntity(false, new C1(i), new C2(i + 1));
             }
             ChunkedPool.Tenant<IntEntity> tenant = composition.getTenant();
             var iterator = composition.select(C1.class, C2.class, tenant.noItemIterator(), null);
-            int i = 0;
+            long lastId1 = 0, lastId2 = 0;
             while (iterator.hasNext()) {
                 var next = iterator.next();
                 long id1 = next.comp1().id;
                 long id2 = next.comp2().id;
-                Assertions.assertEquals(i++, id1);
-                Assertions.assertEquals(i, id2);
+                Assertions.assertTrue((id1 + 1) % ID_SCHEMA.chunkCapacity() == 0 || lastId1 - 1 == id1);
+                Assertions.assertTrue((id2) % ID_SCHEMA.chunkCapacity() == 0 || lastId2 - 1 == id2);
+                lastId1 = id1;
+                lastId2 = id2;
             }
             var iteratorE = composition.select(C1.class, C2.class, tenant.iterator(), null);
-            i = 0;
+            lastId1 = 0;
+            lastId2 = 0;
             while (iteratorE.hasNext()) {
                 var next = iteratorE.next();
                 long id1 = next.comp1().id;
                 long id2 = next.comp2().id;
-                Assertions.assertEquals(i++, id1);
-                Assertions.assertEquals(i, id2);
+                Assertions.assertTrue((id1 + 1) % ID_SCHEMA.chunkCapacity() == 0 || lastId1 - 1 == id1);
+                Assertions.assertTrue((id2) % ID_SCHEMA.chunkCapacity() == 0 || lastId2 - 1 == id2);
+                lastId1 = id1;
+                lastId2 = id2;
             }
         }
     }

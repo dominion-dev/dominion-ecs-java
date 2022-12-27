@@ -8,82 +8,82 @@ natively with JDK Azul-17 aarch64:
 
 | 1,000,000 Entities                                 | Average Time |
 |:---------------------------------------------------|:------------:|
-| **Create** entities with **no** component          |   0.021 s    |
+| **Create** entities with **no** component          |   0.016 s    |
 |                                                    |              |
 | **Create** entities with **1** component           |   0.034 s    |
-| **Create** entities with **2** components          |   0.047 s    |
-| **Create** entities with **4** components          |   0.077 s    |
-| **Create** entities with **8** components          |   0.096 s    |
+| **Create** entities with **2** components          |   0.063 s    |
+| **Create** entities with **4** components          |   0.064 s    |
+| **Create** entities with **8** components          |   0.093 s    |
 |                                                    |              |
-| **Create** prepared entities with **1** component  |   0.027 s    |
-| **Create** prepared entities with **2** components |   0.031 s    |
-| **Create** prepared entities with **4** components |   0.042 s    |
-| **Create** prepared entities with **8** components |   0.078 s    |
+| **Create** prepared entities with **1** component  |   0.018 s    |
+| **Create** prepared entities with **2** components |   0.026 s    |
+| **Create** prepared entities with **4** components |   0.039 s    |
+| **Create** prepared entities with **8** components |   0.068 s    |
 |                                                    |              |
-| **Delete** entities with **1** component           |   0.016 s    |
-| **Delete** entities with **2** components          |   0.017 s    |
-| **Delete** entities with **4** components          |   0.017 s    |
-| **Delete** entities with **8** components          |   0.016 s    |
+| **Delete** entities with **1** component           |   0.019 s    |
+| **Delete** entities with **2** components          |   0.021 s    |
+| **Delete** entities with **4** components          |   0.021 s    |
+| **Delete** entities with **8** components          |   0.028 s    |
 |                                                    |              |
 
 | 1,000,000 Entities                         | Average Time |
 |--------------------------------------------|:------------:|
-| **Add** up to **1** component              |   0.054 s    |
-| **Add** up to **2** components             |   0.055 s    |
-| **Add** up to **4** components             |   0.062 s    |
-| **Add** up to **8** components             |   0.084 s    |
+| **Add** up to **1** component              |   0.051 s    |
+| **Add** up to **2** components             |   0.058 s    |
+| **Add** up to **4** components             |   0.068 s    |
+| **Add** up to **8** components             |   0.093 s    |
 |                                            |              |
-| **Remove** from **1** component            |   0.049 s    |
-| **Remove** from **2** components           |   0.052 s    |
-| **Remove** from **4** components           |   0.059 s    |
-| **Remove** from **8** components           |   0.092 s    |
+| **Remove** from **1** component            |   0.053 s    |
+| **Remove** from **2** components           |   0.057 s    |
+| **Remove** from **4** components           |   0.067 s    |
+| **Remove** from **8** components           |   0.091 s    |
 |                                            |              |
-| **Modify** with **1** component            |   0.039 s    |
-| **Modify** with **2** components           |   0.046 s    |
-| **Modify** with **4** components           |   0.051 s    |
-| **Modify** with **8** components           |   0.085 s    |
+| **Modify** with **1** component            |   0.048 s    |
+| **Modify** with **2** components           |   0.051 s    |
+| **Modify** with **4** components           |   0.059 s    |
+| **Modify** with **8** components           |   0.082 s    |
 |                                            |              |
 | **SetState** with **1** component          |   0.047 s    |
-| **SetState** with **2** component          |   0.047 s    |
-| **SetState** with **4** components         |   0.048 s    |
-| **SetState** with **8** components         |   0.048 s    |
+| **SetState** with **2** component          |   0.046 s    |
+| **SetState** with **4** components         |   0.046 s    |
+| **SetState** with **8** components         |   0.046 s    |
 |                                            |              |
-| **Enable** entities with **1** component   |   0.023 s    |
-| **Enable** entities with **2** components  |   0.025 s    |
-| **Enable** entities with **4** components  |   0.037 s    |
-| **Enable** entities with **8** components  |   0.047 s    |
+| **Enable** entities with **1** component   |   0.019 s    |
+| **Enable** entities with **2** components  |   0.026 s    |
+| **Enable** entities with **4** components  |   0.030 s    |
+| **Enable** entities with **8** components  |   0.041 s    |
 |                                            |              |
-| **Disable** entities with **1** component  |   0.019 s    |
-| **Disable** entities with **2** components |   0.020 s    |
-| **Disable** entities with **4** components |   0.024 s    |
-| **Disable** entities with **8** components |   0.032 s    |
+| **Disable** entities with **1** component  |   0.027 s    |
+| **Disable** entities with **2** components |   0.030 s    |
+| **Disable** entities with **4** components |   0.034 s    |
+| **Disable** entities with **8** components |   0.049 s    |
 |                                            |              |
-| **Has** with **1** component type          |   0.007 s    |
-| **Has** with **2** component types         |   0.010 s    |
-| **Has** with **4** component types         |   0.011 s    |
-| **Has** with **8** component types         |   0.011 s    |
+| **Has** with **1** component type          |   0.008 s    |
+| **Has** with **2** component types         |   0.009 s    |
+| **Has** with **4** component types         |   0.010 s    |
+| **Has** with **8** component types         |   0.014 s    |
 |                                            |              |
-| **Contains** with **1** component          |   0.006 s    |
-| **Contains** with **2** components         |   0.015 s    |
-| **Contains** with **4** components         |   0.018 s    |
-| **Contains** with **8** components         |   0.025 s    |
+| **Contains** with **1** component          |   0.008 s    |
+| **Contains** with **2** components         |   0.013 s    |
+| **Contains** with **4** components         |   0.019 s    |
+| **Contains** with **8** components         |   0.024 s    |
 |                                            |              |
 
 | 10,000,000 Entities                             | Average Time | Using _State_ - Average Time |
 |-------------------------------------------------|:------------:|:----------------------------:|
-| **Iterate** entities unpacking **1** component  |   0.010 s    |           0.048 s            |
-| **Iterate** entities unpacking **2** components |   0.023 s    |           0.044 s            |
-| **Iterate** entities unpacking **3** components |   0.028 s    |           0.070 s            |
-| **Iterate** entities unpacking **4** components |   0.033 s    |           0.101 s            |
-| **Iterate** entities unpacking **5** components |   0.038 s    |           0.126 s            |
-| **Iterate** entities unpacking **6** components |   0.043 s    |           0.137 s            |
+| **Iterate** entities unpacking **1** component  |   0.007 s    |           0.041 s            |
+| **Iterate** entities unpacking **2** components |   0.019 s    |           0.042 s            |
+| **Iterate** entities unpacking **3** components |   0.023 s    |           0.082 s            |
+| **Iterate** entities unpacking **4** components |   0.029 s    |           0.057 s            |
+| **Iterate** entities unpacking **5** components |   0.034 s    |           0.062 s            |
+| **Iterate** entities unpacking **6** components |   0.039 s    |           0.136 s            |
 |                                                 |              |                              |
-| **Stream** entities unpacking **1** component   |   0.025 s    |           0.061 s            |
-| **Stream** entities unpacking **2** components  |   0.045 s    |           0.068 s            |
-| **Stream** entities unpacking **3** components  |   0.056 s    |           0.081 s            |
-| **Stream** entities unpacking **4** components  |   0.065 s    |           0.094 s            |
-| **Stream** entities unpacking **5** components  |   0.077 s    |           0.130 s            |
-| **Stream** entities unpacking **6** components  |   0.103 s    |           0.139 s            |
+| **Stream** entities unpacking **1** component   |   0.023 s    |           0.050 s            |
+| **Stream** entities unpacking **2** components  |   0.040 s    |           0.064 s            |
+| **Stream** entities unpacking **3** components  |   0.052 s    |           0.079 s            |
+| **Stream** entities unpacking **4** components  |   0.062 s    |           0.091 s            |
+| **Stream** entities unpacking **5** components  |   0.075 s    |           0.106 s            |
+| **Stream** entities unpacking **6** components  |   0.094 s    |           0.136 s            |
 |                                                 |              |                              |
 
 ## Java and benchmarks
