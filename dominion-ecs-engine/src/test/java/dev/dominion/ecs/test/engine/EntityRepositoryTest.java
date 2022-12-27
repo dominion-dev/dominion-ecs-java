@@ -384,6 +384,44 @@ class EntityRepositoryTest {
         }
     }
 
+    @Test
+    void findEntitiesByMoreComponentsThanExpected() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+    }
+
+    @Test
+    void findEntitiesByWrongComposition() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            entityRepository.createEntity(new C3(0), new C4(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+    }
+
+    @Test
+    void findEntitiesWithAlsoUnregisteredComponent() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+    }
+
     enum State {
         ONE, TWO
     }
