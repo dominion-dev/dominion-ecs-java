@@ -1,7 +1,8 @@
 # <img src="https://raw.githubusercontent.com/dominion-dev/dominion-dev.github.io/main/dominion-logo-square.png" align="right" width="100"> Dominion VS Others
 
-The Dominion project provides several benchmarks of all its features, but this suite provides a clear comparison to
-other ECS libraries to see some of the same features in isolation.
+The Dominion project provides
+several [benchmarks](https://github.com/dominion-dev/dominion-ecs-java/tree/main/dominion-ecs-engine-benchmarks/README.md)
+of all its features, but this suite provides a clear comparison to other ECS libraries to see some of the same features in isolation.
 
 ECS frameworks tested:
 
@@ -39,34 +40,34 @@ natively with JDK Azul-17 aarch64:
 
 ---
 
-| 1,000,000 Entities                        | Dominion Throughput | Artemis Throughput |
-|:------------------------------------------|:-------------------:|:------------------:|
-| **Add** up to **1** component             |    19.249 ops/s     |    18.831 ops/s    |
-| **Add** up to **2** components            |    17.321 ops/s     |    18.421 ops/s    |
-| **Add** up to **4** components            |    14.818 ops/s     |    18.974 ops/s    |
-| **Add** up to **6** components            |    13.123 ops/s     |    17.357 ops/s    |
+| 1,000,000 Entities             | Dominion Throughput | Artemis Throughput |
+|:-------------------------------|:-------------------:|:------------------:|
+| **Add** up to **1** component  |    19.249 ops/s     |    18.831 ops/s    |
+| **Add** up to **2** components |    17.321 ops/s     |    18.421 ops/s    |
+| **Add** up to **4** components |    14.818 ops/s     |    18.974 ops/s    |
+| **Add** up to **6** components |    13.123 ops/s     |    17.357 ops/s    |
 
 <img alt="add" src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Add+Component+to+1M+Entities+-+throughput+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,20&chxr=0,0,20&chd=t:19.249,17.321,14.818,13.123|18.831,18.421,18.974,17.357">
 
 ---
 
-| 1,000,000 Entities                        | Dominion Throughput | Artemis Throughput |
-|:------------------------------------------|:-------------------:|:------------------:|
-| **Remove** from **1** component           |    19.095 ops/s     |    25.101 ops/s    |
-| **Remove** from **2** components          |    17.680 ops/s     |    23.838 ops/s    |
-| **Remove** from **4** components          |    14.762 ops/s     |    24.717 ops/s    |
-| **Remove** from **6** components          |    12.708 ops/s     |    24.944 ops/s    |
+| 1,000,000 Entities               | Dominion Throughput | Artemis Throughput |
+|:---------------------------------|:-------------------:|:------------------:|
+| **Remove** from **1** component  |    19.095 ops/s     |    25.101 ops/s    |
+| **Remove** from **2** components |    17.680 ops/s     |    23.838 ops/s    |
+| **Remove** from **4** components |    14.762 ops/s     |    24.717 ops/s    |
+| **Remove** from **6** components |    12.708 ops/s     |    24.944 ops/s    |
 
 <img alt="remove" src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Remove+Component+from+1M+Entities+-+throughput+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,30&chxr=0,0,30&chd=t:19.095,17.680,14.762,12.708|25.101,23.838,24.717,24.944">
 
 ---
 
-| 1,000,000 Entities                        | Dominion Throughput | Artemis Throughput |
-|:------------------------------------------|:-------------------:|:------------------:|
-| **Delete** entities with **1** component  |    47.474 ops/s     |    48.193 ops/s    |
-| **Delete** entities with **2** component  |    47.052 ops/s     |    40.987 ops/s    |
-| **Delete** entities with **4** component  |    46.718 ops/s     |    31.064 ops/s    |
-| **Delete** entities with **6** component  |    31.415 ops/s     |    26.456 ops/s    |
+| 1,000,000 Entities                       | Dominion Throughput | Artemis Throughput |
+|:-----------------------------------------|:-------------------:|:------------------:|
+| **Delete** entities with **1** component |    47.474 ops/s     |    48.193 ops/s    |
+| **Delete** entities with **2** component |    47.052 ops/s     |    40.987 ops/s    |
+| **Delete** entities with **4** component |    46.718 ops/s     |    31.064 ops/s    |
+| **Delete** entities with **6** component |    31.415 ops/s     |    26.456 ops/s    |
 
 <img alt="delete" src="https://chart.googleapis.com/chart?cht=bvg&chof=png&chs=600x300&chbh=25,3,30&chdl=Dominion|Artemis&chco=3333FF,8888FF&chxt=y,x&chg=25,0&chma=50&chtt=Delete+1M+Entities+-+throughput+ops/s&chl=1+comp|2+comp|4+comp|6+comp&chds=0,50&chxr=0,0,50&chd=t:47.474,47.052,46.718,31.415|48.193,40.987,31.064,26.456">
 
