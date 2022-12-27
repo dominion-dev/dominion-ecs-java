@@ -50,7 +50,7 @@ public abstract class ResultSet<T> implements Results<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return nodeMap != null ?
+        return nodeMap != null && nodeMap.size() > 0 ?
                 (nodeMap.size() > 1 ?
                         new IteratorWrapper<>(this, nodeMap.values().iterator()) :
                         compositionIterator(nodeMap.values().iterator().next().getComposition()))
