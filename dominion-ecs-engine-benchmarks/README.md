@@ -10,15 +10,15 @@ natively with JDK Azul-17 aarch64:
 |:---------------------------------------------------|:------------:|
 | **Create** entities with **no** component          |   0.016 s    |
 |                                                    |              |
-| **Create** entities with **1** component           |   0.034 s    |
+| **Create** entities with **1** component           |   0.035 s    |
 | **Create** entities with **2** components          |   0.063 s    |
-| **Create** entities with **4** components          |   0.064 s    |
-| **Create** entities with **8** components          |   0.093 s    |
+| **Create** entities with **4** components          |   0.066 s    |
+| **Create** entities with **8** components          |   0.095 s    |
 |                                                    |              |
 | **Create** prepared entities with **1** component  |   0.018 s    |
-| **Create** prepared entities with **2** components |   0.026 s    |
+| **Create** prepared entities with **2** components |   0.029 s    |
 | **Create** prepared entities with **4** components |   0.039 s    |
-| **Create** prepared entities with **8** components |   0.068 s    |
+| **Create** prepared entities with **8** components |   0.059 s    |
 |                                                    |              |
 | **Delete** entities with **1** component           |   0.019 s    |
 | **Delete** entities with **2** components          |   0.021 s    |
