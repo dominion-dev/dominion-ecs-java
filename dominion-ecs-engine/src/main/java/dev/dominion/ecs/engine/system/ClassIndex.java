@@ -148,8 +148,7 @@ public final class ClassIndex implements AutoCloseable {
         boolean[] checkArray = new boolean[index + length + 1];
         int min = Integer.MAX_VALUE, max = 0;
         for (int i = 0; i < length; i++) {
-            int value = getIndex(objects[i].getClass());
-            value = value == 0 ? getIndexOrAddClass(objects[i].getClass()) : value;
+            int value = getIndexOrAddClass(objects[i].getClass());
             if (checkArray[value]) {
                 throw new IllegalArgumentException("Duplicate object types are not allowed");
             }
@@ -166,8 +165,7 @@ public final class ClassIndex implements AutoCloseable {
         boolean[] checkArray = new boolean[index + length + 1];
         int min = Integer.MAX_VALUE, max = 0;
         for (int i = 0; i < length; i++) {
-            int value = getIndex(classes[i]);
-            value = value == 0 ? getIndexOrAddClass(classes[i]) : value;
+            int value = getIndexOrAddClass(classes[i]);
             if (checkArray[value]) {
                 throw new IllegalArgumentException("Duplicate object types are not allowed");
             }

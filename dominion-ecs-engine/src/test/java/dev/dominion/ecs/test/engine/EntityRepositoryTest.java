@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class EntityRepositoryTest {
 
@@ -28,11 +32,26 @@ class EntityRepositoryTest {
         }
     }
 
-    //    @Test
-    void createEntityWithName() {
-        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
-            IntEntity entityWithName = (IntEntity) entityRepository.createEntity("an-entity");
-            Assertions.assertEquals("an-entity", entityWithName.getName());
+    @Test
+    public void concurrentCreateEntity() throws InterruptedException {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test")) {
+            final int capacity = 1 << 22;
+            final ExecutorService pool = Executors.newFixedThreadPool(10);
+            for (int i = 0; i < capacity; i++) {
+                pool.execute(() -> entityRepository.createEntity(new C1(0), new C2(0)));
+            }
+            pool.shutdown();
+            Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
+
+            var count = new AtomicInteger(0);
+            var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+            while (iterator.hasNext()) {
+                var rs = iterator.next();
+                Assertions.assertNotNull(rs.entity());
+                Assertions.assertNotNull(rs.comp());
+                count.getAndIncrement();
+            }
+            Assertions.assertEquals(capacity, count.get());
         }
     }
 
@@ -362,6 +381,44 @@ class EntityRepositoryTest {
             Assertions.assertEquals(4, next2.comp1().id);
             Assertions.assertEquals(5, next2.comp2().id);
             Assertions.assertEquals(entity2, next2.entity());
+        }
+    }
+
+    @Test
+    void findEntitiesByMoreComponentsThanExpected() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+    }
+
+    @Test
+    void findEntitiesByWrongComposition() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            entityRepository.createEntity(new C3(0), new C4(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
+        }
+    }
+
+    @Test
+    void findEntitiesWithAlsoUnregisteredComponent() {
+        try (EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test")) {
+            entityRepository.createEntity(new C1(0), new C2(0));
+            AtomicInteger count = new AtomicInteger(0);
+            entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).stream().forEach((rs) -> count.incrementAndGet());
+            Assertions.assertEquals(0, count.get());
         }
     }
 

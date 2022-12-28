@@ -42,13 +42,11 @@ class ChunkedPoolTest {
         }
 
         @Override
-        public int setId(int id) {
-            return id;
+        public void setId(int id) {
         }
 
         @Override
-        public int setStateId(int id) {
-            return 0;
+        public void setStateId(int id) {
         }
 
         @Override
@@ -70,7 +68,7 @@ class ChunkedPoolTest {
 
         @Test
         public void nextId() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
@@ -87,7 +85,7 @@ class ChunkedPoolTest {
 
         @Test
         public void freeIdAndStateId() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
@@ -115,53 +113,82 @@ class ChunkedPoolTest {
 
         @Test
         public void concurrentNextId() throws InterruptedException {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
-                final int capacity = 1 << 20;
-                final ExecutorService pool = Executors.newFixedThreadPool(8);
+                int capacity = 1 << 20;
+                ExecutorService pool = Executors.newFixedThreadPool(16);
+                int[] array = new int[capacity];
                 for (int i = 0; i < capacity; i++) {
-                    pool.execute(tenant::nextId);
+                    pool.execute(() -> {
+                        int nextId = tenant.nextId();
+                        array[nextId] = nextId;
+                    });
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
                 int actual = tenant.nextId();
                 Assertions.assertEquals(capacity, actual);
                 Assertions.assertEquals(actual + 1, chunkedPool.size());
+                int last = -1;
+                for (int id : array) {
+                    Assertions.assertEquals(last, id - 1);
+                    last = id;
+                }
             }
         }
 
         @Test
         public void concurrentNextAndFreeId() throws InterruptedException {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+//            System.setProperty("dominion.logging-level", "TRACE");
+//            System.setProperty("dominion.dominion-1.logging-level", "TRACE");
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+//            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(new ChunkedPool.IdSchema(8), LoggingSystem.Context.TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
-                final int capacity = 1 << 20;
+                final int capacity = 1 << 16;
                 final ExecutorService pool = Executors.newFixedThreadPool(8);
                 int added = 0;
                 int removed = 0;
+                int[] array = new int[capacity];
                 for (int i = 0; i < capacity; i++) {
                     if (i % 10 == 0) {
-                        final int idx = (int) (i * 0.7);
+                        final int idx = (int) (i * 0.1);
                         pool.execute(() -> tenant.freeId(idx));
                         removed++;
                     }
-                    pool.execute(tenant::nextId);
+                    pool.execute(() -> {
+                        int nextId = tenant.nextId();
+                        array[nextId] = nextId;
+                    });
                     added++;
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-                Assertions.assertEquals(0, tenant.getIdStack().size());
-                Assertions.assertEquals(added - removed, chunkedPool.size());
+//                Assertions.assertEquals(0, tenant.getIdStack().size());
+                Assertions.assertEquals(added - removed, chunkedPool.size() - 1);
                 Assertions.assertTrue(tenant.nextId() >= added - removed);
+
+                int last = -1;
+//                try {
+                for (int i = 0; i < added - removed; i++) {
+                    int id = array[i];
+                    Assertions.assertEquals(last, id - 1);
+                    last = id;
+                }
+//                } finally {
+//                    for (int id : array) {
+//                        System.out.print(id + ",");
+//                    }
+//                }
             }
         }
 
         @Test
         void concurrentTenants() throws InterruptedException {
             int capacity = 1 << 18;
-            int threadCount = 10;
+            int threadCount = 8;
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
                 final ChunkedPool.Tenant<TestEntity> tenant1 = chunkedPool.newTenant(1, null, 1);
                 final ChunkedPool.Tenant<TestEntity> tenant2 = chunkedPool.newTenant(2, null, 2);
                 final ChunkedPool.Tenant<TestEntity> tenant3 = chunkedPool.newTenant(3, null, 3);
@@ -193,19 +220,21 @@ class ChunkedPoolTest {
 
         @Test
         public void iterator() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.VERBOSE_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
                 Iterator<TestEntity> iterator = tenant.iterator();
                 Assertions.assertFalse(iterator.hasNext());
-                for (int i = 0; i < 1_000_000; i++) {
+                int capacity = 1 << 20;
+                for (int i = 0; i < capacity; i++) {
                     tenant.register(new TestEntity(tenant.nextId(), null, null), null);
                 }
                 iterator = tenant.iterator();
-                int i = 0;
+                long lastId = 0;
                 while (iterator.hasNext()) {
                     long id = iterator.next().id;
-                    Assertions.assertEquals(i++, id);
+                    Assertions.assertTrue((id + 1) % ID_SCHEMA.chunkCapacity() == 0 || lastId - 1 == id);
+                    lastId = id;
                 }
             }
         }

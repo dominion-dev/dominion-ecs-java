@@ -81,6 +81,7 @@ public final class CompositionRepository implements AutoCloseable {
                 byRemoving;
     }
 
+    @SuppressWarnings("EnhancedSwitchMigration")
     public DataComposition getOrCreate(Object[] components) {
         int componentsLength = components == null ? 0 : components.length;
         switch (componentsLength) {
@@ -98,6 +99,7 @@ public final class CompositionRepository implements AutoCloseable {
         }
     }
 
+    @SuppressWarnings("EnhancedSwitchMigration")
     public DataComposition getOrCreateByType(Class<?>[] componentTypes) {
         int length = componentTypes == null ? 0 : componentTypes.length;
         switch (length) {
@@ -218,7 +220,7 @@ public final class CompositionRepository implements AutoCloseable {
                 for (int i = 0; i < componentTypes.length; i++) {
                     node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentTypes[i])));
                     if (node == null) {
-                        continue;
+                        return null;
                     }
                     currentCompositions = currentCompositions == null ?
                             node.copyOfLinkedNodes() :
@@ -230,9 +232,6 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public void mapWithout(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
-        if (componentTypes.length == 0) {
-            return;
-        }
         for (Class<?> componentType : componentTypes) {
             IndexKey indexKey = new IndexKey(classIndex.getIndex(componentType));
             nodeMap.remove(indexKey);
@@ -246,13 +245,11 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public void mapWithAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
-        if (componentTypes.length == 0) {
-            return;
-        }
         for (Class<?> componentType : componentTypes) {
             Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
             if (node == null) {
-                continue;
+                nodeMap.clear();
+                return;
             }
             intersect(nodeMap, node.linkedNodes);
         }

@@ -16,10 +16,12 @@ public final class IntStack implements AutoCloseable {
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
     private final StampedLock lock = new StampedLock();
+    private final int nullInt;
     private long address;
     private int capacity;
 
-    public IntStack(int initialCapacity) {
+    public IntStack(int nullInt, int initialCapacity) {
+        this.nullInt = nullInt;
         this.capacity = initialCapacity;
         address = unsafe.allocateMemory(initialCapacity);
     }
@@ -27,7 +29,7 @@ public final class IntStack implements AutoCloseable {
     public int pop() {
         int i = index.get();
         if (i < 0) {
-            return Integer.MIN_VALUE;
+            return nullInt;
         }
         int returnValue = unsafe.getInt(address + i);
         returnValue = index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
