@@ -38,7 +38,7 @@ class EntityRepositoryTest {
             final int capacity = 1 << 22;
             final ExecutorService pool = Executors.newFixedThreadPool(10);
             for (int i = 0; i < capacity; i++) {
-                pool.execute(() -> entityRepository.createEntity(new C1(0)));
+                pool.execute(() -> entityRepository.createEntity(new C1(0), new C2(0)));
             }
             pool.shutdown();
             Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
