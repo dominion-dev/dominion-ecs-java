@@ -45,7 +45,7 @@
                             <goal>write-project-properties</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${project.build.outputDirectory}/from-pom.properties</outputFile>
+                            <outputFile>${project.build.outputDirectory}/dominion-ecs-java/from-pom.properties</outputFile>
                         </configuration>
                     </execution>
                 </executions>
