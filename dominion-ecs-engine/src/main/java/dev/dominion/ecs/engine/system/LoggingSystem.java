@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
 public final class LoggingSystem {
-    public static final String POM_PROPERTIES = "from-pom.properties";
+    public static final String POM_PROPERTIES = "dominion-ecs-java/from-pom.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
     public static final System.Logger.Level DEFAULT_LOGGING_LEVEL = System.Logger.Level.INFO;
