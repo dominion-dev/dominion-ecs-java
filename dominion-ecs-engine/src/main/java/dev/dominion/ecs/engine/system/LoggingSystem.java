@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
 public final class LoggingSystem {
-    public static final String POM_PROPERTIES = "from-pom.properties";
+    public static final String PROJECT_PROPERTIES = "dominion-ecs-java/project.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
     public static final System.Logger.Level DEFAULT_LOGGING_LEVEL = System.Logger.Level.INFO;
@@ -102,7 +102,7 @@ public final class LoggingSystem {
 
     private static String fetchPomVersion() throws IOException {
         InputStream is = LoggingSystem.class.getClassLoader()
-                .getResourceAsStream(POM_PROPERTIES);
+                .getResourceAsStream(PROJECT_PROPERTIES);
         if (is == null) return "?";
         Properties properties = new Properties();
         properties.load(is);
