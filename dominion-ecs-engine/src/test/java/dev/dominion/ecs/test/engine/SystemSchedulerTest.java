@@ -2,8 +2,8 @@ package dev.dominion.ecs.test.engine;
 
 import dev.dominion.ecs.api.Scheduler;
 import dev.dominion.ecs.engine.SystemScheduler;
-import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.LoggingSystem.Context;
+import dev.dominion.ecs.engine.system.Config;
+import dev.dominion.ecs.engine.system.Logging.Context;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +14,7 @@ class SystemSchedulerTest {
 
     @Test
     void schedule() {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         int initialValue = 17, prime = 31;
         AtomicInteger count = new AtomicInteger(initialValue);
         scheduler.schedule(() -> count.getAndUpdate(value -> value * prime + 1));
@@ -26,7 +26,7 @@ class SystemSchedulerTest {
 
     @Test
     void scheduleWithException() {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         Runnable systemA = scheduler.schedule(() -> {
             throw new RuntimeException("Test system runtime exception");
         });
@@ -56,7 +56,7 @@ class SystemSchedulerTest {
 
     @Test
     void parallelSchedule() {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         int initialValue = 17, prime = 31;
         AtomicInteger count = new AtomicInteger(initialValue);
         scheduler.schedule(() -> count.getAndUpdate(value -> value * prime + 1));
@@ -71,7 +71,7 @@ class SystemSchedulerTest {
 
     @Test
     void suspendAndResume() {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         int initialValue = 17, prime = 31;
         AtomicInteger count = new AtomicInteger(initialValue);
         Runnable runnable1 = scheduler.schedule(() -> count.getAndUpdate(value -> value * prime + 1));
@@ -110,7 +110,7 @@ class SystemSchedulerTest {
 
     @Test
     void forkAndJoin() {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         int initialValue = 17, prime = 31;
         AtomicInteger count = new AtomicInteger(initialValue);
         scheduler.schedule(() -> count.getAndUpdate(value -> value * prime + 1));
@@ -135,7 +135,7 @@ class SystemSchedulerTest {
 
     @Test
     void tickAtFixedRate() throws InterruptedException {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         AtomicInteger count = new AtomicInteger(0);
         scheduler.schedule(count::incrementAndGet);
         scheduler.tickAtFixedRate(60);
@@ -150,7 +150,7 @@ class SystemSchedulerTest {
 
     @Test
     void deltaTime() throws InterruptedException {
-        Scheduler scheduler = new SystemScheduler(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
+        Scheduler scheduler = new SystemScheduler(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS, Context.TEST);
         AtomicReference<Double> count = new AtomicReference<>(0d);
         scheduler.schedule(() -> count.set(count.get() + scheduler.deltaTime()));
         scheduler.tickAtFixedRate(60);

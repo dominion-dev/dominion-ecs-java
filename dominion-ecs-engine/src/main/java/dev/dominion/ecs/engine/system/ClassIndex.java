@@ -24,7 +24,7 @@ public final class ClassIndex implements AutoCloseable {
     public static final int DEFAULT_HASH_BIT = 20; // 1MB -> about 1K classes
     public static final int MIN_HASH_BIT = 14;
     public static final int MAX_HASH_BIT = 24;
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private final Map<Object, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
     private final int hashBit;
@@ -42,18 +42,18 @@ public final class ClassIndex implements AutoCloseable {
     };
 
     public ClassIndex() {
-        this(DEFAULT_HASH_BIT, true, LoggingSystem.Context.TEST);
+        this(DEFAULT_HASH_BIT, true, Logging.Context.TEST);
     }
 
-    public ClassIndex(int hashBit, boolean fallbackMapEnabled, LoggingSystem.Context loggingContext) {
+    public ClassIndex(int hashBit, boolean fallbackMapEnabled, Logging.Context loggingContext) {
         this.hashBit = Math.min(Math.max(hashBit, MIN_HASH_BIT), MAX_HASH_BIT);
         this.fallbackMapEnabled = fallbackMapEnabled;
         capacity = (1 << hashBit) << INT_BYTES_SHIFT;
         memoryAddress = unsafe.allocateMemory(capacity);
         unsafe.setMemory(memoryAddress, capacity, (byte) 0);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Creating " + this
                     )
             );

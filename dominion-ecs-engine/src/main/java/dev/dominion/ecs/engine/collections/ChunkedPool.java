@@ -5,7 +5,7 @@
 
 package dev.dominion.ecs.engine.collections;
 
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,20 +21,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
     public static final int ID_STACK_CAPACITY = 1 << 16;
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private final LinkedChunk<T>[] chunks;
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
-    private final LoggingSystem.Context loggingContext;
+    private final Logging.Context loggingContext;
     private int chunkIndex = -1;
 
     @SuppressWarnings("unchecked")
-    public ChunkedPool(IdSchema idSchema, LoggingSystem.Context loggingContext) {
+    public ChunkedPool(IdSchema idSchema, Logging.Context loggingContext) {
         this.idSchema = idSchema;
         this.loggingContext = loggingContext;
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Creating " + this
                     )
             );
@@ -189,14 +189,14 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final IdSchema idSchema;
         private final IntStack idStack;
         private final LinkedChunk<T> firstChunk;
-        private final LoggingSystem.Context loggingContext;
+        private final Logging.Context loggingContext;
         private final int dataLength;
         private final Object owner;
         private final Object subject;
         private LinkedChunk<T> currentChunk;
         private int nextId = IdSchema.DETACHED_BIT;
 
-        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, Object subject, LoggingSystem.Context loggingContext) {
+        private Tenant(ChunkedPool<T> pool, IdSchema idSchema, int dataLength, Object owner, Object subject, Logging.Context loggingContext) {
             this.pool = pool;
             this.idSchema = idSchema;
             this.dataLength = dataLength;
@@ -207,9 +207,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             currentChunk = pool.newChunk(this, null);
             firstChunk = currentChunk;
             nextId();
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                                 , "Creating " + this
                         )
                 );
@@ -227,10 +227,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int nextId() {
-            boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+            boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             if (loggable) {
                 LOGGER.log(
-                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
                                 , "Getting nextId from " + currentChunk
                                         + " having current nextId " + idSchema.idToString(nextId)
                         )
@@ -240,7 +240,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 int returnValue = idStack.pop();
                 if (loggable) {
                     LOGGER.log(
-                            System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                            System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
                                     , "Popping nextId:" + idSchema.idToString(returnValue)
                             )
                     );
@@ -273,7 +273,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             if (check && (chunkById == null || chunkById.tenant != this)) {
                 throw new IllegalArgumentException("Invalid chunkById [" + chunkById + "] retrieved by [" + id + "]");
             }
-            boolean loggable = LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+            boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             synchronized (this) {
                 if (chunkById.isEmpty()) {
                     return id;
@@ -281,7 +281,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 int reusableId = chunkById.remove(id, isState);
                 if (loggable) {
                     LOGGER.log(
-                            System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                            System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
                                     , "Freeing " + (isState ? "stateId" : "id") + "=" + idSchema.idToString(id)
                                             + " > reusableId=" + idSchema.idToString(reusableId)
                                             + " having current " + currentChunk
@@ -293,7 +293,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 if (chunkById != currentChunk) {
                     if (loggable) {
                         LOGGER.log(
-                                System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                                System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
                                         , "Pushing reusableId: " + idSchema.idToString(reusableId)
                                 )
                         );
@@ -338,9 +338,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             int stateId = nextId();
             LinkedChunk<T> stateChunk = pool.getChunk(stateId);
             stateChunk.setState(stateId, entry);
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
                 LOGGER.log(
-                        System.Logger.Level.TRACE, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
                                 , "Setting state to " + entry
                         )
                 );
@@ -609,7 +609,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     public static final class LinkedChunk<T extends Item> {
-        private static final System.Logger LOGGER = LoggingSystem.getLogger();
+        private static final System.Logger LOGGER = Logging.getLogger();
         private final IdSchema idSchema;
         private final Item[] itemArray;
         private final Object[] dataArray;
@@ -622,7 +622,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private LinkedChunk<T> next;
         private int sizeOffset = 0;
 
-        public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, LoggingSystem.Context loggingContext) {
+        public LinkedChunk(int id, IdSchema idSchema, LinkedChunk<T> previous, int dataLength, Tenant<T> tenant, Logging.Context loggingContext) {
             this.idSchema = idSchema;
             this.dataLength = dataLength;
             itemArray = new Item[idSchema.chunkCapacity];
@@ -631,9 +631,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.previous = previous;
             this.tenant = tenant;
             this.id = id;
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
-                        System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                        System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                                 , "Creating " + this
                         )
                 );

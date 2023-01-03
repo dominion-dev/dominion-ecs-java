@@ -6,7 +6,7 @@
 package dev.dominion.ecs.engine;
 
 import dev.dominion.ecs.api.Scheduler;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,21 +18,21 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SystemScheduler implements Scheduler {
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private final int timeoutSeconds;
     private final Map<Runnable, Single> taskMap = new HashMap<>();
     private final List<Task> mainTasks = new ArrayList<>();
     private final ExecutorService mainExecutor;
     private final ForkJoinPool workStealExecutor;
     private final ScheduledExecutorService tickExecutor;
-    private final LoggingSystem.Context loggingContext;
+    private final Logging.Context loggingContext;
     private final StampedLock scheduleLock = new StampedLock();
     private final ReentrantLock tickLock = new ReentrantLock();
     private ScheduledFuture<?> scheduledTicks;
     private int currentTicksPerSecond = 0;
     private TickTime tickTime;
 
-    public SystemScheduler(int timeoutSeconds, LoggingSystem.Context loggingContext) {
+    public SystemScheduler(int timeoutSeconds, Logging.Context loggingContext) {
         this.timeoutSeconds = timeoutSeconds;
         this.loggingContext = loggingContext;
         var threadFactory = new ThreadFactory() {
@@ -40,7 +40,7 @@ public class SystemScheduler implements Scheduler {
             @Override
             public Thread newThread(Runnable r) {
                 SchedulerThread schedulerThread = new SchedulerThread(r);
-                if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                     LOGGER.log(System.Logger.Level.DEBUG, "New scheduler-thread: " + schedulerThread.getName());
                 }
                 return schedulerThread;
@@ -50,7 +50,7 @@ public class SystemScheduler implements Scheduler {
         tickExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         int nThreads = Runtime.getRuntime().availableProcessors();
         workStealExecutor = (ForkJoinPool) Executors.newWorkStealingPool(nThreads);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Parallel executor created with max {0} thread count", nThreads);
         }
         tickTime = new TickTime(System.nanoTime(), 1);
@@ -71,7 +71,7 @@ public class SystemScheduler implements Scheduler {
                 mainTasks.add(single);
                 return single;
             });
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(System.Logger.Level.DEBUG, "Schedule a new system in #{0} position", mainTasks.size());
             }
             return system;
@@ -93,7 +93,7 @@ public class SystemScheduler implements Scheduler {
                     var cluster = new Cluster(systems);
                     mainTasks.add(cluster);
                     taskMap.putAll(cluster.taskMap);
-                    if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                    if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(System.Logger.Level.DEBUG, "Schedule {0} parallel-systems in #{1} position", systems.length, mainTasks.size());
                     }
                 }
@@ -117,7 +117,7 @@ public class SystemScheduler implements Scheduler {
                 }
             });
         } catch (RuntimeException ex) {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
                 LOGGER.log(System.Logger.Level.ERROR, "invoke", ex);
             }
         }
@@ -143,7 +143,7 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(false);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "A system has been suspended");
         }
     }
@@ -155,7 +155,7 @@ public class SystemScheduler implements Scheduler {
             return;
         }
         singleTask.setEnabled(true);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "A system has been resumed");
         }
     }
@@ -168,7 +168,7 @@ public class SystemScheduler implements Scheduler {
             var futures = mainExecutor.invokeAll(mainTasks);
             futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
                 LOGGER.log(System.Logger.Level.ERROR, "tick", ex);
             }
         } finally {
@@ -214,7 +214,7 @@ public class SystemScheduler implements Scheduler {
                     workStealExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS) &&
                     tickExecutor.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
                 LOGGER.log(System.Logger.Level.ERROR, "shutdown", ex);
             }
 

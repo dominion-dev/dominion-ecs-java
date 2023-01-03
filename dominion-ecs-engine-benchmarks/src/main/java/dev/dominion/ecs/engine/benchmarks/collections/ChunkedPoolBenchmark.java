@@ -8,8 +8,8 @@ package dev.dominion.ecs.engine.benchmarks.collections;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
-import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Config;
+import dev.dominion.ecs.engine.system.Logging;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -21,7 +21,7 @@ import static dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 public class ChunkedPoolBenchmark extends DominionBenchmark {
     private static final IdSchema ID_SCHEMA =
-            new IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+            new IdSchema(Config.DEFAULT_CHUNK_BIT);
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
@@ -46,7 +46,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
         }
 
         @SuppressWarnings("UnusedReturnValue")
@@ -81,7 +81,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
             started = false;
         }
 
@@ -124,7 +124,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @SuppressWarnings("resource")
         @Setup(Level.Iteration)
         public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
         }
 
         @Setup(Level.Invocation)
@@ -163,7 +163,7 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
         @SuppressWarnings("resource")
         @Setup(Level.Invocation)
         public void setupInvocation() {
-            tenant = new ChunkedPool<TestItem>(ID_SCHEMA, LoggingSystem.Context.TEST).newTenant();
+            tenant = new ChunkedPool<TestItem>(ID_SCHEMA, Logging.Context.TEST).newTenant();
             for (int i = 0; i < size; i++) {
                 tenant.register(new TestItem(tenant.nextId(), null, null), null);
             }

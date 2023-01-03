@@ -7,7 +7,7 @@ package dev.dominion.ecs.engine.system;
 
 import java.util.Optional;
 
-public final class ConfigSystem {
+public final class Config {
     public static final String DOMINION_ = "dominion.";
     public static final String SHOW_BANNER = "show-banner";
     public static final String LOGGING_LEVEL = "logging-level";

@@ -8,9 +8,9 @@ package dev.dominion.ecs.engine;
 import dev.dominion.ecs.api.*;
 import dev.dominion.ecs.api.Results.*;
 import dev.dominion.ecs.engine.CompositionRepository.Node;
-import dev.dominion.ecs.engine.system.ConfigSystem;
+import dev.dominion.ecs.engine.system.Config;
 import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -19,14 +19,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class EntityRepository implements Dominion {
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private final String name;
-    private final LoggingSystem.Context loggingContext;
+    private final Logging.Context loggingContext;
     private final CompositionRepository compositions;
     private final int systemTimeoutSeconds;
 
     public EntityRepository(String name, int classIndexBit, int chunkBit, int systemTimeoutSeconds,
-                            LoggingSystem.Context loggingContext) {
+                            Logging.Context loggingContext) {
         this.name = name;
         this.systemTimeoutSeconds = systemTimeoutSeconds;
         this.loggingContext = loggingContext;
@@ -43,9 +43,9 @@ public final class EntityRepository implements Dominion {
         Object[] componentArray = components.length == 0 ? null : components;
         DataComposition composition = compositions.getOrCreate(componentArray);
         IntEntity entity = composition.createEntity(false, componentArray);
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Creating " + entity + " with " + composition)
             );
         }
@@ -191,40 +191,40 @@ public final class EntityRepository implements Dominion {
         @Override
         public Dominion create(String name) {
             name = normalizeName(name);
-            Optional<System.Logger.Level> fetchLoggingLevel = ConfigSystem.fetchLoggingLevel(name);
-            System.Logger.Level level = fetchLoggingLevel.orElse(LoggingSystem.DEFAULT_LOGGING_LEVEL);
-            Optional<Integer> fetchClassIndexBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CLASS_INDEX_BIT);
-            int classIndexBit = fetchClassIndexBit.orElse(ConfigSystem.DEFAULT_CLASS_INDEX_BIT);
-            Optional<Integer> fetchChunkBit = ConfigSystem.fetchIntValue(name, ConfigSystem.CHUNK_BIT);
-            int chunkBit = fetchChunkBit.orElse(ConfigSystem.DEFAULT_CHUNK_BIT);
-            Optional<Integer> fetchSystemTimeoutSeconds = ConfigSystem.fetchIntValue(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS);
-            int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(ConfigSystem.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
+            Optional<System.Logger.Level> fetchLoggingLevel = Config.fetchLoggingLevel(name);
+            System.Logger.Level level = fetchLoggingLevel.orElse(Logging.DEFAULT_LOGGING_LEVEL);
+            Optional<Integer> fetchClassIndexBit = Config.fetchIntValue(name, Config.CLASS_INDEX_BIT);
+            int classIndexBit = fetchClassIndexBit.orElse(Config.DEFAULT_CLASS_INDEX_BIT);
+            Optional<Integer> fetchChunkBit = Config.fetchIntValue(name, Config.CHUNK_BIT);
+            int chunkBit = fetchChunkBit.orElse(Config.DEFAULT_CHUNK_BIT);
+            Optional<Integer> fetchSystemTimeoutSeconds = Config.fetchIntValue(name, Config.SYSTEM_TIMEOUT_SECONDS);
+            int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
 
-            if (ConfigSystem.showBanner()) {
-                LoggingSystem.printPanel(
+            if (Config.showBanner()) {
+                Logging.printPanel(
                         "Dominion '" + name + "'"
                         , "  Logging-Level: '" + level
                                 + (fetchLoggingLevel.isEmpty() ? "' (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.LOGGING_LEVEL) + "')" : "'")
+                                + Config.getPropertyName(name, Config.LOGGING_LEVEL) + "')" : "'")
                         , "  ClassIndex-Bit: " + classIndexBit
                                 + (fetchClassIndexBit.isEmpty() ? " (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.CLASS_INDEX_BIT) + "')" : "")
+                                + Config.getPropertyName(name, Config.CLASS_INDEX_BIT) + "')" : "")
                         , "  Chunk-Bit: " + chunkBit
                                 + (fetchChunkBit.isEmpty() ? " (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.CHUNK_BIT) + "')" : "")
+                                + Config.getPropertyName(name, Config.CHUNK_BIT) + "')" : "")
                         , "  SystemTimeout-Seconds: " + systemTimeoutSeconds
                                 + (fetchSystemTimeoutSeconds.isEmpty() ? " (set sys-property '"
-                                + ConfigSystem.getPropertyName(name, ConfigSystem.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
+                                + Config.getPropertyName(name, Config.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
                 );
             }
 
-            int loggingLevelIndex = LoggingSystem.registerLoggingLevel(level);
+            int loggingLevelIndex = Logging.registerLoggingLevel(level);
 
             return new EntityRepository(name
                     , classIndexBit
                     , chunkBit
                     , systemTimeoutSeconds
-                    , new LoggingSystem.Context(name, loggingLevelIndex)
+                    , new Logging.Context(name, loggingLevelIndex)
             );
         }
     }

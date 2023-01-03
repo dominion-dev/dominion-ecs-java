@@ -5,7 +5,7 @@ import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,19 +17,19 @@ class CompositionRepositoryTest {
     @Test
     void init() {
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(1, 1, LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(1, 1, Logging.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(14, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(8, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(100, 100, LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(100, 100, Logging.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(24, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(16, idSchema.chunkBit());
         }
         try (CompositionRepository compositionRepository =
-                     new CompositionRepository(21, 15, LoggingSystem.Context.TEST)) {
+                     new CompositionRepository(21, 15, Logging.Context.TEST)) {
             IdSchema idSchema = compositionRepository.getIdSchema();
             Assertions.assertEquals(21, compositionRepository.getClassIndex().getHashBit());
             Assertions.assertEquals(15, idSchema.chunkBit());
@@ -38,7 +38,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreate() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             DataComposition composition = compositionRepository.getOrCreate(new Object[0]);
             Assertions.assertArrayEquals(new Class<?>[0], composition.getComponentTypes());
             CompositionRepository.Node root = compositionRepository.getRoot();
@@ -48,7 +48,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreateWith1Component() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             DataComposition composition = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class}, composition.getComponentTypes());
             Assertions.assertTrue(compositionRepository.getNodeCache()
@@ -58,7 +58,7 @@ class CompositionRepositoryTest {
 
     @Test
     void getOrCreateWith2Component() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             DataComposition composition = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
             Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
             IndexKey indexKey = new IndexKey(new int[]{
@@ -78,7 +78,7 @@ class CompositionRepositoryTest {
 
     @Test
     void findWith() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             ClassIndex classIndex = compositionRepository.getClassIndex();
             DataComposition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             DataComposition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
@@ -126,7 +126,7 @@ class CompositionRepositoryTest {
 
     @Test
     void without() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             ClassIndex classIndex = compositionRepository.getClassIndex();
             DataComposition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             DataComposition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
@@ -152,7 +152,7 @@ class CompositionRepositoryTest {
 
     @Test
     void withAlso() {
-        try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+        try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
             ClassIndex classIndex = compositionRepository.getClassIndex();
             DataComposition compositionC1 = compositionRepository.getOrCreate(new Object[]{new C1(0)});
             DataComposition compositionC1C2 = compositionRepository.getOrCreate(new Object[]{new C1(0), new C2(0)});
@@ -201,7 +201,7 @@ class CompositionRepositoryTest {
     public class NodeTest {
         @Test
         void getOrCreateCompositions() {
-            try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+            try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
                 CompositionRepository.Node node = compositionRepository.new Node(C1.class, C2.class);
                 DataComposition composition = node.getOrCreateComposition();
                 Assertions.assertArrayEquals(new Class<?>[]{C1.class, C2.class}, composition.getComponentTypes());
@@ -210,7 +210,7 @@ class CompositionRepositoryTest {
 
         @Test
         void toStringTest() {
-            try (CompositionRepository compositionRepository = new CompositionRepository(LoggingSystem.Context.TEST)) {
+            try (CompositionRepository compositionRepository = new CompositionRepository(Logging.Context.TEST)) {
                 CompositionRepository.Node node = compositionRepository.new Node(C1.class, C2.class);
                 Assertions.assertEquals("Node={types=[C1,C2]}", node.toString());
             }
