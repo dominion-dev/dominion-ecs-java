@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class DataCompositionTest {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(Config.DEFAULT_CHUNK_BIT);
+            new ChunkedPool.IdSchema(Config.DominionSize.MEDIUM.chunkBit());
 
     @Test
     void createEntityAtCompositionLevel() {

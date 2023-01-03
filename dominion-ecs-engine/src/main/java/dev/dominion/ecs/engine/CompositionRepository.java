@@ -32,8 +32,8 @@ public final class CompositionRepository implements AutoCloseable {
     private final Logging.Context loggingContext;
 
     public CompositionRepository(Logging.Context loggingContext) {
-        this(Config.DEFAULT_CLASS_INDEX_BIT
-                , Config.DEFAULT_CHUNK_BIT
+        this(Config.DominionSize.MEDIUM.classIndexBit()
+                , Config.DominionSize.MEDIUM.chunkBit()
                 , loggingContext
         );
     }
