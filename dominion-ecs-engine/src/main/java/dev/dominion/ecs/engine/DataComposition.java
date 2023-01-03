@@ -10,7 +10,7 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
 import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class DataComposition {
     public static final int COMPONENT_INDEX_CAPACITY = 1 << 10;
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
     private final ChunkedPool<IntEntity> pool;
@@ -28,10 +28,10 @@ public final class DataComposition {
     private final IdSchema idSchema;
     private final int[] componentIndex;
     private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
-    private final LoggingSystem.Context loggingContext;
+    private final Logging.Context loggingContext;
 
     public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
-            , ClassIndex classIndex, IdSchema idSchema, LoggingSystem.Context loggingContext
+            , ClassIndex classIndex, IdSchema idSchema, Logging.Context loggingContext
             , Class<?>... componentTypes) {
         this.repository = repository;
         this.pool = pool;
@@ -49,9 +49,9 @@ public final class DataComposition {
         } else {
             componentIndex = null;
         }
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Creating " + this)
             );
         }
@@ -98,9 +98,9 @@ public final class DataComposition {
         return stateTenants.computeIfAbsent(key,
                 s -> {
                     var newStateTenant = pool.newTenant(0, this, key);
-                    if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+                    if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(
-                                System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                                System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                                         , "Adding state " + newStateTenant + " to " + this)
                         );
                     }
@@ -358,7 +358,7 @@ public final class DataComposition {
         }
     }
 
-    record IteratorWith3Next<T1, T2, T3, T4>(int idx1, int idx2, int idx3,
+    record IteratorWith3Next<T1, T2, T3>(int idx1, int idx2, int idx3,
                                              ChunkedPool.PoolDataIterator<IntEntity> iterator,
                                              ChunkedPool.PoolIteratorNextWith3 nextWith3
     ) implements Iterator<Results.With3<T1, T2, T3>> {

@@ -4,21 +4,21 @@ import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Config;
+import dev.dominion.ecs.engine.system.Logging;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class DataCompositionTest {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+            new ChunkedPool.IdSchema(Config.DEFAULT_CHUNK_BIT);
 
     @Test
     void createEntityAtCompositionLevel() {
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
             DataComposition composition =
-                    new DataComposition(null, chunkedPool, null, ID_SCHEMA, LoggingSystem.Context.TEST);
+                    new DataComposition(null, chunkedPool, null, ID_SCHEMA, Logging.Context.TEST);
             IntEntity entity = composition.createEntity(false);
             Assertions.assertNotNull(entity);
             Assertions.assertEquals(composition, entity.getComposition());
@@ -40,7 +40,7 @@ class DataCompositionTest {
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
         DataComposition composition = new DataComposition(null, null, classIndex, null
-                , LoggingSystem.Context.TEST, C1.class
+                , Logging.Context.TEST, C1.class
                 , C2.class
                 , C3.class
                 , C4.class
@@ -69,9 +69,9 @@ class DataCompositionTest {
     public void select1Comp() {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
-                    , LoggingSystem.Context.TEST
+                    , Logging.Context.TEST
                     , C1.class);
             int capacity = 1 << 20;
             for (int i = 0; i < capacity; i++) {
@@ -99,9 +99,9 @@ class DataCompositionTest {
         ClassIndex classIndex = new ClassIndex();
         classIndex.addClass(C1.class);
         classIndex.addClass(C2.class);
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
             DataComposition composition = new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA
-                    , LoggingSystem.Context.STRESS_TEST
+                    , Logging.Context.STRESS_TEST
                     , C1.class, C2.class);
             int capacity = 1 << 20;
             for (int i = 0; i < capacity; i++) {
@@ -137,9 +137,9 @@ class DataCompositionTest {
     @Test
     void setEntityState() {
         ClassIndex classIndex = new ClassIndex();
-        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+        try (ChunkedPool<IntEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
             DataComposition composition =
-                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, LoggingSystem.Context.TEST);
+                    new DataComposition(null, chunkedPool, classIndex, ID_SCHEMA, Logging.Context.TEST);
             IntEntity entity = composition.createEntity(false);
             entity.setState(State1.ONE);
             Assertions.assertEquals(entity.getStateChunk().getTenant(), composition.getStateTenant(classIndex.getIndexKeyByEnum(State1.ONE)));

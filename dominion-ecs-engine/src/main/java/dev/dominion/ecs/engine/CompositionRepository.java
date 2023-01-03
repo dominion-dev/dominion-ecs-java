@@ -10,9 +10,9 @@ import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.ConfigSystem;
+import dev.dominion.ecs.engine.system.Config;
 import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +20,7 @@ import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 public final class CompositionRepository implements AutoCloseable {
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     private final NodeCache nodeCache = new NodeCache();
     private final ClassIndex classIndex;
     private final ChunkedPool<IntEntity> pool;
@@ -29,23 +29,23 @@ public final class CompositionRepository implements AutoCloseable {
     private final Map<Class<?>, Composition.ByAdding1AndRemoving<?>> addingTypeModifiers = new ConcurrentHashMap<>();
     private final Map<Class<?>, Composition.ByRemoving> removingTypeModifiers = new ConcurrentHashMap<>();
     private final Node root;
-    private final LoggingSystem.Context loggingContext;
+    private final Logging.Context loggingContext;
 
-    public CompositionRepository(LoggingSystem.Context loggingContext) {
-        this(ConfigSystem.DEFAULT_CLASS_INDEX_BIT
-                , ConfigSystem.DEFAULT_CHUNK_BIT
+    public CompositionRepository(Logging.Context loggingContext) {
+        this(Config.DEFAULT_CLASS_INDEX_BIT
+                , Config.DEFAULT_CHUNK_BIT
                 , loggingContext
         );
     }
 
-    public CompositionRepository(int classIndexBit, int chunkBit, LoggingSystem.Context loggingContext) {
+    public CompositionRepository(int classIndexBit, int chunkBit, Logging.Context loggingContext) {
         classIndex = new ClassIndex(classIndexBit, true, loggingContext);
         chunkBit = Math.max(IdSchema.MIN_CHUNK_BIT, Math.min(chunkBit, IdSchema.MAX_CHUNK_BIT));
         idSchema = new IdSchema(chunkBit);
         this.loggingContext = loggingContext;
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Creating " + getClass().getSimpleName()
                     )
             );
@@ -151,9 +151,9 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("resource")
     public void modifyComponents(IntEntity entity, PreparedComposition.TargetComposition targetComposition, Object addedComponent, Object[] addedComponents) {
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
             );
         }
@@ -169,9 +169,9 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public Entity addComponent(IntEntity entity, Object component) {
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Adding [" + component.getClass().getSimpleName() + "] to " + entity)
 
             );
@@ -186,9 +186,9 @@ public final class CompositionRepository implements AutoCloseable {
         if (componentType == null) {
             return false;
         }
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Removing [" + componentType.getSimpleName() + "] from " + entity)
             );
         }
@@ -203,9 +203,9 @@ public final class CompositionRepository implements AutoCloseable {
 
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
-        if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(loggingContext.subject()
+                    System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
                             , "Find entities with " + Arrays.toString(componentTypes))
             );
         }
@@ -279,7 +279,7 @@ public final class CompositionRepository implements AutoCloseable {
         return nodeCache;
     }
 
-    public LoggingSystem.Context getLoggingContext() {
+    public Logging.Context getLoggingContext() {
         return loggingContext;
     }
 
@@ -330,10 +330,10 @@ public final class CompositionRepository implements AutoCloseable {
 
         public Node(Class<?>... componentTypes) {
             this.componentTypes = componentTypes;
-            if (LoggingSystem.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG
-                        , LoggingSystem.format(loggingContext.subject(), "Creating " + this)
+                        , Logging.format(loggingContext.subject(), "Creating " + this)
                 );
             }
         }
