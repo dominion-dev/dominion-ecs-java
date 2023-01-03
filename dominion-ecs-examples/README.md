@@ -13,7 +13,7 @@ you find the documented source.
 With Dominion already built in your local folder, you can run this example with the following commands:
 
 ```
-java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.8.0-SNAPSHOT.jar
+java -jar dominion-ecs-examples/target/dominion-ecs-examples-0.9.0-SNAPSHOT.jar
 ```
 
 ## Dark Entities
@@ -26,7 +26,7 @@ Shows how to create a basic _dominion_ of entities, components, and systems by c
 to illuminate and explore a random dungeon map. Implements a wise lighting system able to fork subsystems and distribute
 on worker threads to take advantage of multiple cores.
 
-<img src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
+<img alt="dark-entities" src="https://raw.githubusercontent.com/dominion-dev/dominion-ecs-java/main/dominion-ecs-examples/dark-entities-01.gif">
 
 The [main class](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/src/main/java/dev/dominion/ecs/examples/dark/DarkEntities.java)
 implementation is straightforward and provides a comment on almost every line. It can be read from top to bottom.
@@ -34,7 +34,7 @@ implementation is straightforward and provides a comment on almost every line. I
 With Dominion already built in your local folder, you can run this example with the following commands:
 
 ```
-java -cp dominion-ecs-examples/target/dominion-ecs-examples-0.8.0-SNAPSHOT.jar dev.dominion.ecs.examples.dark.DarkEntities
+java -cp dominion-ecs-examples/target/dominion-ecs-examples-0.9.0-SNAPSHOT.jar dev.dominion.ecs.examples.dark.DarkEntities
 ```
 
 ## Support Dominion
