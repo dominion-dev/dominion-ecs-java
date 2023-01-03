@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 import static java.lang.StackWalker.Option.RETAIN_CLASS_REFERENCE;
 
-public final class LoggingSystem {
+public final class Logging {
     public static final String PROJECT_PROPERTIES = "dominion-ecs-java/project.properties";
     public static final String REVISION = "revision";
     public static final String DEFAULT_LOGGER = "util.logging";
@@ -42,7 +42,7 @@ public final class LoggingSystem {
             System.Logger.Level rootLevel = level.orElse(DEFAULT_LOGGING_LEVEL);
             rootLevelOrdinal = rootLevel.ordinal();
             registerLoggingLevel(rootLevel);
-            if (ConfigSystem.showBanner()) {
+            if (Config.showBanner()) {
                 showBanner(version, rootLevel, level.isEmpty());
             }
         } catch (Exception e) {
@@ -51,7 +51,7 @@ public final class LoggingSystem {
     }
 
     public static System.Logger getLogger() {
-        return System.getLogger(ConfigSystem.DOMINION_ + STACK_WALKER.getCallerClass().getSimpleName());
+        return System.getLogger(Config.DOMINION_ + STACK_WALKER.getCallerClass().getSimpleName());
     }
 
     public static int registerLoggingLevel(System.Logger.Level level) {
@@ -93,7 +93,7 @@ public final class LoggingSystem {
                 "Root Logging System"
                 , "  Logging-Level: '" + level + "'"
                 , isDefaultLoggingLevel ? "  Change the root level with the sys-property '"
-                        + ConfigSystem.getPropertyName(ConfigSystem.LOGGING_LEVEL) + "'." : null
+                        + Config.getPropertyName(Config.LOGGING_LEVEL) + "'." : null
                 , isDefaultLogger() ?
                         "  Dominion is compatible with all logging systems that support the " +
                                 "'System.Logger' Platform Logging API and Service (JEP 264)." : null
@@ -101,7 +101,7 @@ public final class LoggingSystem {
     }
 
     private static String fetchPomVersion() throws IOException {
-        InputStream is = LoggingSystem.class.getClassLoader()
+        InputStream is = Logging.class.getClassLoader()
                 .getResourceAsStream(PROJECT_PROPERTIES);
         if (is == null) return "?";
         Properties properties = new Properties();
@@ -110,10 +110,10 @@ public final class LoggingSystem {
     }
 
     private static Optional<System.Logger.Level> setupDefaultLoggingLibrary() {
-        var level = ConfigSystem.fetchLoggingLevel("");
+        var level = Config.fetchLoggingLevel("");
         System.setProperty("java.util.logging.SimpleFormatter.format"
-                , (ConfigSystem.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$32.32s %5$s %6$s %n");
-        Logger dominionRootLogger = Logger.getLogger(ConfigSystem.DOMINION_);
+                , (Config.logCaller() ? "[%2$s] " : "") + "%4$4.4s %3$32.32s %5$s %6$s %n");
+        Logger dominionRootLogger = Logger.getLogger(Config.DOMINION_);
         java.util.logging.Level julLevel =
                 spi2JulLevelMapping[level.orElse(DEFAULT_LOGGING_LEVEL).ordinal()];
         dominionRootLogger.setLevel(julLevel);

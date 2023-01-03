@@ -9,8 +9,8 @@ import dev.dominion.ecs.engine.DataComposition;
 import dev.dominion.ecs.engine.IntEntity;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Config;
+import dev.dominion.ecs.engine.system.Logging;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DataCompositionBenchmark extends DominionBenchmark {
 
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+            new ChunkedPool.IdSchema(Config.DEFAULT_CHUNK_BIT);
 
     DataComposition composition2;
     Object[] inputArray2 = new Object[]{
@@ -65,17 +65,17 @@ public class DataCompositionBenchmark extends DominionBenchmark {
         classIndex.addClass(C7.class);
         classIndex.addClass(C8.class);
         composition2 = new DataComposition(null, null, classIndex, null
-                , LoggingSystem.Context.TEST, C1.class
+                , Logging.Context.TEST, C1.class
                 , C3.class
         );
         composition4 = new DataComposition(null, null, classIndex, null
-                , LoggingSystem.Context.TEST, C2.class
+                , Logging.Context.TEST, C2.class
                 , C4.class
                 , C6.class
                 , C7.class
         );
         composition8 = new DataComposition(null, null, classIndex, null
-                , LoggingSystem.Context.TEST, C1.class
+                , Logging.Context.TEST, C1.class
                 , C2.class
                 , C3.class
                 , C4.class
@@ -120,7 +120,7 @@ public class DataCompositionBenchmark extends DominionBenchmark {
 
         @Setup(Level.Iteration)
         public void setup() {
-            composition = new DataComposition(null, new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST), classIndex, ID_SCHEMA, LoggingSystem.Context.TEST, C1.class);
+            composition = new DataComposition(null, new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST), classIndex, ID_SCHEMA, Logging.Context.TEST, C1.class);
             C1 c1 = new C1(0);
             for (int i = 0; i < size; i++) {
                 composition.createEntity(false, c1);

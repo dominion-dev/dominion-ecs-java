@@ -1,7 +1,7 @@
 package dev.dominion.ecs.test.engine.system;
 
 import dev.dominion.ecs.engine.system.ClassIndex;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -63,7 +63,7 @@ public class ClassIndexTest {
 
     @Test
     void concurrentGetIndexOrAddClass() throws InterruptedException {
-        try (ClassIndex map = new ClassIndex(22, false, LoggingSystem.Context.TEST)) {
+        try (ClassIndex map = new ClassIndex(22, false, Logging.Context.TEST)) {
             final int capacity = 1 << 7;
             final ExecutorService executorService = Executors.newFixedThreadPool(4);
             AtomicInteger errors = new AtomicInteger(0);

@@ -9,7 +9,7 @@ import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.system.IndexKey;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public abstract class ResultSet<T> implements Results<T> {
-    private static final System.Logger LOGGER = LoggingSystem.getLogger();
+    private static final System.Logger LOGGER = Logging.getLogger();
     protected final boolean withEntity;
     private final CompositionRepository compositionRepository;
     private final Map<IndexKey, CompositionRepository.Node> nodeMap;
@@ -29,9 +29,9 @@ public abstract class ResultSet<T> implements Results<T> {
         this.compositionRepository = compositionRepository;
         this.nodeMap = nodeMap;
         this.withEntity = withEntity;
-        if (LoggingSystem.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(compositionRepository.getLoggingContext().subject()
+                    System.Logger.Level.DEBUG, Logging.format(compositionRepository.getLoggingContext().subject()
                             , "Creating " + this)
             );
         }
@@ -71,9 +71,9 @@ public abstract class ResultSet<T> implements Results<T> {
     @Override
     public <S extends Enum<S>> Results<T> withState(S state) {
         stateKey = compositionRepository.getClassIndex().getIndexKeyByEnum(state);
-        if (LoggingSystem.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
+        if (Logging.isLoggable(compositionRepository.getLoggingContext().levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
-                    System.Logger.Level.DEBUG, LoggingSystem.format(compositionRepository.getLoggingContext().subject()
+                    System.Logger.Level.DEBUG, Logging.format(compositionRepository.getLoggingContext().subject()
                             , "Setting state " + state + " to " + this)
             );
         }

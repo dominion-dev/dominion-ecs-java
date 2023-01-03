@@ -6,24 +6,24 @@
 package dev.dominion.ecs.engine.benchmarks.system;
 
 import dev.dominion.ecs.engine.benchmarks.DominionBenchmark;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Logging;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 
 import java.util.concurrent.TimeUnit;
 
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
-public class LoggingSystemBenchmark extends DominionBenchmark {
+public class LoggingBenchmark extends DominionBenchmark {
 
 
     public static void main(String[] args) throws Exception {
         org.openjdk.jmh.Main.main(
-                new String[]{fetchBenchmarkName(LoggingSystemBenchmark.class)}
+                new String[]{fetchBenchmarkName(LoggingBenchmark.class)}
         );
     }
 
     @Benchmark
     public boolean isLoggable() {
-        return LoggingSystem.isLoggable(-1, System.Logger.Level.DEBUG);
+        return Logging.isLoggable(-1, System.Logger.Level.DEBUG);
     }
 }

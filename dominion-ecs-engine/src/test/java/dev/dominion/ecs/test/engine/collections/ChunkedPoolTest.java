@@ -2,8 +2,8 @@ package dev.dominion.ecs.test.engine.collections;
 
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
-import dev.dominion.ecs.engine.system.ConfigSystem;
-import dev.dominion.ecs.engine.system.LoggingSystem;
+import dev.dominion.ecs.engine.system.Config;
+import dev.dominion.ecs.engine.system.Logging;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,11 +15,11 @@ import java.util.concurrent.TimeUnit;
 
 class ChunkedPoolTest {
     private static final ChunkedPool.IdSchema ID_SCHEMA =
-            new ChunkedPool.IdSchema(ConfigSystem.DEFAULT_CHUNK_BIT);
+            new ChunkedPool.IdSchema(Config.DEFAULT_CHUNK_BIT);
 
     @Test
     public void newTenant() {
-        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
             ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
             Assertions.assertNotNull(tenant);
         }
@@ -27,7 +27,7 @@ class ChunkedPoolTest {
 
     @Test
     public void register() {
-        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+        try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
             ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
             TestEntity entry = new TestEntity(1, null, null);
             Assertions.assertEquals(entry, tenant.register(entry, null));
@@ -68,7 +68,7 @@ class ChunkedPoolTest {
 
         @Test
         public void nextId() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
                 Assertions.assertEquals(1, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
@@ -85,7 +85,7 @@ class ChunkedPoolTest {
 
         @Test
         public void freeIdAndStateId() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
                 Assertions.assertEquals(0, tenant.nextId() & ID_SCHEMA.objectIdBitMask());
@@ -113,7 +113,7 @@ class ChunkedPoolTest {
 
         @Test
         public void concurrentNextId() throws InterruptedException {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 int capacity = 1 << 20;
                 ExecutorService pool = Executors.newFixedThreadPool(16);
@@ -141,7 +141,7 @@ class ChunkedPoolTest {
         public void concurrentNextAndFreeId() throws InterruptedException {
 //            System.setProperty("dominion.logging-level", "TRACE");
 //            System.setProperty("dominion.dominion-1.logging-level", "TRACE");
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
 //            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(new ChunkedPool.IdSchema(8), LoggingSystem.Context.TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 final int capacity = 1 << 16;
@@ -188,7 +188,7 @@ class ChunkedPoolTest {
             int threadCount = 8;
             ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 final ChunkedPool.Tenant<TestEntity> tenant1 = chunkedPool.newTenant(1, null, 1);
                 final ChunkedPool.Tenant<TestEntity> tenant2 = chunkedPool.newTenant(2, null, 2);
                 final ChunkedPool.Tenant<TestEntity> tenant3 = chunkedPool.newTenant(3, null, 3);
@@ -220,7 +220,7 @@ class ChunkedPoolTest {
 
         @Test
         public void iterator() {
-            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, LoggingSystem.Context.STRESS_TEST)) {
+            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 Assertions.assertEquals(0, tenant.currentChunkSize());
                 Iterator<TestEntity> iterator = tenant.iterator();
@@ -246,7 +246,7 @@ class ChunkedPoolTest {
         @Test
         public void size() {
             ChunkedPool.LinkedChunk<TestEntity> chunk =
-                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
+                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, Logging.Context.TEST);
             Assertions.assertEquals(0, chunk.incrementIndex());
             Assertions.assertEquals(1, chunk.incrementIndex());
         }
@@ -254,7 +254,7 @@ class ChunkedPoolTest {
         @Test
         public void capacity() {
             ChunkedPool.LinkedChunk<TestEntity> chunk =
-                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
+                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, Logging.Context.TEST);
             Assertions.assertTrue(chunk.hasCapacity());
             for (int i = 0; i < ID_SCHEMA.chunkCapacity() - 1; i++) {
                 chunk.incrementIndex();
@@ -267,9 +267,9 @@ class ChunkedPoolTest {
         @Test
         public void data() {
             ChunkedPool.LinkedChunk<TestEntity> previous =
-                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, LoggingSystem.Context.TEST);
+                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, null, 0, null, Logging.Context.TEST);
             ChunkedPool.LinkedChunk<TestEntity> chunk =
-                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, previous, 0, null, LoggingSystem.Context.TEST);
+                    new ChunkedPool.LinkedChunk<>(0, ID_SCHEMA, previous, 0, null, Logging.Context.TEST);
             var entity = new TestEntity(1, null, null);
             chunk.set(entity, null);
             Assertions.assertEquals(entity, chunk.get(1));
