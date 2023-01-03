@@ -194,7 +194,7 @@ public final class EntityRepository implements Dominion {
             name = normalizeName(name);
             Optional<System.Logger.Level> fetchLoggingLevel = Config.fetchLoggingLevel(name);
             System.Logger.Level level = fetchLoggingLevel.orElse(Logging.DEFAULT_LOGGING_LEVEL);
-            Optional<Config.DominionSize> fetchSize = Config.fetchSize();
+            Optional<Config.DominionSize> fetchSize = Config.fetchSize(name);
             Config.DominionSize size = fetchSize.orElse(Config.DominionSize.MEDIUM);
             Optional<Integer> fetchClassIndexBit = Config.fetchIntValue(name, Config.CLASS_INDEX_BIT);
             int classIndexBit = fetchClassIndexBit.orElse(fetchSize.orElse(Config.DominionSize.MEDIUM).classIndexBit());

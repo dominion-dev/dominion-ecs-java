@@ -28,8 +28,8 @@ public final class Config {
         return Optional.ofNullable(levelStr != null ? System.Logger.Level.valueOf(levelStr) : null);
     }
 
-    public static Optional<DominionSize> fetchSize() {
-        String sizeStr = System.getProperty(getPropertyName(SIZE));
+    public static Optional<DominionSize> fetchSize(String name) {
+        String sizeStr = System.getProperty(getPropertyName(name, SIZE));
         return Optional.ofNullable(sizeStr != null ? DominionSize.valueOf(sizeStr.toUpperCase()) : null);
     }
 
