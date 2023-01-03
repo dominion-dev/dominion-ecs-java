@@ -52,20 +52,22 @@ public final class Config {
     }
 
     public enum DominionSize {
-        NANO(10, 8),
-        MICRO(12, 10),
-        SMALL(14, 10),
-        NARROW(16, 10),
-        MEDIUM(16, 12),
-        LARGE(18, 12),
-        HUGE(20, 14),
-        WIDE(10, 16);
+        NANO(10, 8, "One or a few types of components, few entities"),
+        MICRO(12, 10, "Few types of components, a fair amount of entities"),
+        SMALL(14, 10, "Some component types, a fair amount of entities"),
+        NARROW(16, 10, "Several component types, a fair amount of entities"),
+        MEDIUM(16, 12, "Several component types, many entities"),
+        LARGE(18, 12, "Many component types, many entities"),
+        HUGE(20, 14, "Thousands of component types, millions of entities"),
+        WIDE(10, 16, "One or a few types of components, a fair amount of entities in a few chunks");
 
         private final int classIndexBit, chunkBit;
+        private final String note;
 
-        DominionSize(int classIndexBit, int chunkBit) {
+        DominionSize(int classIndexBit, int chunkBit, String note) {
             this.classIndexBit = classIndexBit;
             this.chunkBit = chunkBit;
+            this.note = note;
         }
 
         public int classIndexBit() {
@@ -78,7 +80,7 @@ public final class Config {
 
         @Override
         public String toString() {
-            return name() + " {" +
+            return name() + " - " + note +" {" +
                     "classIndexBit=" + classIndexBit +
                     ", chunkBit=" + chunkBit +
                     '}';

@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = Logging.getLogger();
@@ -201,7 +202,6 @@ public final class EntityRepository implements Dominion {
             int chunkBit = fetchChunkBit.orElse(fetchSize.orElse(Config.DominionSize.MEDIUM).chunkBit());
             Optional<Integer> fetchSystemTimeoutSeconds = Config.fetchIntValue(name, Config.SYSTEM_TIMEOUT_SECONDS);
             int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
-
             if (Config.showBanner()) {
                 Logging.printPanel(
                         "Dominion '" + name + "'"
@@ -221,10 +221,14 @@ public final class EntityRepository implements Dominion {
                                 + (fetchSystemTimeoutSeconds.isEmpty() ? " (set sys-property '"
                                 + Config.getPropertyName(name, Config.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
                 );
+                if (fetchSize.isEmpty()) {
+                    Logging.printPanel(
+                            Stream.concat(Stream.of("Dominion 'Size' options:"),
+                                            Arrays.stream(Config.DominionSize.values()).map(Config.DominionSize::toString))
+                                    .toArray(String[]::new));
+                }
             }
-
             int loggingLevelIndex = Logging.registerLoggingLevel(level);
-
             return new EntityRepository(name
                     , classIndexBit
                     , chunkBit
