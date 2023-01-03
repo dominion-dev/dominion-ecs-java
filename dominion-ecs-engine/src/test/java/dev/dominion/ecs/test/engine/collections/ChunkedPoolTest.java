@@ -139,10 +139,7 @@ class ChunkedPoolTest {
 
         @Test
         public void concurrentNextAndFreeId() throws InterruptedException {
-//            System.setProperty("dominion.logging-level", "TRACE");
-//            System.setProperty("dominion.dominion-1.logging-level", "TRACE");
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
-//            try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(new ChunkedPool.IdSchema(8), LoggingSystem.Context.TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
                 final int capacity = 1 << 16;
                 final ExecutorService pool = Executors.newFixedThreadPool(8);
@@ -163,22 +160,15 @@ class ChunkedPoolTest {
                 }
                 pool.shutdown();
                 Assertions.assertTrue(pool.awaitTermination(600, TimeUnit.SECONDS));
-//                Assertions.assertEquals(0, tenant.getIdStack().size());
                 Assertions.assertEquals(added - removed, chunkedPool.size() - 1);
                 Assertions.assertTrue(tenant.nextId() >= added - removed);
 
                 int last = -1;
-//                try {
                 for (int i = 0; i < added - removed; i++) {
                     int id = array[i];
                     Assertions.assertEquals(last, id - 1);
                     last = id;
                 }
-//                } finally {
-//                    for (int id : array) {
-//                        System.out.print(id + ",");
-//                    }
-//                }
             }
         }
 
