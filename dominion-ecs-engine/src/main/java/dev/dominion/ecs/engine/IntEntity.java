@@ -180,10 +180,14 @@ public final class IntEntity implements Entity, Item {
     @Override
     public Entity setEnabled(boolean enabled) {
         if (enabled && !isEnabled()) {
-            chunk.unshelve(this, shelf);
-            shelf = null;
+            synchronized (this) {
+                chunk.unshelve(this, shelf);
+                shelf = null;
+            }
         } else if (!enabled && isEnabled()) {
-            shelf = chunk.shelve(this);
+            synchronized (this) {
+                shelf = chunk.shelve(this);
+            }
         }
         return this;
     }
