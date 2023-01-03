@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public final class EntityRepository implements Dominion {
     private static final System.Logger LOGGER = Logging.getLogger();
@@ -193,33 +194,41 @@ public final class EntityRepository implements Dominion {
             name = normalizeName(name);
             Optional<System.Logger.Level> fetchLoggingLevel = Config.fetchLoggingLevel(name);
             System.Logger.Level level = fetchLoggingLevel.orElse(Logging.DEFAULT_LOGGING_LEVEL);
+            Optional<Config.DominionSize> fetchSize = Config.fetchSize();
+            Config.DominionSize size = fetchSize.orElse(Config.DominionSize.MEDIUM);
             Optional<Integer> fetchClassIndexBit = Config.fetchIntValue(name, Config.CLASS_INDEX_BIT);
-            int classIndexBit = fetchClassIndexBit.orElse(Config.DEFAULT_CLASS_INDEX_BIT);
+            int classIndexBit = fetchClassIndexBit.orElse(fetchSize.orElse(Config.DominionSize.MEDIUM).classIndexBit());
             Optional<Integer> fetchChunkBit = Config.fetchIntValue(name, Config.CHUNK_BIT);
-            int chunkBit = fetchChunkBit.orElse(Config.DEFAULT_CHUNK_BIT);
+            int chunkBit = fetchChunkBit.orElse(fetchSize.orElse(Config.DominionSize.MEDIUM).chunkBit());
             Optional<Integer> fetchSystemTimeoutSeconds = Config.fetchIntValue(name, Config.SYSTEM_TIMEOUT_SECONDS);
             int systemTimeoutSeconds = fetchSystemTimeoutSeconds.orElse(Config.DEFAULT_SYSTEM_TIMEOUT_SECONDS);
-
             if (Config.showBanner()) {
                 Logging.printPanel(
                         "Dominion '" + name + "'"
                         , "  Logging-Level: '" + level
                                 + (fetchLoggingLevel.isEmpty() ? "' (set sys-property '"
                                 + Config.getPropertyName(name, Config.LOGGING_LEVEL) + "')" : "'")
+                        , "  Dominion-Size: '" + size
+                                + (fetchSize.isEmpty() ? "' (set sys-property '"
+                                + Config.getPropertyName(name, Config.SIZE) + "')" : "'")
                         , "  ClassIndex-Bit: " + classIndexBit
-                                + (fetchClassIndexBit.isEmpty() ? " (set sys-property '"
+                                + (fetchClassIndexBit.isEmpty() && fetchSize.isEmpty() ? " (set sys-property '"
                                 + Config.getPropertyName(name, Config.CLASS_INDEX_BIT) + "')" : "")
                         , "  Chunk-Bit: " + chunkBit
-                                + (fetchChunkBit.isEmpty() ? " (set sys-property '"
+                                + (fetchChunkBit.isEmpty() && fetchSize.isEmpty() ? " (set sys-property '"
                                 + Config.getPropertyName(name, Config.CHUNK_BIT) + "')" : "")
                         , "  SystemTimeout-Seconds: " + systemTimeoutSeconds
                                 + (fetchSystemTimeoutSeconds.isEmpty() ? " (set sys-property '"
                                 + Config.getPropertyName(name, Config.SYSTEM_TIMEOUT_SECONDS) + "')" : "")
                 );
+                if (fetchSize.isEmpty()) {
+                    Logging.printPanel(
+                            Stream.concat(Stream.of("Dominion 'Size' options:"),
+                                            Arrays.stream(Config.DominionSize.values()).map(Config.DominionSize::toString))
+                                    .toArray(String[]::new));
+                }
             }
-
             int loggingLevelIndex = Logging.registerLoggingLevel(level);
-
             return new EntityRepository(name
                     , classIndexBit
                     , chunkBit
