@@ -54,7 +54,7 @@ Add the following dependency declaration in your project pom.xml:
         <dependency>
             <groupId>dev.dominion.ecs</groupId>
             <artifactId>dominion-ecs-engine</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+            <version>0.9.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
