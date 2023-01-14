@@ -404,6 +404,15 @@ class EntityRepositoryTest {
         Assertions.assertEquals(0, count.get());
     }
 
+    @Test
+    void close() {
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+        Assertions.assertFalse(entityRepository.isClosed());
+        entityRepository.close();
+        Assertions.assertTrue(entityRepository.isClosed());
+        Assertions.assertThrows(IllegalStateException.class, entityRepository::createEntity);
+    }
+
     enum State {
         ONE, TWO
     }

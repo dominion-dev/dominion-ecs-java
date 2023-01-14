@@ -184,6 +184,13 @@ public interface Dominion {
     <T1, T2, T3, T4, T5, T6> Results<With6<T1, T2, T3, T4, T5, T6>> findEntitiesWith(Class<T1> type1, Class<T2> type2, Class<T3> type3, Class<T4> type4, Class<T5> type5, Class<T6> type6);
 
     /**
+     * Check if it is already closed.
+     *
+     * @return true if closed
+     */
+    boolean isClosed();
+
+    /**
      * Closes this resource, relinquishing any underlying resources.
      */
     void close();
