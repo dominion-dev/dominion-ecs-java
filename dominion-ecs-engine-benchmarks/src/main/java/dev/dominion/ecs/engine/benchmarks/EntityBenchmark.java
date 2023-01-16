@@ -657,7 +657,7 @@ public class EntityBenchmark extends DominionBenchmark {
                 for (int i = 0; i < size; i++) entities2[i].setEnabled(false);
             if (entities4[0].isEnabled())
                 for (int i = 0; i < size; i++) entities4[i].setEnabled(false);
-             if (entities8[0].isEnabled())
+            if (entities8[0].isEnabled())
                 for (int i = 0; i < size; i++) entities8[i].setEnabled(false);
 
         }

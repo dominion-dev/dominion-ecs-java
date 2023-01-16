@@ -404,6 +404,26 @@ class EntityRepositoryTest {
         Assertions.assertEquals(0, count.get());
     }
 
+    @SuppressWarnings("ConstantValue")
+    @Test
+    void findAndDisableEntities() {
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+        entityRepository.createEntity(new C1(0));
+        entityRepository.createEntity(new C1(1));
+        entityRepository.createEntity(new C1(2));
+        entityRepository.createEntity(new C1(3));
+        var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertTrue(iterator.hasNext());
+        while (iterator.hasNext()) {
+            var next = iterator.next();
+            next.entity().setEnabled(false);
+            System.out.println("next.comp() = " + next.comp());
+        }
+        iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertFalse(iterator.hasNext());
+        Assertions.assertFalse(iterator.hasNext());
+    }
+
     @Test
     void close() {
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");

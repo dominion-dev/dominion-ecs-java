@@ -5,7 +5,6 @@
 
 package dev.dominion.ecs.engine.benchmarks;
 
-import dev.dominion.ecs.engine.benchmarks.others.CreatingEntityBenchmark;
 import dev.dominion.ecs.engine.benchmarks.others.OthersBenchmark;
 import org.openjdk.jmh.annotations.*;
 

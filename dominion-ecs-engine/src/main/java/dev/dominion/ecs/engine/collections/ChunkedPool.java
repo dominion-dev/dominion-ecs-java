@@ -404,7 +404,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @Override
         public boolean hasNext() {
             return next > -1
-                    || ((currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
+                    || (currentChunk != null && (currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
         }
 
         @SuppressWarnings({"unchecked"})
