@@ -80,7 +80,7 @@ public final class Config {
 
         @Override
         public String toString() {
-            return name() + " - " + note +" {" +
+            return name() + " - " + note + " {" +
                     "classIndexBit=" + classIndexBit +
                     ", chunkBit=" + chunkBit +
                     '}';
