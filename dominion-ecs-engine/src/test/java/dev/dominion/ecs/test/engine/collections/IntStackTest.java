@@ -36,7 +36,7 @@ class IntStackTest {
     void concurrentPush() throws InterruptedException {
         final int capacity = 1 << 10;
         final int limit = 1 << 20;
-        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity * 8)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity >>> 1)) {
             final ExecutorService pool = Executors.newFixedThreadPool(8);
             for (int i = 0; i < limit; i++) {
                 pool.execute(() -> stack.push(1));
@@ -50,7 +50,7 @@ class IntStackTest {
     @Test
     void concurrentPop() throws InterruptedException {
         final int capacity = 1 << 22;
-        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity * 8)) {
+        try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity >>> 1)) {
             final ExecutorService pool = Executors.newFixedThreadPool(4);
             for (int i = 0; i < capacity; i++) {
                 if (i % 10 == 0) {

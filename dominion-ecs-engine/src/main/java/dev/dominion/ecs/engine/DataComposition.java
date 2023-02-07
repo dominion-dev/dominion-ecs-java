@@ -359,8 +359,8 @@ public final class DataComposition {
     }
 
     record IteratorWith3Next<T1, T2, T3>(int idx1, int idx2, int idx3,
-                                             ChunkedPool.PoolDataIterator<IntEntity> iterator,
-                                             ChunkedPool.PoolIteratorNextWith3 nextWith3
+                                         ChunkedPool.PoolDataIterator<IntEntity> iterator,
+                                         ChunkedPool.PoolIteratorNextWith3 nextWith3
     ) implements Iterator<Results.With3<T1, T2, T3>> {
         @Override
         public boolean hasNext() {

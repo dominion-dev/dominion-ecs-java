@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <T> the managed type that must implement the {@link Item} interface
  */
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
-    public static final int ID_STACK_CAPACITY = 1 << 16;
     private static final System.Logger LOGGER = Logging.getLogger();
     private final LinkedChunk<T>[] chunks;
     private final List<Tenant<T>> tenants = new ArrayList<>();
@@ -203,7 +202,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.owner = owner;
             this.subject = subject;
             this.loggingContext = loggingContext;
-            idStack = new IntStack(IdSchema.DETACHED_BIT, ID_STACK_CAPACITY);
+            idStack = new IntStack(IdSchema.DETACHED_BIT, idSchema.chunkCapacity);
             currentChunk = pool.newChunk(this, null);
             firstChunk = currentChunk;
             nextId();
@@ -405,7 +404,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @Override
         public boolean hasNext() {
             return next > -1
-                    || ((currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
+                    || (currentChunk != null && (currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
         }
 
         @SuppressWarnings({"unchecked"})
