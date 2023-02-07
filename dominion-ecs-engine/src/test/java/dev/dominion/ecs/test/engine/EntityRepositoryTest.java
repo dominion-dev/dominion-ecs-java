@@ -404,6 +404,27 @@ class EntityRepositoryTest {
         Assertions.assertEquals(0, count.get());
     }
 
+    @Test
+    void findEntitiesAddingAndRemovingComponents() {
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+
+        var entity = entityRepository.createEntity(new C1(0));
+        var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertTrue(iterator.hasNext());
+
+        entity.add(new C2(0));
+        iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertTrue(iterator.hasNext());
+
+        entity.add(new C3(0));
+        iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertTrue(iterator.hasNext());
+
+        entity.removeType(C3.class);
+        iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        Assertions.assertTrue(iterator.hasNext());
+    }
+
     @SuppressWarnings("ConstantValue")
     @Test
     void findAndDisableEntities() {
