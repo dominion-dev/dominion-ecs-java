@@ -141,8 +141,17 @@ public abstract class ResultSet<T> implements Results<T> {
 
         @Override
         public boolean hasNext() {
-            return wrapped.hasNext()
-                    || (nodesIterator.hasNext() && (wrapped = owner.compositionIterator(nodesIterator.next().getComposition())).hasNext());
+            if (wrapped.hasNext()) {
+                return true;
+            }
+
+            while (nodesIterator.hasNext()) {
+                if ((wrapped = owner.compositionIterator(nodesIterator.next().getComposition())).hasNext()) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         @Override
