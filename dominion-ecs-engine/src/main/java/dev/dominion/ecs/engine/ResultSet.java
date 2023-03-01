@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -87,13 +88,13 @@ public abstract class ResultSet<T> implements Results<T> {
 
     @Override
     public Results<T> without(Class<?>... componentTypes) {
-        compositionRepository.mapWithout(nodeMap, componentTypes);
+        compositionRepository.mapWithout(nodeMap == null ? new ConcurrentHashMap<>() : nodeMap, componentTypes);
         return this;
     }
 
     @Override
     public Results<T> withAlso(Class<?>... componentTypes) {
-        compositionRepository.mapWithAlso(nodeMap, componentTypes);
+        compositionRepository.mapWithAlso(nodeMap == null ? new ConcurrentHashMap<>() : nodeMap, componentTypes);
         return this;
     }
 
