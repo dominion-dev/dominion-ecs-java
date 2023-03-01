@@ -14,7 +14,11 @@ import dev.dominion.ecs.engine.system.Config;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.Logging;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
@@ -232,6 +236,9 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public void mapWithout(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+        if (nodeMap == null) {
+            return;
+        }
         for (Class<?> componentType : componentTypes) {
             IndexKey indexKey = new IndexKey(classIndex.getIndex(componentType));
             nodeMap.remove(indexKey);
@@ -245,6 +252,9 @@ public final class CompositionRepository implements AutoCloseable {
     }
 
     public void mapWithAlso(Map<IndexKey, Node> nodeMap, Class<?>... componentTypes) {
+        if (nodeMap == null) {
+            return;
+        }
         for (Class<?> componentType : componentTypes) {
             Node node = nodeCache.getNode(new IndexKey(classIndex.getIndex(componentType)));
             if (node == null) {
