@@ -402,6 +402,23 @@ class EntityRepositoryTest {
         AtomicInteger count = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
+        
+        AtomicInteger count2 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C3.class).withAlso(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
+        Assertions.assertEquals(0, count2.get());
+    }
+
+    @Test
+    void findEntitiesWithoutUnregisteredComponent() {
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+        entityRepository.createEntity(new C1(0));
+        AtomicInteger count = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class).without(C3.class).stream().forEach((rs) -> count.incrementAndGet());
+        Assertions.assertEquals(1, count.get());
+
+        AtomicInteger count2 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C3.class).without(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
+        Assertions.assertEquals(0, count2.get());
     }
 
     @Test
