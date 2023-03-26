@@ -241,7 +241,7 @@ public final class DarkEntities {
             scheduler.tick();
         }
         // orderly shutdown the scheduler
-        scheduler.shutDown();
+        assert scheduler.shutDown();
     }
 
     // quit-confirming function

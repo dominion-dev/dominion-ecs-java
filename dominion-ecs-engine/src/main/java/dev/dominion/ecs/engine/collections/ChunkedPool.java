@@ -783,6 +783,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return dataArray[idSchema.fetchObjectId(id)];
         }
 
+        public Object getFromMultiDataArray(int id, int i) {
+            return multiDataArray[i][idSchema.fetchObjectId(id)];
+        }
+
         public Tenant<T> getTenant() {
             return tenant;
         }

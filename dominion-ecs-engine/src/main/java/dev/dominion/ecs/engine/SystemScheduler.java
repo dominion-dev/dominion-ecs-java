@@ -164,9 +164,7 @@ public class SystemScheduler implements Scheduler {
     public void tick() {
         tickLock.lock();
         try {
-            tickTime = calcTickTime(tickTime);
-            var futures = mainExecutor.invokeAll(mainTasks);
-            futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
+            tick(calcTickTime(tickTime));
         } catch (InterruptedException | ExecutionException | TimeoutException ex) {
             if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
                 LOGGER.log(System.Logger.Level.ERROR, "tick", ex);
@@ -174,6 +172,26 @@ public class SystemScheduler implements Scheduler {
         } finally {
             tickLock.unlock();
         }
+    }
+
+    @Override
+    public void tick(long deltaNanoTime) {
+        tickLock.lock();
+        try {
+            tick(new TickTime(System.nanoTime(), deltaNanoTime));
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.ERROR)) {
+                LOGGER.log(System.Logger.Level.ERROR, "tick", ex);
+            }
+        } finally {
+            tickLock.unlock();
+        }
+    }
+
+    private void tick(TickTime tickTime) throws InterruptedException, ExecutionException, TimeoutException {
+        this.tickTime = tickTime;
+        var futures = mainExecutor.invokeAll(mainTasks);
+        futures.get(0).get(timeoutSeconds, TimeUnit.SECONDS);
     }
 
     @Override
