@@ -117,6 +117,14 @@ public interface Scheduler {
     void tick();
 
     /**
+     * Starts running all scheduled systems sequentially in a guaranteed order.
+     * Systems sent in parallel run concurrently in the same slot, which is scheduled sequentially in a guaranteed order.
+     *
+     * @param deltaNanoTime set the delta time in nanoseconds between the last tick and this tick.
+     */
+    void tick(long deltaNanoTime);
+
+    /**
      * Starts a periodic tick that becomes enabled immediately and subsequently with the given fixed rate
      *
      * @param ticksPerSecond the required number of ticks per second or 0 if you want to pause the periodic tick.
