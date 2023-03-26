@@ -158,5 +158,9 @@ class SystemSchedulerTest {
         scheduler.tickAtFixedRate(0);
         double d = count.get();
         Assertions.assertEquals(0.1f, d, .07);
+        count.set(0d);
+        scheduler.tick(500_000_000);
+        d = count.get();
+        Assertions.assertEquals(0.5f, d, .0001);
     }
 }

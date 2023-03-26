@@ -147,6 +147,19 @@ public final class IntEntity implements Entity, Item {
                 && chunk.getData(getId())[idx].equals(component);
     }
 
+    @Override
+    public Object get(Class<?> componentType) {
+        int dataLength;
+        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return null;
+        if (dataLength == 1) {
+            Object fromDataArray = chunk.getFromDataArray(id);
+            return fromDataArray.getClass().equals(componentType) ? fromDataArray : null;
+        }
+        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+        int componentIndex = composition.fetchComponentIndex(componentType);
+        return componentIndex > -1 ? chunk.getFromMultiDataArray(id, componentIndex) : null;
+    }
+
     @SuppressWarnings("resource")
     @Override
     public <S extends Enum<S>> Entity setState(S state) {
