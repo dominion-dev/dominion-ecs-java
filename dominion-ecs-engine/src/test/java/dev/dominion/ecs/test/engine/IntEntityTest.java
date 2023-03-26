@@ -222,6 +222,20 @@ class IntEntityTest {
         Assertions.assertTrue(entity3.contains(c2));
     }
 
+    @Test
+    void get() {
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+        var c1 = new C1(0);
+        var c2 = new C2(0);
+        IntEntity entity = (IntEntity) entityRepository.createEntity();
+        Assertions.assertNull(entity.get(C1.class));
+        IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
+        Assertions.assertEquals(c1, entity2.get(C1.class));
+        IntEntity entity3 = (IntEntity) entityRepository.createEntity(c1, c2);
+        Assertions.assertEquals(c1, entity3.get(C1.class));
+        Assertions.assertEquals(c2, entity3.get(C2.class));
+    }
+
     record C1(int id) {
     }
 

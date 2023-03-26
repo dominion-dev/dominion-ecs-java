@@ -62,6 +62,14 @@ public interface Entity {
     boolean contains(Object component);
 
     /**
+     * Gets the component of the specified type if any.
+     *
+     * @param componentType the component type
+     * @return the component or null
+     */
+    Object get(Class<?> componentType);
+
+    /**
      * Sets a state to the entity or remove the current state by passing a null value.
      *
      * @param state the state, it can be null
