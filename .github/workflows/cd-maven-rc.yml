@@ -1,4 +1,4 @@
-# This workflow will publish EA releases to maven central and create the tag on git
+# This workflow will publish RC releases to maven central and create the tag on git
 
 name: Tag RC Release Manually
 
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Check if branch is release branch
         id: is_release_branch
@@ -33,14 +33,15 @@ jobs:
         if: steps.is_release_branch.outputs.is_release_branch == 'true'
         id: latest_rc_tag
         run: |
-          latest_rc_tag=$(git describe --tags --match "RC*" --abbrev=0 2>/dev/null || echo "")
+          current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
+          latest_rc_tag=$(git describe --tags --match "${current_release_version}-RC*" --abbrev=0 2>/dev/null || echo "")
           if [ -z "$latest_rc_tag" ]; then
             echo "No existing RC tags found"
-            latest_rc_tag="RC1"
+            latest_rc_tag="${current_release_version}-RC1"
           else
             latest_rc_number=$(echo "$latest_rc_tag" | grep -o '[0-9]*$')
             next_rc_number=$((latest_rc_number + 1))
-            echo "::set-output name=next_rc_tag::RC$next_rc_number"
+            echo "::set-output name=next_rc_tag::${current_release_version}-RC$next_rc_number"
           fi
 
       - name: Create new RC tag
