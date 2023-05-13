@@ -47,14 +47,14 @@ jobs:
       - name: Create new RC tag
         if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
         run: |
-          git tag ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
-          echo "Tagged code with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+          echo "Tag code with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+#          git tag ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
 
       - name: Push RC tag to GitHub
         if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
         run: |
-          git push origin ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
-          echo "Pushed RC tag to GitHub: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+          echo "Push RC tag to GitHub: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+#          git push origin ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
 
       - name: Deploy to Maven Central
         if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
@@ -63,5 +63,5 @@ jobs:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
-          mvn clean deploy -Drevision=${{ steps.latest_rc_tag.outputs.next_rc_tag }}
-          echo "Deployed artifact with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+          echo "Deploy artifact with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
+#          mvn clean deploy -Drevision=${{ steps.latest_rc_tag.outputs.next_rc_tag }}
