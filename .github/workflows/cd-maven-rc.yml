@@ -57,18 +57,6 @@ jobs:
             echo "next_rc_tag=${current_release_version}-RC$next_rc_number" >> $GITHUB_ENV
           fi
 
-      - name: Create new RC tag
-        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
-        run: |
-          echo "Creating new RC tag: ${{ env.next_rc_tag }}"
-#          git tag ${{ env.next_rc_tag }}
-
-      - name: Push RC tag to GitHub
-        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
-        run: |
-          echo "Pushing RC tag to GitHub: ${{ env.next_rc_tag }}"
-#          git push origin ${{ env.next_rc_tag }}
-
       - name: Deploy to Maven Central
         if: env.is_release_branch == 'true' && env.next_rc_tag != ''
         env:
@@ -77,4 +65,16 @@ jobs:
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
           echo "Deploying artifact with RC tag: ${{ env.next_rc_tag }}"
-#          mvn clean deploy -Drevision=${{ env.next_rc_tag }}
+          mvn --batch-mode -Denv=cd-maven -Drevision=${{ env.next_rc_tag }} clean deploy
+
+      - name: Create new RC tag
+        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
+        run: |
+          echo "Creating new RC tag: ${{ env.next_rc_tag }}"
+          git tag ${{ env.next_rc_tag }}
+
+      - name: Push RC tag to GitHub
+        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
+        run: |
+          echo "Pushing RC tag to GitHub: ${{ env.next_rc_tag }}"
+          git push origin ${{ env.next_rc_tag }}
