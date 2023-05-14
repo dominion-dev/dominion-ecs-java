@@ -70,8 +70,8 @@ actions:
 - **_reducing garbage collection activities_**: GC could affect overall performances as its activities run concurrently
   with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
   structures whenever possible.
-- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
-  Otherwise, it makes little sense today.
+- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU, 
+  otherwise, it would make little sense today.
 - **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
   faster than Java 11.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
