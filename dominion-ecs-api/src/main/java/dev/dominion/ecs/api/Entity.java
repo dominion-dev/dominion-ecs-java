@@ -67,7 +67,7 @@ public interface Entity {
      * @param componentType the component type
      * @return the component or null
      */
-    Object get(Class<?> componentType);
+    <T> T get(Class<T> componentType);
 
     /**
      * Sets a state to the entity or remove the current state by passing a null value.
