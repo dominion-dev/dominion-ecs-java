@@ -46,31 +46,11 @@ In your local environment you must have already installed a Java 17 (or newer) a
 Add the following dependency declaration in your project pom.xml:
 
 ```xml
-
-<project>
-    <!-- ... -->
-
-    <dependencies>
-        <dependency>
-            <groupId>dev.dominion.ecs</groupId>
-            <artifactId>dominion-ecs-engine</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
-
-    <repositories>
-        <repository>
-            <id>central-snapshot</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-</project>
+<dependency>
+    <groupId>dev.dominion.ecs</groupId>
+    <artifactId>dominion-ecs-engine</artifactId>
+    <version>0.9.0-RC1</version>
+</dependency>
 ```
 
 Check out the
@@ -91,9 +71,7 @@ actions:
   with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
   structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU.
-  Otherwise, it makes little sense today. Writing a highly concurrent library in Java requires non-blocking concurrency
-  as much as possible and leveraging the best available lock implementation as the
-  fast [StampedLock](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/locks/StampedLock.html).
+  Otherwise, it makes little sense today.
 - **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
   faster than Java 11.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
@@ -101,9 +79,9 @@ actions:
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
   dependency on the logging implementation of your choice.
 
-## Ok, enough blah blah blah..
+## Ok let's start
 
-Here is an example:
+Here is a first example:
 
 ```java
 public class HelloDominion {
@@ -180,7 +158,7 @@ page with all the documented code.
 | Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        | release-RC#  |
 | Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
 
-Dominion is officially in _**Early Access**_.
+Dominion is officially in _**Release Candidate**_.
 
 [Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
