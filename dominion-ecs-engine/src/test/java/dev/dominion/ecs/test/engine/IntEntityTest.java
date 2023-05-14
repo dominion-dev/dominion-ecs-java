@@ -230,7 +230,8 @@ class IntEntityTest {
         IntEntity entity = (IntEntity) entityRepository.createEntity();
         Assertions.assertNull(entity.get(C1.class));
         IntEntity entity2 = (IntEntity) entityRepository.createEntity(c1);
-        Assertions.assertEquals(c1, entity2.get(C1.class));
+        C1 actual = entity2.get(C1.class);
+        Assertions.assertEquals(c1, actual);
         IntEntity entity3 = (IntEntity) entityRepository.createEntity(c1, c2);
         Assertions.assertEquals(c1, entity3.get(C1.class));
         Assertions.assertEquals(c2, entity3.get(C2.class));

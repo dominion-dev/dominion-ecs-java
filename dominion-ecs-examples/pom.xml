@@ -12,6 +12,9 @@
 
     <artifactId>dominion-ecs-examples</artifactId>
 
+    <name>Dominion ECS Project Examples</name>
+    <url>https://www.dominion.dev</url>
+
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>

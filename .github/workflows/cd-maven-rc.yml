@@ -11,57 +11,70 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          server-id: ossrh
+          server-username: OSSRH_USERNAME
+          server-password: OSSRH_PASSWORD
+          gpg-passphrase: GPG_PASSPHRASE
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Check if branch is release branch
         id: is_release_branch
         run: |
+          echo "Checking if branch is a release branch"
           if [[ "${{ github.ref }}" =~ ^refs/heads/release/.*$ ]]; then
             echo "This is a release branch"
-            echo "::set-output name=is_release_branch::true"
+            echo "is_release_branch=true" >> $GITHUB_ENV
           else
             echo "This is not a release branch"
-            echo "::set-output name=is_release_branch::false"
+            echo "is_release_branch=false" >> $GITHUB_ENV
           fi
 
       - name: Set up Git
-        if: steps.is_release_branch.outputs.is_release_branch == 'true'
+        if: env.is_release_branch == 'true'
         run: |
+          echo "Setting up Git"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
       - name: Get latest RC tag
-        if: steps.is_release_branch.outputs.is_release_branch == 'true'
+        if: env.is_release_branch == 'true'
         id: latest_rc_tag
         run: |
+          echo "Getting the latest RC tag"
           current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
           latest_rc_tag=$(git describe --tags --match "${current_release_version}-RC*" --abbrev=0 2>/dev/null || echo "")
           if [ -z "$latest_rc_tag" ]; then
             echo "No existing RC tags found"
-            latest_rc_tag="${current_release_version}-RC1"
+            echo "next_rc_tag=${current_release_version}-RC1" >> $GITHUB_ENV
           else
             latest_rc_number=$(echo "$latest_rc_tag" | grep -o '[0-9]*$')
             next_rc_number=$((latest_rc_number + 1))
-            echo "::set-output name=next_rc_tag::${current_release_version}-RC$next_rc_number"
+            echo "next_rc_tag=${current_release_version}-RC$next_rc_number" >> $GITHUB_ENV
           fi
 
-      - name: Create new RC tag
-        if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
-        run: |
-          echo "Tag code with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
-#          git tag ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
-
-      - name: Push RC tag to GitHub
-        if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
-        run: |
-          echo "Push RC tag to GitHub: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
-#          git push origin ${{ steps.latest_rc_tag.outputs.next_rc_tag }}
-
       - name: Deploy to Maven Central
-        if: steps.is_release_branch.outputs.is_release_branch == 'true' && steps.latest_rc_tag.outputs.next_rc_tag != ''
+        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
-          echo "Deploy artifact with RC tag: ${{ steps.latest_rc_tag.outputs.next_rc_tag }}"
-#          mvn clean deploy -Drevision=${{ steps.latest_rc_tag.outputs.next_rc_tag }}
+          echo "Deploying artifact with RC tag: ${{ env.next_rc_tag }}"
+          mvn --batch-mode -DskipTests -Denv=cd-maven -Drevision=${{ env.next_rc_tag }} clean deploy
+
+      - name: Create new RC tag
+        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
+        run: |
+          echo "Creating new RC tag: ${{ env.next_rc_tag }}"
+          git tag ${{ env.next_rc_tag }}
+
+      - name: Push RC tag to GitHub
+        if: env.is_release_branch == 'true' && env.next_rc_tag != ''
+        run: |
+          echo "Pushing RC tag to GitHub: ${{ env.next_rc_tag }}"
+          git push origin ${{ env.next_rc_tag }}
