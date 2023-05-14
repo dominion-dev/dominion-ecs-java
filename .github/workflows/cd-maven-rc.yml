@@ -65,7 +65,7 @@ jobs:
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
           echo "Deploying artifact with RC tag: ${{ env.next_rc_tag }}"
-          mvn --batch-mode -Denv=cd-maven -Drevision=${{ env.next_rc_tag }} clean deploy
+          mvn --batch-mode -DskipTests -Denv=cd-maven -Drevision=${{ env.next_rc_tag }} clean deploy
 
       - name: Create new RC tag
         if: env.is_release_branch == 'true' && env.next_rc_tag != ''
