@@ -11,6 +11,9 @@
 
     <artifactId>dominion-ecs-api</artifactId>
 
+    <name>Dominion ECS Project API</name>
+    <url>https://www.dominion.dev</url>
+
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
     </properties>

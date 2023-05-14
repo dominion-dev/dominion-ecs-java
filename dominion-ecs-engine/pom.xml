@@ -10,6 +10,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>dominion-ecs-engine</artifactId>
+
+    <name>Dominion ECS Project Engine</name>
+    <url>https://www.dominion.dev</url>
+
     <dependencies>
         <dependency>
             <groupId>dev.dominion.ecs</groupId>

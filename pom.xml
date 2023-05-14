@@ -11,6 +11,7 @@
 
     <name>Dominion ECS Project</name>
     <description>Dominion is an Entity Component System library for Java</description>
+    <url>https://www.dominion.dev</url>
 
     <modules>
         <module>dominion-ecs-api</module>
