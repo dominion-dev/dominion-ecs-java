@@ -82,7 +82,8 @@ can be disabled and re-enabled and can have a given Enum value to optionally set
 | boolean **removeType**(Class\<?> componentType)         | Removes a component if there is a component of the specified type.              |
 | boolean **has**(Class\<?> componentType)                | Checks if there is a component of the specified type.                           |
 | boolean **contains**(Object component)                  | Checks if the specified component is present.                                   |
-| <S extends Enum\<S>> Entity **setState**(S state)       | Sets a state to the entity or remove the current state by passing a null value. |
+| \<T> T  **get**(Class\<T> componentType)                | Gets the component of the specified type if any.                                |
+| \<S extends Enum\<S>> Entity **setState**(S state)      | Sets a state to the entity or remove the current state by passing a null value. |
 | boolean **isEnabled**()                                 | Checks if the entity is enabled.                                                |
 | [Entity](#class-entity) **setEnabled**(boolean enabled) | Enable/Disables the entity.                                                     |
 
