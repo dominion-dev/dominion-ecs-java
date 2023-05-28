@@ -187,17 +187,17 @@ class ChunkedPoolTest {
                     executorService.execute(tenant1::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant1.freeId(idx, false, false));
+                        executorService.execute(() -> tenant1.freeId(idx, false));
                     }
                     executorService.execute(tenant2::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant2.freeId(idx, false, false));
+                        executorService.execute(() -> tenant2.freeId(idx, false));
                     }
                     executorService.execute(tenant3::nextId);
                     if (i % 10 == 0) {
                         final int idx = (int) (i * 0.7);
-                        executorService.execute(() -> tenant3.freeId(idx, false, false));
+                        executorService.execute(() -> tenant3.freeId(idx, false));
                     }
                 }
                 executorService.shutdown();

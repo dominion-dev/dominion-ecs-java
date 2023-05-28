@@ -251,4 +251,5 @@ class IntEntityTest {
 
     record C5(int id) {
     }
+
 }
