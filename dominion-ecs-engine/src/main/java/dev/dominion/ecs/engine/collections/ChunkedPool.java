@@ -260,21 +260,18 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int freeId(int id) {
-            return freeId(id, true, false);
+            return freeId(id, false);
         }
 
         public int freeStateId(int stateId) {
-            return freeId(stateId, true, true);
+            return freeId(stateId, true);
         }
 
-        public int freeId(int id, boolean check, boolean isState) {
-            LinkedChunk<T> chunkById = pool.getChunk(id);
-            if (check && (chunkById == null || chunkById.tenant != this)) {
-                throw new IllegalArgumentException("Invalid chunkById [" + chunkById + "] retrieved by [" + id + "]");
-            }
-            boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+        public int freeId(int id, boolean isState) {
             synchronized (this) {
-                if (chunkById.isEmpty()) {
+                LinkedChunk<T> chunkById = pool.getChunk(id);
+                boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+                if (chunkById == null || chunkById.tenant != this || chunkById.isEmpty()) {
                     return id;
                 }
                 int reusableId = chunkById.remove(id, isState);
