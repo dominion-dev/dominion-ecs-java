@@ -252,4 +252,78 @@ class IntEntityTest {
     record C5(int id) {
     }
 
+    public static class A {
+        private final C c;
+
+        public A(EntityRepository entityRepository) {
+            c = new C(entityRepository.createEntity(this));
+        }
+    }
+
+    record B(A a) {
+    }
+
+    record C(Entity entity) {
+    }
+
+    @Test
+    public void concurrentConcatenatedAdd() throws InterruptedException {
+
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+
+        Runnable runnable = () -> {
+            for (int i = 0; i < 1000; i++) {
+                final var a = new A(entityRepository);
+                a.c.entity.add(new B(a));
+            }
+        };
+        executorService.execute(runnable);
+        executorService.execute(runnable);
+
+        executorService.shutdown();
+        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+
+        entityRepository.findEntitiesWith(A.class, B.class).stream().forEach(rs -> Assertions.assertEquals(rs.comp1(), rs.comp2().a, "rs.comp1() VS rs.comp2().a"));
+
+        entityRepository.findEntitiesWith(A.class).stream().forEach(rs -> {
+            Assertions.assertNotNull(rs.entity());
+            Assertions.assertNotNull(rs.comp());
+            Assertions.assertEquals(rs.entity(), rs.comp().c.entity, "rs.entity() VS rs.comp().c.entity");
+        });
+    }
+
+//    record A(int tag) {
+//    }
+//
+//    record B(A a, int tag) {
+//    }
+//
+//    @Test
+//    public void concurrentConcatenatedAdd() throws InterruptedException {
+//        ExecutorService executorService = Executors.newFixedThreadPool(8);
+//        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+//        AtomicInteger tagProvider = new AtomicInteger();
+//
+//        Runnable runnable = () -> {
+//            for (int i = 0; i < 10000; i++) {
+//                int tag = tagProvider.incrementAndGet();
+//                A a;
+//                Entity entity = entityRepository.createEntity(a = new A(tag)).add(new B(a, tag));
+//                a = entity.get(A.class);
+//                B b = entity.get(B.class);
+//                if (!a.equals(b.a)) {
+//                    System.out.println("MISMATCH in " + entity);
+//                }
+//            }
+//        };
+//        executorService.execute(runnable);
+//        executorService.execute(runnable);
+//        executorService.shutdown();
+//        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+//
+//        entityRepository.findEntitiesWith(A.class, B.class).stream().forEach(rs -> {
+//            Assertions.assertEquals(rs.comp1(), rs.comp2().a, "rs.comp1() VS rs.comp2().a");
+//        });
+//    }
 }

@@ -117,8 +117,10 @@ public final class DataComposition {
     }
 
     public IntEntity createEntity(boolean prepared, Object... components) {
-        return tenant.register(new IntEntity(tenant.nextId()),
-                !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
+        synchronized (tenant) {
+            return tenant.register(new IntEntity(tenant.nextId()),
+                    !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
+        }
     }
 
     public void attachEntity(IntEntity entity, int[] indexMapping, int[] addedIndexMapping, Object addedComponent, Object[] addedComponents) {
