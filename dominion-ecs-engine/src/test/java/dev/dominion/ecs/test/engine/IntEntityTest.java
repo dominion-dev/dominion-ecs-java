@@ -131,14 +131,27 @@ class IntEntityTest {
 
     @Test
     void removeAll() {
-        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
-        int capacity = (1 << 20) + 1;
-        for (int i = 0; i < capacity; i++) {
-            entityRepository.createEntity(new C1(i));
+        {
+            EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+            int capacity = (1 << 20) + 1;
+            for (int i = 0; i < capacity; i++) {
+                entityRepository.createEntity(new C1(i));
+            }
+            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
         }
-        entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
-        entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
-        Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
+
+        {
+            EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+            int capacity = (1 << 20) + 1;
+            for (int i = 0; i < capacity; i++) {
+                entityRepository.createEntity(new C1(i));
+            }
+            entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
+            entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
+            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
+        }
     }
 
     @Test
