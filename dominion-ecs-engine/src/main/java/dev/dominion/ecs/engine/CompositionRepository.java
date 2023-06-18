@@ -157,9 +157,9 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
             );
         }
-        int prevId = entity.getId();
         ChunkedPool.Tenant<IntEntity> prevTenant;
         synchronized (prevTenant = entity.getChunk().getTenant()) {
+            int prevId = entity.getId();
             targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
             prevTenant.freeId(prevId);
         }

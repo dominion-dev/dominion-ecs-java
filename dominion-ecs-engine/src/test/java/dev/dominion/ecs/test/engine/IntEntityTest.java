@@ -253,29 +253,43 @@ class IntEntityTest {
     }
 
     public static class A {
+        private final int id;
         private final C c;
 
-        public A(EntityRepository entityRepository) {
-            c = new C(entityRepository.createEntity(this));
+        public A(int id, EntityRepository entityRepository) {
+            this.id = id;
+            c = new C(id, entityRepository.createEntity(this));
+        }
+
+        @Override
+        public String toString() {
+            return "A{" +
+                    "id=" + id +
+                    '}';
         }
     }
 
-    record B(A a) {
+    record B(int id, A a) {
     }
 
-    record C(Entity entity) {
+    record C(int id, Entity entity) {
     }
 
     @Test
     public void concurrentConcatenatedAdd() throws InterruptedException {
+//        System.setProperty("dominion.logging-level", "TRACE");
+//        System.setProperty("dominion.test.logging-level", "TRACE");
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+//        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
 
+        AtomicInteger counter = new AtomicInteger(1);
         Runnable runnable = () -> {
-            for (int i = 0; i < 1000; i++) {
-                final var a = new A(entityRepository);
-                a.c.entity.add(new B(a));
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                final var a = new A(id, entityRepository);
+                a.c.entity.add(new B(id, a));
             }
         };
         executorService.execute(runnable);
@@ -301,7 +315,7 @@ class IntEntityTest {
 //
 //    @Test
 //    public void concurrentConcatenatedAdd() throws InterruptedException {
-//        ExecutorService executorService = Executors.newFixedThreadPool(8);
+//        ExecutorService executorService = Executors.newFixedThreadPool(10);
 //        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
 //        AtomicInteger tagProvider = new AtomicInteger();
 //

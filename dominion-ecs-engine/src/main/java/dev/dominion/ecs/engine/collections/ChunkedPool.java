@@ -641,6 +641,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int remove(int id, boolean isState) {
+//            System.out.println("remove id: " + idSchema.idToString(id) + " and index: " + index);
             int removedIndex = idSchema.fetchObjectId(id);
             int lastIndex = --index + sizeOffset;
             if (lastIndex < 0 || lastIndex >= idSchema.chunkCapacity) {
@@ -655,6 +656,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     last.setStateId(id);
                 }
                 if (dataLength == 1) {
+//                    System.out.println("dataArray[removedIndex] = dataArray[lastIndex] -> with removedIndex:" + removedIndex + " lastIndex: " + lastIndex);
                     dataArray[removedIndex] = dataArray[lastIndex];
                 }
                 if (dataLength > 1) {
@@ -663,6 +665,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     }
                 }
                 itemArray[removedIndex] = last;
+//                System.out.println("itemArray[removedIndex] = last -> with removedIndex:" + removedIndex + " last: " + last);
                 itemArray[lastIndex] = null;
             } else {
                 itemArray[removedIndex] = null;
@@ -713,6 +716,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 } else { // copy to new multiDataArray
                     if (prevChunk.dataLength == 1) { // copy from prev.dataArray
                         if (indexMapping[0] > -1) {
+//                            System.out.println("multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx] -> prevChunk.dataArray[prevIdx]: " + prevChunk.dataArray[prevIdx] + " prevIdx: " + prevIdx + " newIdx: " + newIdx);
                             multiDataArray[indexMapping[0]][newIdx] = prevChunk.dataArray[prevIdx];
                         }
                     } else {  // copy from prev.multiDataArray
