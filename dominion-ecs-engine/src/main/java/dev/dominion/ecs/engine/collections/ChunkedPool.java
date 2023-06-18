@@ -202,7 +202,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.owner = owner;
             this.subject = subject;
             this.loggingContext = loggingContext;
-            idStack = new IntStack(IdSchema.DETACHED_BIT, idSchema.chunkCapacity);
+            idStack = new IntStack(IdSchema.DETACHED_BIT, idSchema.chunkCapacity << 3);
             currentChunk = pool.newChunk(this, null);
             firstChunk = currentChunk;
             nextId();
