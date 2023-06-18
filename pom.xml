@@ -45,7 +45,7 @@
         <nexus-staging-maven-plugin>1.6.13</nexus-staging-maven-plugin>
         <!--Dependencies - No core modules build dependencies-->
         <junit-jupiter-engine>5.8.2</junit-jupiter-engine>
-        <jmh-core>1.35</jmh-core>
+        <jmh-core>1.36</jmh-core>
         <jol-core>0.16</jol-core>
     </properties>
 
