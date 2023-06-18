@@ -11,7 +11,7 @@ natively with JDK Azul-17 aarch64:
 | **Create** entities with **no** component          |   0.016 s    |
 |                                                    |              |
 | **Create** entities with **1** component           |   0.035 s    |
-| **Create** entities with **2** components          |   0.063 s    |
+| **Create** entities with **2** components          |   0.048 s    |
 | **Create** entities with **4** components          |   0.066 s    |
 | **Create** entities with **8** components          |   0.095 s    |
 |                                                    |              |
