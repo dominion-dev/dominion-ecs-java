@@ -205,7 +205,7 @@ public final class CompositionRepository implements AutoCloseable {
         return true;
     }
 
-    @SuppressWarnings("ForLoopReplaceableByForEach")
+    @SuppressWarnings({"ForLoopReplaceableByForEach", "LocalVariableUsedAndDeclaredInDifferentSwitchBranches"})
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
         if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
