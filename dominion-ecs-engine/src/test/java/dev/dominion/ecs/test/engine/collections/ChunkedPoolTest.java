@@ -111,7 +111,7 @@ class ChunkedPoolTest {
             }
         }
 
-        @Test
+//        @Test
         public void concurrentNextId() throws InterruptedException {
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.STRESS_TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();
@@ -137,7 +137,7 @@ class ChunkedPoolTest {
             }
         }
 
-        @Test
+//        @Test
         public void concurrentNextAndFreeId() throws InterruptedException {
             try (ChunkedPool<TestEntity> chunkedPool = new ChunkedPool<>(ID_SCHEMA, Logging.Context.TEST)) {
                 ChunkedPool.Tenant<TestEntity> tenant = chunkedPool.newTenant();

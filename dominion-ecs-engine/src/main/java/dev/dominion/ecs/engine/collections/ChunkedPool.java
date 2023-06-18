@@ -243,28 +243,28 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         )
                 );
             }
-            synchronized (this) {
-                int returnValue = idStack.pop();
-                if (loggable) {
-                    LOGGER.log(
-                            System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
-                                    , "Popping nextId:" + idSchema.idToString(returnValue)
-                            )
-                    );
-                }
-                if (returnValue != IdSchema.DETACHED_BIT) {
-                    pool.getChunk(returnValue).incrementIndex();
-                    return returnValue;
-                }
-                returnValue = nextId;
-                if (currentChunk.index < idSchema.chunkCapacity - 1) {
-                    nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
-                    return returnValue;
-                }
-                currentChunk = pool.newChunk(this, currentChunk);
+//            synchronized (this) {
+            int returnValue = idStack.pop();
+            if (loggable) {
+                LOGGER.log(
+                        System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
+                                , "Popping nextId:" + idSchema.idToString(returnValue)
+                        )
+                );
+            }
+            if (returnValue != IdSchema.DETACHED_BIT) {
+                pool.getChunk(returnValue).incrementIndex();
+                return returnValue;
+            }
+            returnValue = nextId;
+            if (currentChunk.index < idSchema.chunkCapacity - 1) {
                 nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                 return returnValue;
             }
+            currentChunk = pool.newChunk(this, currentChunk);
+            nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
+            return returnValue;
+//            }
         }
 
         public int freeId(int id) {
@@ -276,38 +276,38 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int freeId(int id, boolean isState) {
-            synchronized (this) {
-                LinkedChunk<T> chunkById = pool.getChunk(id);
-                boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
-                if (chunkById == null || chunkById.tenant != this || chunkById.isEmpty()) {
-                    return id;
-                }
-                int reusableId = chunkById.remove(id, isState);
+//            synchronized (this) {
+            LinkedChunk<T> chunkById = pool.getChunk(id);
+            boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
+            if (chunkById == null || chunkById.tenant != this || chunkById.isEmpty()) {
+                return id;
+            }
+            int reusableId = chunkById.remove(id, isState);
+            if (loggable) {
+                LOGGER.log(
+                        System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
+                                , "Freeing " + (isState ? "stateId" : "id") + "=" + idSchema.idToString(id)
+                                        + " > reusableId=" + idSchema.idToString(reusableId)
+                                        + " having current " + currentChunk
+
+                        )
+                );
+            }
+            if (reusableId == IdSchema.DETACHED_BIT) return reusableId;
+            if (chunkById != currentChunk) {
                 if (loggable) {
                     LOGGER.log(
                             System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
-                                    , "Freeing " + (isState ? "stateId" : "id") + "=" + idSchema.idToString(id)
-                                            + " > reusableId=" + idSchema.idToString(reusableId)
-                                            + " having current " + currentChunk
-
+                                    , "Pushing reusableId: " + idSchema.idToString(reusableId)
                             )
                     );
                 }
-                if (reusableId == IdSchema.DETACHED_BIT) return reusableId;
-                if (chunkById != currentChunk) {
-                    if (loggable) {
-                        LOGGER.log(
-                                System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
-                                        , "Pushing reusableId: " + idSchema.idToString(reusableId)
-                                )
-                        );
-                    }
-                    idStack.push(reusableId);
-                } else {
-                    nextId = reusableId;
-                }
-                return reusableId;
+                idStack.push(reusableId);
+            } else {
+                nextId = reusableId;
             }
+            return reusableId;
+//            }
         }
 
         public PoolDataIterator<T> iterator() {
