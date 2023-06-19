@@ -83,44 +83,36 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public Entity add(Object component) {
-        synchronized (this) {
-            if (!isEnabled()) {
-                return this;
-            }
-            return getComposition().getRepository().addComponent(this, component);
+    public synchronized Entity add(Object component) {
+        if (!isEnabled()) {
+            return this;
         }
+        return getComposition().getRepository().addComponent(this, component);
     }
 
     @Override
-    public boolean remove(Object component) {
-        synchronized (this) {
-            if (!isEnabled()) {
-                return false;
-            }
-            return getComposition().getRepository().removeComponentType(this, component.getClass());
+    public synchronized boolean remove(Object component) {
+        if (!isEnabled()) {
+            return false;
         }
+        return getComposition().getRepository().removeComponentType(this, component.getClass());
     }
 
-    public boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
-                          Object addedComponent, Object[] addedComponents) {
-        synchronized (this) {
-            if (!isEnabled()) {
-                return false;
-            }
-            compositions.modifyComponents(this, targetComposition, addedComponent, addedComponents);
-            return true;
+    public synchronized boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
+                                       Object addedComponent, Object[] addedComponents) {
+        if (!isEnabled()) {
+            return false;
         }
+        compositions.modifyComponents(this, targetComposition, addedComponent, addedComponents);
+        return true;
     }
 
     @Override
-    public boolean removeType(Class<?> componentType) {
-        synchronized (this) {
-            if (!isEnabled()) {
-                return false;
-            }
-            return getComposition().getRepository().removeComponentType(this, componentType);
+    public synchronized boolean removeType(Class<?> componentType) {
+        if (!isEnabled()) {
+            return false;
         }
+        return getComposition().getRepository().removeComponentType(this, componentType);
     }
 
     @Override
@@ -163,27 +155,33 @@ public final class IntEntity implements Entity, Item {
 
     @SuppressWarnings("resource")
     @Override
-    public <S extends Enum<S>> Entity setState(S state) {
-        synchronized (this) {
-            if (!isEnabled()) {
-                return this;
-            }
-            if (state == null && stateChunk != null) {
-                stateChunk.getTenant().freeStateId(stateId);
+    public synchronized <S extends Enum<S>> Entity setState(S state) {
+        if (!isEnabled()) {
+            return this;
+        }
+        if (state == null && stateChunk != null) {
+            ChunkedPool.Tenant<IntEntity> tenant;
+            synchronized (tenant = stateChunk.getTenant()) {
+                tenant.freeStateId(stateId);
                 stateChunk = null;
                 return this;
             }
-            DataComposition composition = getComposition();
-            if (stateChunk != null) {
-                var tenant = stateChunk.getTenant();
-                if (tenant == composition.getStateTenant(state)) {
-                    return this;
-                }
+        }
+        DataComposition composition = getComposition();
+        if (stateChunk != null) {
+            var tenant = stateChunk.getTenant();
+            if (tenant == composition.getStateTenant(state)) {
+                return this;
+            }
+            synchronized (stateChunk.getTenant()) {
                 tenant.freeStateId(stateId);
             }
-            stateChunk = composition.fetchStateTenants(state).registerState(this);
-            return this;
         }
+        ChunkedPool.Tenant<IntEntity> tenant;
+        synchronized (tenant = composition.fetchStateTenants(state)) {
+            stateChunk = tenant.registerState(this);
+        }
+        return this;
     }
 
     @Override
@@ -192,32 +190,35 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public Entity setEnabled(boolean enabled) {
+    public synchronized Entity setEnabled(boolean enabled) {
         if (enabled && !isEnabled()) {
-            synchronized (this) {
+            synchronized (chunk.getTenant()) {
                 chunk.unshelve(this, shelf);
                 shelf = null;
             }
         } else if (!enabled && isEnabled()) {
-            synchronized (this) {
+            synchronized (chunk.getTenant()) {
                 shelf = chunk.shelve(this);
             }
         }
         return this;
     }
 
-    boolean delete() {
-        synchronized (this) {
-            chunk.getTenant().freeId(id);
+    synchronized boolean delete() {
+        ChunkedPool.Tenant<IntEntity> tenant;
+        synchronized (tenant = chunk.getTenant()) {
+            tenant.freeId(id);
             flagDetachedId();
             chunk = null;
-            if (stateChunk != null) {
-                stateChunk.getTenant().freeStateId(stateId);
+            shelf = null;
+        }
+        if (stateChunk != null) {
+            synchronized (tenant = stateChunk.getTenant()) {
+                tenant.freeStateId(stateId);
                 stateChunk = null;
             }
-            shelf = null;
-            return true;
         }
+        return true;
     }
 
     @Override
