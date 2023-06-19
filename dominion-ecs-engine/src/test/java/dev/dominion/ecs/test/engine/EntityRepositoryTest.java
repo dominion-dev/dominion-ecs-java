@@ -42,9 +42,7 @@ class EntityRepositoryTest {
         Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
 
         var count = new AtomicInteger(0);
-        var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
-        while (iterator.hasNext()) {
-            var rs = iterator.next();
+        for (var rs : entityRepository.findEntitiesWith(C1.class)) {
             Assertions.assertNotNull(rs.entity());
             Assertions.assertNotNull(rs.comp());
             count.getAndIncrement();
@@ -378,11 +376,19 @@ class EntityRepositoryTest {
         entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
 
+        AtomicInteger count1 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class, C2.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
+        Assertions.assertEquals(0, count1.get());
+
         entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         entityRepository.createEntity(new C1(0), new C2(0));
         AtomicInteger count2 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+
+        AtomicInteger count3 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
+        Assertions.assertEquals(0, count3.get());
     }
 
     @Test
@@ -393,6 +399,10 @@ class EntityRepositoryTest {
         AtomicInteger count = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
+
+        AtomicInteger count1 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class, C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
+        Assertions.assertEquals(0, count1.get());
     }
 
     @Test
@@ -402,10 +412,18 @@ class EntityRepositoryTest {
         AtomicInteger count = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
-        
+
+        AtomicInteger count1 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
+        Assertions.assertEquals(0, count1.get());
+
         AtomicInteger count2 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C3.class).withAlso(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+
+        AtomicInteger count3 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C3.class).withAlso(C1.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
+        Assertions.assertEquals(0, count3.get());
     }
 
     @Test
@@ -416,9 +434,17 @@ class EntityRepositoryTest {
         entityRepository.findEntitiesWith(C1.class).without(C3.class).stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(1, count.get());
 
+        AtomicInteger count1 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C1.class).without(C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
+        Assertions.assertEquals(1, count1.get());
+
         AtomicInteger count2 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C3.class).without(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+
+        AtomicInteger count3 = new AtomicInteger(0);
+        entityRepository.findEntitiesWith(C3.class).without(C1.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
+        Assertions.assertEquals(0, count3.get());
     }
 
     @Test

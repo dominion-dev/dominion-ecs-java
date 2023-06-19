@@ -14,11 +14,7 @@ import dev.dominion.ecs.engine.system.Config;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.Logging;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
@@ -161,14 +157,18 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
             );
         }
-        int prevId = entity.getId();
-        ChunkedPool.Tenant<IntEntity> prevTenant = entity.getChunk().getTenant();
-        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
-        prevTenant.freeId(prevId);
+        ChunkedPool.Tenant<IntEntity> prevTenant;
+        synchronized (prevTenant = entity.getChunk().getTenant()) {
+            int prevId = entity.getId();
+            targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
+            prevTenant.freeId(prevId);
+        }
         if (entity.stateChunk != null) {
-            ChunkedPool.Tenant<IntEntity> prevStateTenant = entity.stateChunk.getTenant();
-            prevStateTenant.freeStateId(entity.getStateId());
-            entity.stateChunk = targetComposition.target().fetchStateTenants((IndexKey) prevStateTenant.getSubject()).registerState(entity);
+            ChunkedPool.Tenant<IntEntity> prevStateTenant;
+            synchronized (prevStateTenant = entity.stateChunk.getTenant()) {
+                prevStateTenant.freeStateId(entity.getStateId());
+                entity.stateChunk = targetComposition.target().fetchStateTenants((IndexKey) prevStateTenant.getSubject()).registerState(entity);
+            }
         }
     }
 
@@ -205,7 +205,7 @@ public final class CompositionRepository implements AutoCloseable {
         return true;
     }
 
-    @SuppressWarnings("ForLoopReplaceableByForEach")
+    @SuppressWarnings({"ForLoopReplaceableByForEach", "LocalVariableUsedAndDeclaredInDifferentSwitchBranches"})
     public Map<IndexKey, Node> findWith(Class<?>... componentTypes) {
         if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
             LOGGER.log(
