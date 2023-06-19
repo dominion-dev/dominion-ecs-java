@@ -17,7 +17,7 @@ import java.util.stream.Stream;
  * @param <T> the type of each result
  * @author Enrico Stara
  */
-public interface Results<T> {
+public interface Results<T> extends Iterable<T> {
 
     /**
      * Provides an iterator to retrieve found entities in sequence.
@@ -32,6 +32,13 @@ public interface Results<T> {
      * @return the stream
      */
     Stream<T> stream();
+
+    /**
+     * Creates a parallel stream to supports functional-style operations on found entities.
+     *
+     * @return the stream
+     */
+    Stream<T> parallelStream();
 
     /**
      * Provides a filtered Results without one or more component types to exclude.

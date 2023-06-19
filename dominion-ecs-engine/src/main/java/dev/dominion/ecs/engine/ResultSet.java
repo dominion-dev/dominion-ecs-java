@@ -86,6 +86,11 @@ public abstract class ResultSet<T> implements Results<T> {
     }
 
     @Override
+    public Stream<T> parallelStream() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED), true);
+    }
+
+    @Override
     public Results<T> without(Class<?>... componentTypes) {
         compositionRepository.mapWithout(nodeMap, componentTypes);
         return this;
