@@ -160,7 +160,9 @@ public final class CompositionRepository implements AutoCloseable {
         ChunkedPool.Tenant<IntEntity> prevTenant;
         synchronized (prevTenant = entity.getChunk().getTenant()) {
             int prevId = entity.getId();
-            targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
+            synchronized (targetComposition.target().getTenant()) {
+                targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
+            }
             prevTenant.freeId(prevId);
         }
         if (entity.stateChunk != null) {
