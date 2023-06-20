@@ -320,37 +320,33 @@ class IntEntityTest {
         });
     }
 
-//    record A(int tag) {
-//    }
-//
-//    record B(A a, int tag) {
-//    }
-//
-//    @Test
-//    public void concurrentConcatenatedAdd() throws InterruptedException {
-//        ExecutorService executorService = Executors.newFixedThreadPool(10);
-//        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
-//        AtomicInteger tagProvider = new AtomicInteger();
-//
-//        Runnable runnable = () -> {
-//            for (int i = 0; i < 10000; i++) {
-//                int tag = tagProvider.incrementAndGet();
-//                A a;
-//                Entity entity = entityRepository.createEntity(a = new A(tag)).add(new B(a, tag));
-//                a = entity.get(A.class);
-//                B b = entity.get(B.class);
-//                if (!a.equals(b.a)) {
-//                    System.out.println("MISMATCH in " + entity);
-//                }
-//            }
-//        };
-//        executorService.execute(runnable);
-//        executorService.execute(runnable);
-//        executorService.shutdown();
-//        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
-//
-//        entityRepository.findEntitiesWith(A.class, B.class).stream().forEach(rs -> {
-//            Assertions.assertEquals(rs.comp1(), rs.comp2().a, "rs.comp1() VS rs.comp2().a");
-//        });
-//    }
+    @Test
+    public void concurrentConcatenatedMultipleAdds() throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+
+        AtomicInteger counter = new AtomicInteger(1);
+        Runnable runnable1 = () -> {
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                entityRepository.createEntity(new C1(id)).add(new C2(id));
+            }
+        };
+        Runnable runnable2 = () -> {
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                entityRepository.createEntity(new C1(id)).add(new C2(id)).add(new C3(id));
+            }
+        };
+        executorService.execute(runnable1);
+        executorService.execute(runnable2);
+
+        executorService.shutdown();
+        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+
+        entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> {
+            Assertions.assertNotNull(rs.entity());
+            Assertions.assertNotNull(rs.comp());
+        });
+    }
 }
