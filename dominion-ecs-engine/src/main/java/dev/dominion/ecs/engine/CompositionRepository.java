@@ -56,6 +56,10 @@ public final class CompositionRepository implements AutoCloseable {
         root.composition = new DataComposition(this, pool, classIndex, idSchema, loggingContext);
     }
 
+    public ChunkedPool<IntEntity> getPool() {
+        return pool;
+    }
+
     public IdSchema getIdSchema() {
         return idSchema;
     }
