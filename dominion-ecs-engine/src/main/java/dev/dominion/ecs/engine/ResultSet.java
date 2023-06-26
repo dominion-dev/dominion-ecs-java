@@ -21,7 +21,7 @@ import java.util.stream.StreamSupport;
 public abstract class ResultSet<T> implements Results<T> {
     private static final System.Logger LOGGER = Logging.getLogger();
     protected final boolean withEntity;
-    private final CompositionRepository compositionRepository;
+    protected final CompositionRepository compositionRepository;
     private final Map<IndexKey, CompositionRepository.Node> nodeMap;
     protected IndexKey stateKey;
 
@@ -182,6 +182,38 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         public <S extends Enum<S>> Results<T> withState(S state) {
             throw new UnsupportedOperationException("Unsupported .findCompositionWith(Class<T> type).withState(S state) call : use .findEntitiesWith(Class<T> type).withState(S state) instead");
+        }
+    }
+
+    public final static class All extends ResultSet<IntEntity> {
+
+        public All(CompositionRepository compositionRepository) {
+            super(compositionRepository, null, false);
+        }
+
+        @Override
+        Iterator<IntEntity> compositionIterator(DataComposition composition) {
+            return null;
+        }
+
+        @Override
+        public Iterator<IntEntity> iterator() {
+            return compositionRepository.getPool().allEntities();
+        }
+
+        @Override
+        public <S extends Enum<S>> Results<IntEntity> withState(S state) {
+            throw new UnsupportedOperationException("Unsupported operation.");
+        }
+
+        @Override
+        public Results<IntEntity> without(Class<?>... componentTypes) {
+            throw new UnsupportedOperationException("Unsupported operation.");
+        }
+
+        @Override
+        public Results<IntEntity> withAlso(Class<?>... componentTypes) {
+            throw new UnsupportedOperationException("Unsupported operation.");
         }
     }
 

@@ -9,6 +9,7 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -208,6 +209,40 @@ class EntityRepositoryTest {
         Assertions.assertEquals(entity2, pool.getEntry(id1));
         Assertions.assertEquals(id1, entity2.getId());
     }
+
+
+    @Test
+    void findAllEntities() {
+        var c1 = new C1(0);
+        var c2 = new C2(0);
+        var c3 = new C3(0);
+        var c4 = new C4(0);
+        var c5 = new C5(0);
+        var c6 = new C6(0);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+        Entity[] entities = new Entity[6];
+        entities[0] = entityRepository.createEntity(c1);
+        entities[1] = entityRepository.createEntity(c1, c2);
+        entities[2] = entityRepository.createEntity(c1, c2, c3);
+        entities[3] = entityRepository.createEntity(c1, c2, c3, c4);
+        entities[4] = entityRepository.createEntity(c1, c2, c3, c4, c5);
+        entities[5] = entityRepository.createEntity(c1, c2, c3, c4, c5, c6);
+
+        Iterator<Entity> iterator = entityRepository.findAllEntities().iterator();
+        Assertions.assertEquals(entities[5], iterator.next());
+        Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(entities[4], iterator.next());
+        Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(entities[3], iterator.next());
+        Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(entities[2], iterator.next());
+        Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(entities[1], iterator.next());
+        Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(entities[0], iterator.next());
+        Assertions.assertFalse(iterator.hasNext());
+    }
+
 
     @Test
     void findComponents() {
