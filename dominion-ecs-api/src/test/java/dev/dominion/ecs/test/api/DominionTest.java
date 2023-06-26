@@ -117,6 +117,11 @@ public class DominionTest {
         }
 
         @Override
+        public <T extends Entity> Results<T> findAllEntities() {
+            return null;
+        }
+
+        @Override
         public <T> Results<Results.With1<T>> findEntitiesWith(Class<T> type) {
             return null;
         }

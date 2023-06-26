@@ -80,6 +80,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         return newTenant;
     }
 
+    public Iterator<T> allEntities() {
+        return new PoolAllEntitiesIterator<>(this.chunks, chunkIndex);
+    }
+
     public int size() {
         int sum = 0;
         for (int i = 0; i <= chunkIndex; i++) {
@@ -243,7 +247,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         )
                 );
             }
-//            synchronized (this) {
             int returnValue = idStack.pop();
             if (loggable) {
                 LOGGER.log(
@@ -264,7 +267,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             currentChunk = pool.newChunk(this, currentChunk);
             nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
             return returnValue;
-//            }
         }
 
         public int freeId(int id) {
@@ -276,7 +278,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public int freeId(int id, boolean isState) {
-//            synchronized (this) {
             LinkedChunk<T> chunkById = pool.getChunk(id);
             boolean loggable = Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE);
             if (chunkById == null || chunkById.tenant != this || chunkById.isEmpty()) {
@@ -307,7 +308,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 nextId = reusableId;
             }
             return reusableId;
-//            }
         }
 
         public PoolDataIterator<T> iterator() {
@@ -636,13 +636,53 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @Override
         public boolean hasNext() {
             return next > -1
-                    || (currentChunk != null && (currentChunk = currentChunk.next) != null && !currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin);
+                    ||
+                    (
+                            currentChunk != null
+                                    &&
+                                    (currentChunk = currentChunk.next) != null
+                                    &&
+                                    !currentChunk.isEmpty()
+                                    &&
+                                    (next = begin = currentChunk.size() - 1) == begin
+                    );
         }
 
         @SuppressWarnings({"unchecked"})
         @Override
         public T next() {
             return (T) currentChunk.itemArray[next--];
+        }
+    }
+
+
+    // ALL-ENTITIES ITERATOR
+
+    public static class PoolAllEntitiesIterator<T extends ChunkedPool.Item> extends PoolIterator<T> {
+        private final LinkedChunk<T>[] chunks;
+        private int chunkIndex;
+
+        public PoolAllEntitiesIterator(LinkedChunk<T>[] chunks, int chunkIndex) {
+            super(chunks[chunkIndex], null);
+            this.chunks = chunks;
+            this.chunkIndex = chunkIndex;
+            currentChunk = chunks[chunkIndex];
+        }
+
+        @SuppressWarnings("ConstantConditions")
+        @Override
+        public boolean hasNext() {
+            return next > -1
+                    ||
+                    (
+                            chunkIndex > 0
+                                    &&
+                                    (currentChunk = chunks[--chunkIndex]) != null
+                                    &&
+                                    !currentChunk.isEmpty()
+                                    &&
+                                    (next = currentChunk.size() - 1) == next
+                    );
         }
     }
 

@@ -33,10 +33,11 @@ items required by the user application.
 | [Entity](#class-entity) **createPreparedEntity**([Composition.OfTypes](#class-composition) withValues); | Creates a new Entity by passing a prepared composition of one or more POJO components.       |
 | [Entity](#class-entity) **createEntityAs**([Entity](#class-entity) prefab, Object... components);       | Creates an Entity by using another Entity as prefab and adding zero or more POJO components. |
 | boolean **deleteEntity**([Entity](#class-entity) entity);                                               | Delete the  entity by freeing the id and canceling the reference to all components, if any   |
-| [Results](#class-results)<EntityWith1> **findEntitiesWith**(Class\<T> type);                            | Finds all entities with a component of the specified type.                                   |
-| [Results](#class-results)<EntityWithN> **findEntitiesWith**(Class\<T1> type1,..)                        | Finds all entities with components of the specified types.                                   |
-| [Results](#class-results)<With1> **findCompositionsWith**(Class\<T> type);                              | Finds all compositions with a component of the specified type.                               |
-| [Results](#class-results)<WithN> **findCompositionsWith**(Class\<T1> type1,..)                          | Finds all compositions with components of the specified types.                               |
+| \<T extends Entity> [Results](#class-results)\<T> **findAllEntities**();                                | Finds all entities.                                                                          |
+| [Results](#class-results)\<With1> **findEntitiesWith**(Class\<T> type);                                 | Finds all entities with a component of the specified type.                                   |
+| [Results](#class-results)\<WithN> **findEntitiesWith**(Class\<T1> type1,..)                             | Finds all entities with components of the specified types.                                   |
+| [Results](#class-results)\<With1> **findCompositionsWith**(Class\<T> type);                             | Finds all compositions with a component of the specified type.                               |
+| [Results](#class-results)\<WithN> **findCompositionsWith**(Class\<T1> type1,..)                         | Finds all compositions with components of the specified types.                               |
 
 ## Class Composition
 

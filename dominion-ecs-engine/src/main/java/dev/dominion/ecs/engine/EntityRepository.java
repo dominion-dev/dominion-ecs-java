@@ -146,6 +146,13 @@ public final class EntityRepository implements Dominion {
         return new ResultSet.With6<>(compositions, nodes, false, type1, type2, type3, type4, type5, type6);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends Entity> Results<T> findAllEntities() {
+        checkState();
+        return (Results<T>) new ResultSet.All(compositions);
+    }
+
     @Override
     public <T> Results<With1<T>> findEntitiesWith(Class<T> type) {
         checkState();
