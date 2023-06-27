@@ -38,12 +38,6 @@ jobs:
         if: env.is_release_branch == 'true'
         run: |
           echo "Setting up Git"
-          git --version
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git status
-          git tag
-          git describe
       - name: Get latest RC tag
         if: env.is_release_branch == 'true'
         id: latest_rc_tag
