@@ -5,6 +5,9 @@ name: Java CD for RC with Maven
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   tag-rc-release:
     runs-on: ubuntu-latest
