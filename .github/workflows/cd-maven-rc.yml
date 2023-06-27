@@ -46,6 +46,7 @@ jobs:
           git config user.email "<>"
           git status
           git tag
+          git ls-remote origin "refs/tags/*-RC*[0-9]" | cut -f 2- | sort -V | tail -1
       - name: Get latest RC tag
         if: env.is_release_branch == 'true'
         id: latest_rc_tag
