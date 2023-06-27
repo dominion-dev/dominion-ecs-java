@@ -265,4 +265,88 @@ class IntEntityTest {
     record C5(int id) {
     }
 
+    public static class A {
+        private final int id;
+        private final C c;
+
+        public A(int id, EntityRepository entityRepository) {
+            this.id = id;
+            c = new C(id, entityRepository.createEntity(this));
+        }
+
+        @Override
+        public String toString() {
+            return "A{" +
+                    "id=" + id +
+                    '}';
+        }
+    }
+
+    record B(int id, A a) {
+    }
+
+    record C(int id, Entity entity) {
+    }
+
+    @Test
+    public void concurrentConcatenatedAdd() throws InterruptedException {
+//        System.setProperty("dominion.logging-level", "TRACE");
+//        System.setProperty("dominion.test.logging-level", "TRACE");
+
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+//        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
+
+        AtomicInteger counter = new AtomicInteger(1);
+        Runnable runnable = () -> {
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                final var a = new A(id, entityRepository);
+                a.c.entity.add(new B(id, a));
+            }
+        };
+        executorService.execute(runnable);
+        executorService.execute(runnable);
+
+        executorService.shutdown();
+        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+
+        entityRepository.findEntitiesWith(A.class, B.class).stream().forEach(rs -> Assertions.assertEquals(rs.comp1(), rs.comp2().a, "rs.comp1() VS rs.comp2().a"));
+
+        entityRepository.findEntitiesWith(A.class).stream().forEach(rs -> {
+            Assertions.assertNotNull(rs.entity());
+            Assertions.assertNotNull(rs.comp());
+            Assertions.assertEquals(rs.entity(), rs.comp().c.entity, "rs.entity() VS rs.comp().c.entity");
+        });
+    }
+
+    @Test
+    public void concurrentConcatenatedMultipleAdds() throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+
+        AtomicInteger counter = new AtomicInteger(1);
+        Runnable runnable1 = () -> {
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                entityRepository.createEntity(new C1(id)).add(new C2(id));
+            }
+        };
+        Runnable runnable2 = () -> {
+            for (int i = 0; i < 10000; i++) {
+                int id = counter.getAndIncrement();
+                entityRepository.createEntity(new C1(id)).add(new C2(id)).add(new C3(id));
+            }
+        };
+        executorService.execute(runnable1);
+        executorService.execute(runnable2);
+
+        executorService.shutdown();
+        Assertions.assertTrue(executorService.awaitTermination(5, TimeUnit.SECONDS));
+
+        entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> {
+            Assertions.assertNotNull(rs.entity());
+            Assertions.assertNotNull(rs.comp());
+        });
+    }
 }
