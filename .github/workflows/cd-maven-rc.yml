@@ -44,7 +44,6 @@ jobs:
           git --version
           git config user.name "GitHub Action Bot"
           git config user.email "<>"
-          git ls-remote origin "refs/tags/*-RC*[0-9]" | cut -f 2- | sort -V | tail -1
       - name: Get latest RC tag
         if: env.is_release_branch == 'true'
         id: latest_rc_tag
