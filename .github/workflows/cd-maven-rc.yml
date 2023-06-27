@@ -5,12 +5,15 @@ name: Java CD for RC with Maven
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   tag-rc-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
       - name: Set up Maven Central Repository
         uses: actions/setup-java@v3
         with:
@@ -38,16 +41,22 @@ jobs:
         if: env.is_release_branch == 'true'
         run: |
           echo "Setting up Git"
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
+          git --version
+          git config user.name "GitHub Action Bot"
+          git config user.email "<>"
+          git status
+          git tag
+          git describe
       - name: Get latest RC tag
         if: env.is_release_branch == 'true'
         id: latest_rc_tag
         run: |
           echo "Getting the latest RC tag"
           current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
+          echo "current_release_version=${current_release_version}"
+          git describe --tags --match "${current_release_version}-RC*" --abbrev=0 2>/dev/null
           latest_rc_tag=$(git describe --tags --match "${current_release_version}-RC*" --abbrev=0 2>/dev/null || echo "")
+          echo "latest_rc_tag=${latest_rc_tag}"
           if [ -z "$latest_rc_tag" ]; then
             echo "No existing RC tags found"
             echo "next_rc_tag=${current_release_version}-RC1" >> $GITHUB_ENV
