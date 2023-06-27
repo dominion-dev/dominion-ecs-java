@@ -52,7 +52,6 @@ jobs:
           echo "Getting the latest RC tag"
           current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
           echo "current_release_version=${current_release_version}"
-          git describe --tags --match "${current_release_version}-RC*" --abbrev=0 2>/dev/null
           latest_rc_tag=$(git ls-remote origin "refs/tags/${current_release_version}-RC*" | cut -f 2- | sort -V | tail -1 2>/dev/null || echo "")
           echo "latest_rc_tag=${latest_rc_tag}"
           if [ -z "$latest_rc_tag" ]; then
