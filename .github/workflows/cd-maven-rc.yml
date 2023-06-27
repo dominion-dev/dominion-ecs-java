@@ -46,7 +46,7 @@ jobs:
           git config user.email "<>"
           git status
           git tag
-          git describe
+          git describe --tags
       - name: Get latest RC tag
         if: env.is_release_branch == 'true'
         id: latest_rc_tag
