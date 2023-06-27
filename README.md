@@ -49,7 +49,7 @@ Add the following dependency declaration in your project pom.xml:
 <dependency>
     <groupId>dev.dominion.ecs</groupId>
     <artifactId>dominion-ecs-engine</artifactId>
-    <version>0.9.0-RC1</version>
+    <version>0.9.0-RC2</version>
 </dependency>
 ```
 
