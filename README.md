@@ -41,7 +41,7 @@ components' composition and subsequent addition of new systems.
 
 ## Archetypes
 
-Dominion implements the so-called _Archetype_ through the Composition class, an aggregation of components
+Dominion implements the so-called _Archetype_ through the DataComposition class, an aggregation of components
 of which an entity can be made of.
 
 In an ECS, the Archetype is a way to organize and manage entities based on their components. It provides a structured
