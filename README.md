@@ -39,6 +39,39 @@ components' composition and subsequent addition of new systems.
 - 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
   the availability of the new version.
 
+## The Archetype data structure
+
+Dominion implements the so-called _Archetype_ data structure through the Composition class, an aggregation of components
+of which an entity can be made of.
+
+In an Entity Component System (ECS), the Archetype is a way to organize and manage entities based on
+their components. It provides a structured approach for efficiently storing and querying entities with similar component
+compositions.
+
+In an ECS, entities are composed of various components that define their behavior and characteristics. The Archetype
+design pattern groups entities into archetypes based on their shared component types. An archetype represents a specific
+combination of component types that entities possess.
+
+The purpose of using archetypes is to optimize entity storage and system processing. Entities within the same archetype
+have the same layout of components, which allows for data-oriented design and improves memory locality. This arrangement
+enhances cache coherency and enables more efficient processing of system operations.
+
+Archetypes also facilitate efficient querying and iteration over entities that match specific component combinations. By
+organizing entities based on their archetypes, systems can quickly identify and process only the relevant entities that
+contain the required component types, reducing unnecessary overhead.
+
+When a new entity is created or modified, the ECS manager checks the archetype it belongs to. If an existing archetype
+matches the component composition, the entity is added to that archetype. Otherwise, a new archetype is created for the
+entity's unique component combination.
+
+By leveraging the Archetype design pattern, Dominion implementations can achieve high performance and scalability by
+optimizing memory usage, facilitating cache-friendly access patterns, and enabling efficient processing of entities with
+similar component compositions.
+
+Overall, the Archetype design pattern in an Entity Component System provides an effective means of organizing, storing,
+and processing entities with shared component types, leading to improved performance and flexibility in game development
+and other related domains.
+
 ## Quick Start
 
 In your local environment you must have already installed a Java 17 (or newer) and Maven.
@@ -46,6 +79,7 @@ In your local environment you must have already installed a Java 17 (or newer) a
 Add the following dependency declaration in your project pom.xml:
 
 ```xml
+
 <dependency>
     <groupId>dev.dominion.ecs</groupId>
     <artifactId>dominion-ecs-engine</artifactId>
@@ -70,7 +104,7 @@ actions:
 - **_reducing garbage collection activities_**: GC could affect overall performances as its activities run concurrently
   with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
   structures whenever possible.
-- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU, 
+- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU,
   otherwise, it would make little sense today.
 - **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
   faster than Java 11.
