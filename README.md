@@ -39,7 +39,7 @@ components' composition and subsequent addition of new systems.
 - 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
   the availability of the new version.
 
-## Archetypes
+## The Archetype
 
 Dominion implements the so-called _Archetype_ through the <code>DataComposition</code> class, an aggregation of
 component types of which an entity can be made of.
