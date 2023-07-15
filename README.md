@@ -130,8 +130,6 @@ actions:
   structures whenever possible.
 - **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU,
   otherwise, it would make little sense today.
-- **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
-  faster than Java 11.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
@@ -214,7 +212,7 @@ page with all the documented code.
 | Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only | none         |
 | Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  | release-EA-# |
 | Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        | release-RC#  |
-| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
+| Final Release          | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
 
 Dominion is officially in _**Release Candidate**_.
 
