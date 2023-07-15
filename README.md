@@ -41,19 +41,21 @@ components' composition and subsequent addition of new systems.
 
 ## Archetypes
 
-Dominion implements the so-called _Archetype_ through the DataComposition class, an aggregation of components
+Dominion implements the so-called _Archetype_ through the <code>DataComposition</code> class, an aggregation of
+component types
 of which an entity can be made of.
 
 In an ECS, the Archetype is a way to organize and manage entities based on their components. It provides a structured
 approach for efficiently storing and querying entities with similar component compositions.
 
 In an ECS, entities are composed of various components that define their behavior and characteristics. The Archetype
-design pattern groups entities into archetypes based on their shared component types. An archetype represents a specific
-combination of component types that entities possess.
+groups entities into archetypes based on their shared component types. An archetype represents a specific combination of
+component types that entities possess.
 
 The purpose of using archetypes is to optimize entity storage and system processing. Entities within the same archetype
 have the same layout of components, which allows for data-oriented design and improves memory locality. This arrangement
-enhances cache coherency and enables more efficient processing of system operations.
+enhances cache coherency, enables more efficient processing of system operations, and is primarily handled in Dominion
+through the <code>ChunkedPool.Tenant</code> class.
 
 Archetypes also facilitate efficient querying and iteration over entities that match specific component combinations. By
 organizing entities based on their archetypes, systems can quickly identify and process only the relevant entities that
@@ -71,9 +73,9 @@ Overall, the Archetype in an Entity Component System provides an effective means
 and processing entities with shared component types, leading to improved performance and flexibility in game development
 and other related domains.
 
-## Struct of Arrays 
+## Struct of Arrays
 
-Dominion implements the specific Struct of Arrays (SoA) layout through the ChunkedPool.LinkedChunk class.
+Dominion implements the specific Struct of Arrays (SoA) layout through the <code>ChunkedPool.LinkedChunk</code> class.
 
 In an ECS, the SoA layout refers to a data organization approach where the components of entities are stored in separate
 arrays based on their data types. This is in contrast to the traditional approach of storing entities as Arrays of
