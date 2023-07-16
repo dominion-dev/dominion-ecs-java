@@ -40,7 +40,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const tag = $(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///');
+            current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
+            echo "current_release_version=${current_release_version}"            
+            tag=current_release_version
             console.log('Git Tag: ' + tag);
             github.rest.git.createRef({
               owner: context.repo.owner,
