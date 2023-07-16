@@ -25,14 +25,13 @@ jobs:
           gpg-passphrase: GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
-      - name: Publish Release package
-        run: |
-          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
-          export REVISION=$RELEASE
+#      - name: Publish Release package
+#        run: |
+#          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
+#          export REVISION=$RELEASE
 #          echo "Maven Deploy: $REVISION"
 #          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION clean deploy
-        env:
-          RELEASE: $RELEASE
+#        env:
 #          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
 #          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 #          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
@@ -41,7 +40,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const tag = $RELEASE;
+            const tag = $(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///');
             console.log('Git Tag: ' + tag);
             github.rest.git.createRef({
               owner: context.repo.owner,
