@@ -25,7 +25,20 @@ jobs:
           gpg-passphrase: GPG_PASSPHRASE
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
+      - name: Check if branch is release branch
+        id: is_release_branch
+        run: |
+          echo "Checking if branch is a release branch"
+          if [[ "${{ github.ref }}" =~ ^refs/heads/release/.*$ ]]; then
+            echo "This is a release branch"
+            echo "is_release_branch=true" >> $GITHUB_ENV
+          else
+            echo "This is not a release branch"
+            echo "is_release_branch=false" >> $GITHUB_ENV
+          fi
+
 #      - name: Publish Release package
+#        if: env.is_release_branch == 'true'
 #        run: |
 #          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
 #          export REVISION=$RELEASE
@@ -37,16 +50,10 @@ jobs:
 #          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Create tag
-        uses: actions/github-script@v6
-        with:
-          script: |
-            current_release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
-            echo "current_release_version=${current_release_version}"            
-            tag=current_release_version
+        if: env.is_release_branch == 'true'
+        id: release_tag
+        run: |
+            tag=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/release\///')
+            echo "tag=${tag}"            
             console.log('Git Tag: ' + tag);
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/' + tag,
-              sha: context.sha
-            });
+            git tag ${{ tag }}
