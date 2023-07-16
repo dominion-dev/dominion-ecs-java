@@ -41,7 +41,7 @@ components' composition and subsequent addition of new systems.
 
 ## The Archetype concept
 
-Dominion implements the so-called _Archetype_ through the <code>DataComposition</code> class, an aggregation of
+Dominion implements the so-called _Archetype_ concept through the <code>DataComposition</code> class, an aggregation of
 component types of which an entity can be made of.
 
 In an ECS, the Archetype is a way to organize and manage entities based on their components. It provides a structured
