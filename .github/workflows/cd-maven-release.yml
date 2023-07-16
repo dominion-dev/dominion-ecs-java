@@ -1,0 +1,51 @@
+# This workflow will publish EA releases to maven central and create the tag on git
+
+name: Java CD for Release with Maven
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          server-id: ossrh
+          server-username: OSSRH_USERNAME
+          server-password: OSSRH_PASSWORD
+          gpg-passphrase: GPG_PASSPHRASE
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Publish Release package
+        run: |
+          export RELEASE=$(echo $GITHUB_REF_NAME | sed 's/^release\/\(.*\)$/\1/')
+          export REVISION=$RELEASE
+          echo "Maven Deploy: $REVISION"
+          mvn --batch-mode -Denv=cd-maven -Drevision=$REVISION clean deploy
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Create tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const release = context.ref.match(/^release\/(.*)$/)[1];
+            const tag = release;
+            console.log('Git Tag: ' + tag);
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/' + tag,
+              sha: context.sha
+            });
