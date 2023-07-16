@@ -39,9 +39,9 @@ components' composition and subsequent addition of new systems.
 - 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
   the availability of the new version.
 
-## The Archetype
+## The Archetype concept
 
-Dominion implements the so-called _Archetype_ through the <code>DataComposition</code> class, an aggregation of
+Dominion implements the so-called _Archetype_ concept through the <code>DataComposition</code> class, an aggregation of
 component types of which an entity can be made of.
 
 In an ECS, the Archetype is a way to organize and manage entities based on their components. It provides a structured
@@ -103,11 +103,10 @@ In your local environment you must have already installed a Java 17 (or newer) a
 Add the following dependency declaration in your project pom.xml:
 
 ```xml
-
 <dependency>
     <groupId>dev.dominion.ecs</groupId>
     <artifactId>dominion-ecs-engine</artifactId>
-    <version>0.9.0-RC2</version>
+    <version>0.9.0</version>
 </dependency>
 ```
 
@@ -204,17 +203,6 @@ window:
 Here
 the [Dominion Examples](https://github.com/dominion-dev/dominion-ecs-java/blob/main/dominion-ecs-examples/README.md)
 page with all the documented code.
-
-## Dominion Release Cycle
-
-| Phase                  | Description                                                                                             | Distribution    | Git tag      |
-|------------------------|---------------------------------------------------------------------------------------------------------|-----------------|--------------|
-| Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only | none         |
-| Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  | release-EA-# |
-| Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        | release-RC#  |
-| Final Release          | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
-
-Dominion is officially in _**Release Candidate**_.
 
 [Join the Discord for further updates!](https://discord.gg/BHMz3axqUG)
 
