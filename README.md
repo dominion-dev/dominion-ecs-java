@@ -39,6 +39,63 @@ components' composition and subsequent addition of new systems.
 - 💪 _with **SUPPORT**_ > [Join the Discord!](https://discord.gg/BHMz3axqUG) The server will support users and announce
   the availability of the new version.
 
+## The Archetype
+
+Dominion implements the so-called _Archetype_ through the <code>DataComposition</code> class, an aggregation of
+component types of which an entity can be made of.
+
+In an ECS, the Archetype is a way to organize and manage entities based on their components. It provides a structured
+approach for efficiently storing and querying entities with similar component compositions.
+
+In an ECS, entities are composed of various components that define their behavior and characteristics. The Archetype
+groups entities into archetypes based on their shared component types. An archetype represents a specific combination of
+component types that entities possess.
+
+The purpose of using archetypes is to optimize entity storage and system processing. Entities within the same archetype
+have the same layout of components, which allows for data-oriented design and improves memory locality. This arrangement
+enhances cache coherency, enables more efficient processing of system operations, and is primarily handled in Dominion
+through the <code>ChunkedPool.Tenant</code> class.
+
+Archetypes also facilitate efficient querying and iteration over entities that match specific component combinations. By
+organizing entities based on their archetypes, systems can quickly identify and process only the relevant entities that
+contain the required component types, reducing unnecessary overhead.
+
+When a new entity is created or modified, the ECS manager checks the archetype it belongs to. If an existing archetype
+matches the component composition, the entity is added to that archetype. Otherwise, a new archetype is created for the
+entity's unique component combination.
+
+By leveraging the Archetype, Dominion implementations can achieve high performance and scalability by
+optimizing memory usage, facilitating cache-friendly access patterns, and enabling efficient processing of entities with
+similar component compositions.
+
+Overall, the Archetype in an Entity Component System provides an effective means of organizing, storing,
+and processing entities with shared component types, leading to improved performance and flexibility in game development
+and other related domains.
+
+## Struct of Arrays
+
+Dominion implements a specific Struct of Arrays (SoA) layout through the <code>ChunkedPool.LinkedChunk</code> class.
+
+In an ECS, the SoA layout refers to a data organization approach where the components of entities are stored in separate
+arrays based on their data types. This is in contrast to the traditional approach of storing entities as Arrays of
+Structs (AoS) where all components of an entity are grouped together in a single struct.
+
+The SoA layout is designed to improve data locality and cache efficiency, which can lead to significant performance
+benefits in certain scenarios. By storing components of the same data type in contiguous arrays, the SoA layout allows
+for better memory access patterns, reducing cache misses and improving CPU cache utilization.
+
+For example, let's consider an ECS with three component types: Position, Velocity, and Renderable. In an SoA layout, all
+Position components would be stored in a separate array, all Velocity components in another array, and so on. Each array
+would contain the respective component data for the entities.
+
+By leveraging the SoA layout, which stores components of the same data type in contiguous arrays, data can be easily
+aligned for SIMD operations. This alignment allows SIMD instructions to operate on multiple data elements in parallel,
+providing significant performance benefits.
+
+Overall, the SoA layout in Dominion provides a way to optimize memory access patterns and improve performance by storing
+components in separate arrays based on their data types, allowing for efficient batch processing of components by
+systems.
+
 ## Quick Start
 
 In your local environment you must have already installed a Java 17 (or newer) and Maven.
@@ -46,6 +103,7 @@ In your local environment you must have already installed a Java 17 (or newer) a
 Add the following dependency declaration in your project pom.xml:
 
 ```xml
+
 <dependency>
     <groupId>dev.dominion.ecs</groupId>
     <artifactId>dominion-ecs-engine</artifactId>
@@ -70,10 +128,8 @@ actions:
 - **_reducing garbage collection activities_**: GC could affect overall performances as its activities run concurrently
   with user code and without direct control. To reduce GC activities significantly, Dominion creates off-heap data
   structures whenever possible.
-- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU, 
+- **_mastering concurrency_**: an ECS library must be not only fast but able to scale running on a multicore CPU,
   otherwise, it would make little sense today.
-- **_using Java 17_**: only by upgrading to the Java 17 you will get a performance boost for free: Java 17 is about 8-9%
-  faster than Java 11.
 - **_adding a blazing-fast logging layer_**: by implementing a thin logging layer over the
   standard [System.Logger](https://openjdk.java.net/jeps/264) (Platform Logging API and Service - JEP 264), Dominion
   achieves a half nanosecond logging level check with next to no performance impact and does not require a specific
@@ -156,7 +212,7 @@ page with all the documented code.
 | Preview                | Features are under heavy development and often have changing requirements and scope.                    | github-zip only | none         |
 | Early Access (EA)      | Features are documented and ready for testing with a wider audience.                                    | maven SNAPSHOT  | release-EA-# |
 | Release Candidate (RC) | Features have been tested through one or more early access cycles with no known showstopper-class bugs. | maven RC        | release-RC#  |
-| Stable Release         | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
+| Final Release          | Features have passed all verifications / tests. Stable releases are ready for production use            | maven RELEASE   | release      |
 
 Dominion is officially in _**Release Candidate**_.
 
