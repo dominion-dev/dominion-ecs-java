@@ -22,7 +22,7 @@
 
     <properties>
         <!-- Project-->
-        <revision>0.9.0-SNAPSHOT</revision>
+        <revision>0.10.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <!-- Plugins-->
