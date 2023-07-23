@@ -46,6 +46,7 @@ public final class IntStack implements AutoCloseable {
                     int newCapacity = currentCapacity + (currentCapacity >>> 1);
                     long newAddress = unsafe.allocateMemory(newCapacity);
                     unsafe.copyMemory(address, newAddress, currentCapacity);
+                    unsafe.freeMemory(address);
                     capacity = newCapacity;
                     address = newAddress;
                 }
