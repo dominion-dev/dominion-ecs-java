@@ -72,19 +72,11 @@ public abstract class ResultSet<T> implements Results<T> {
         if (nodeMap == null || nodeMap.isEmpty()) return 0;
 
         var size = 0;
-        if (nodeMap.size() > 1) {
-            for (CompositionRepository.Node node : nodeMap.values()) {
-                final var composition = node.getComposition();
-                final var sizeIterator = getPoolSizeIterator(composition);
-                while (sizeIterator.hasNext()) {
-                    size += sizeIterator.next();
-                }
-            }
-        } else {
-            var composition = nodeMap.values().iterator().next().getComposition();
-            var iterator = getPoolSizeIterator(composition);
-            while (iterator.hasNext()) {
-                size += iterator.next();
+        for (CompositionRepository.Node node : nodeMap.values()) {
+            final var composition = node.getComposition();
+            final var sizeIterator = getPoolSizeIterator(composition);
+            while (sizeIterator.hasNext()) {
+                size += sizeIterator.next();
             }
         }
         return size;
