@@ -68,6 +68,28 @@ public abstract class ResultSet<T> implements Results<T> {
                 };
     }
 
+    @Override public int size() {
+        if (nodeMap == null || nodeMap.isEmpty()) return 0;
+
+        var size = 0;
+        if (nodeMap.size() > 1) {
+            for (CompositionRepository.Node node : nodeMap.values()) {
+                final var composition = node.getComposition();
+                final var sizeIterator = getPoolSizeIterator(composition);
+                while (sizeIterator.hasNext()) {
+                    size += sizeIterator.next();
+                }
+            }
+        } else {
+            var composition = nodeMap.values().iterator().next().getComposition();
+            var iterator = getPoolSizeIterator(composition);
+            while (iterator.hasNext()) {
+                size += iterator.next();
+            }
+        }
+        return size;
+    }
+
     @Override
     public <S extends Enum<S>> Results<T> withState(S state) {
         stateKey = compositionRepository.getClassIndex().getIndexKeyByEnum(state);
@@ -100,6 +122,21 @@ public abstract class ResultSet<T> implements Results<T> {
     public Results<T> withAlso(Class<?>... componentTypes) {
         compositionRepository.mapWithAlso(nodeMap, componentTypes);
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected ChunkedPool.PoolSizeIterator<IntEntity> getPoolSizeIterator(DataComposition composition) {
+        boolean withState = stateKey != null;
+        ChunkedPool.PoolSizeIterator<IntEntity> iterator;
+        if (withState) {
+            var tenant = composition.getStateTenant(stateKey);
+            iterator = tenant == null ?
+                    ChunkedPool.PoolSizeEmptyIterator.INSTANCE :
+                    tenant.sizeIterator();
+        } else {
+            iterator = composition.getTenant().sizeIterator();
+        }
+        return iterator;
     }
 
     protected ChunkedPool.PoolDataIterator<IntEntity> getPoolDataIterator(DataComposition composition, boolean multiData) {
@@ -199,6 +236,10 @@ public abstract class ResultSet<T> implements Results<T> {
         @Override
         public Iterator<IntEntity> iterator() {
             return compositionRepository.getPool().allEntities();
+        }
+
+        @Override public int size() {
+            return compositionRepository.getPool().size();
         }
 
         @Override

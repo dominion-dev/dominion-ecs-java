@@ -334,6 +334,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     new PoolDataNoItemIteratorWithState<>(firstChunk, idSchema);
         }
 
+        public PoolSizeIterator<T> sizeIterator() {
+            return new PoolSizeIterator<>(firstChunk, idSchema);
+        }
+
         public T register(T entry, Object[] data) {
             return pool.getChunk(entry.getId()).set(entry, data);
         }
@@ -620,7 +624,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     // ROOT iterator
 
-    public static class PoolIterator<T extends Item> implements Iterator<T> {
+    public static abstract class PoolIterator<T extends Item, R> implements Iterator<R> {
         protected int next;
         protected LinkedChunk<T> currentChunk;
         protected IdSchema idSchema;
@@ -650,15 +654,45 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         @SuppressWarnings({"unchecked"})
         @Override
-        public T next() {
-            return (T) currentChunk.itemArray[next--];
+        public R next() {
+            return (R) currentChunk.itemArray[next--];
         }
     }
 
+    // SIZE ITERATOR
+
+    public static class PoolSizeIterator<T extends Item> extends PoolIterator<T, Integer> {
+        public PoolSizeIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
+            super(currentChunk, idSchema);
+        }
+
+        @Override
+        public Integer next() {
+            final var size = next + 1;
+            next -= size;
+            return size;
+        }
+    }
+
+    public static class PoolSizeEmptyIterator<T extends Item> extends PoolSizeIterator<T> {
+        public static final PoolSizeEmptyIterator INSTANCE = new PoolSizeEmptyIterator();
+
+        public PoolSizeEmptyIterator() {
+            super(null, null);
+        }
+
+        @Override public boolean hasNext() {
+            return false;
+        }
+
+        @Override public Integer next() {
+            return 0;
+        }
+    }
 
     // ALL-ENTITIES ITERATOR
 
-    public static class PoolAllEntitiesIterator<T extends ChunkedPool.Item> extends PoolIterator<T> {
+    public static class PoolAllEntitiesIterator<T extends ChunkedPool.Item> extends PoolIterator<T, T> {
         private final LinkedChunk<T>[] chunks;
         private int chunkIndex;
 
@@ -689,7 +723,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     // SINGLE-DATA ITERATORS
 
-    public static class PoolDataIterator<T extends Item> extends PoolIterator<T> {
+    public static class PoolDataIterator<T extends Item> extends PoolIterator<T, T> {
         public PoolDataIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             super(currentChunk, idSchema);
         }

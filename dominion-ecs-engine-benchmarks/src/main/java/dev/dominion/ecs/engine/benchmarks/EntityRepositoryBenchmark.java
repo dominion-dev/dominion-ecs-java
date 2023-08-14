@@ -8,7 +8,11 @@ package dev.dominion.ecs.engine.benchmarks;
 import dev.dominion.ecs.api.Composition;
 import dev.dominion.ecs.api.Entity;
 import dev.dominion.ecs.engine.EntityRepository;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class EntityRepositoryBenchmark extends DominionBenchmark {
@@ -352,6 +356,12 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             streamWithStateImpl(bh);
         }
 
+        @Benchmark
+        public void size(Blackhole bh) { sizeImpl(bh); }
+
+        @Benchmark
+        public void sizeWithState(Blackhole bh) { sizeWidthStateImpl(bh); }
+
         abstract void iterateImpl(Blackhole bh);
 
         abstract void iterateWithStateImpl(Blackhole bh);
@@ -359,6 +369,10 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
         abstract void streamImpl(Blackhole bh);
 
         abstract void streamWithStateImpl(Blackhole bh);
+
+        abstract void sizeImpl(Blackhole bh);
+
+        abstract void sizeWidthStateImpl(Blackhole bh);
 
         @TearDown()
         public void tearDown() {
@@ -412,6 +426,14 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             var stream =
                     entityRepository.findEntitiesWith(C1.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
+        }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findEntitiesWith(C1.class).withState(State1.ONE).size());
         }
     }
 //
@@ -483,6 +505,14 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             var stream =
                     entityRepository.findCompositionsWith(C1.class, C2.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
+        }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class).withState(State1.ONE).size());
         }
     }
 //
@@ -556,6 +586,14 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
             var stream =
                     entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).withState(State1.ONE).stream();
             stream.forEach(bh::consume);
+        }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class).withState(State1.ONE).size());
         }
     }
 //
@@ -632,6 +670,15 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                     entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class)
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
+        }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class)
+                    .withState(State1.ONE).size());
         }
     }
 //
@@ -712,6 +759,15 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
         }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class)
+                    .withState(State1.ONE).size());
+        }
     }
 //
 //    public static class FindComponents5FromMoreCompositions extends FindComponents5 {
@@ -789,6 +845,15 @@ public class EntityRepositoryBenchmark extends DominionBenchmark {
                     entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
                             .withState(State1.ONE).stream();
             stream.forEach(bh::consume);
+        }
+
+        @Override void sizeImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).size());
+        }
+
+        @Override void sizeWidthStateImpl(Blackhole bh) {
+            bh.consume(entityRepository.findCompositionsWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class)
+                    .withState(State1.ONE).size());
         }
     }
 //

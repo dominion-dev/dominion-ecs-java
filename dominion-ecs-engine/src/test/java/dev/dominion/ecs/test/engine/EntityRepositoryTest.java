@@ -241,6 +241,8 @@ class EntityRepositoryTest {
         Assertions.assertTrue(iterator.hasNext());
         Assertions.assertEquals(entities[0], iterator.next());
         Assertions.assertFalse(iterator.hasNext());
+
+        Assertions.assertEquals(6, entityRepository.findAllEntities().size());
     }
 
 
@@ -281,6 +283,12 @@ class EntityRepositoryTest {
         Assertions.assertEquals(c5, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class).iterator().next().comp5());
         Assertions.assertEquals(c5, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp5());
         Assertions.assertEquals(c6, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).iterator().next().comp6());
+
+        Assertions.assertEquals(6, entityRepository.findEntitiesWith(C1.class).size());
+        Assertions.assertEquals(5, entityRepository.findEntitiesWith(C1.class, C2.class).size());
+        Assertions.assertEquals(4, entityRepository.findEntitiesWith(C1.class, C3.class).size());
+        Assertions.assertEquals(1, entityRepository.findEntitiesWith(C1.class, C2.class, C3.class, C4.class, C5.class, C6.class).size());
+        Assertions.assertEquals(0, entityRepository.findEntitiesWith(C7.class).size());
     }
 
     @Test
@@ -337,6 +345,8 @@ class EntityRepositoryTest {
         Assertions.assertEquals(13, next4.comp().id);
         Assertions.assertFalse(iterator4.hasNext());
 
+        Assertions.assertEquals(2, results1.withState(State.TWO).size());
+        Assertions.assertEquals(3, results1.withState(State.ONE).size());
     }
 
     @Test
@@ -357,6 +367,7 @@ class EntityRepositoryTest {
         next = iterator.next();
         Assertions.assertEquals(1, next.comp().id);
         Assertions.assertEquals(entity2, next.entity());
+        Assertions.assertEquals(2, results.size());
 
         var results2 = entityRepository.findEntitiesWith(C2.class);
         var iterator2 = results2.iterator();
@@ -365,11 +376,13 @@ class EntityRepositoryTest {
         var next2 = iterator2.next();
         Assertions.assertEquals(2, next2.comp().id);
         Assertions.assertEquals(entity2, next2.entity());
+        Assertions.assertEquals(1, results2.size());
 
         var results3 = entityRepository.findEntitiesWith(C3.class);
         var iterator3 = results3.iterator();
         Assertions.assertNotNull(iterator3);
         Assertions.assertFalse(iterator3.hasNext());
+        Assertions.assertEquals(0, results3.size());
     }
 
     @Test
@@ -408,8 +421,10 @@ class EntityRepositoryTest {
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         entityRepository.createEntity(new C1(0));
         AtomicInteger count = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach((rs) -> count.incrementAndGet());
+        final var results = entityRepository.findEntitiesWith(C1.class, C2.class);
+        results.stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
+        Assertions.assertEquals(0, results.size());
 
         AtomicInteger count1 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class, C2.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
@@ -418,8 +433,10 @@ class EntityRepositoryTest {
         entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         entityRepository.createEntity(new C1(0), new C2(0));
         AtomicInteger count2 = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).stream().forEach((rs) -> count2.incrementAndGet());
+        final var results2 = entityRepository.findEntitiesWith(C1.class, C2.class, C3.class);
+        results2.stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+        Assertions.assertEquals(0, results2.size());
 
         AtomicInteger count3 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class, C2.class, C3.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
@@ -432,8 +449,10 @@ class EntityRepositoryTest {
         entityRepository.createEntity(new C1(0), new C2(0));
         entityRepository.createEntity(new C3(0), new C4(0));
         AtomicInteger count = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C1.class, C3.class).stream().forEach((rs) -> count.incrementAndGet());
+        final var results = entityRepository.findEntitiesWith(C1.class, C3.class);
+        results.stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
+        Assertions.assertEquals(0, results.size());
 
         AtomicInteger count1 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class, C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
@@ -445,16 +464,20 @@ class EntityRepositoryTest {
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         entityRepository.createEntity(new C1(0), new C2(0));
         AtomicInteger count = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).stream().forEach((rs) -> count.incrementAndGet());
+        final var results = entityRepository.findEntitiesWith(C1.class).withAlso(C3.class);
+        results.stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(0, count.get());
+        Assertions.assertEquals(0, results.size());
 
         AtomicInteger count1 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class).withAlso(C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
         Assertions.assertEquals(0, count1.get());
 
         AtomicInteger count2 = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C3.class).withAlso(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
+        final var results2 = entityRepository.findEntitiesWith(C3.class).withAlso(C1.class);
+        results2.stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+        Assertions.assertEquals(0, results2.size());
 
         AtomicInteger count3 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C3.class).withAlso(C1.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
@@ -466,16 +489,20 @@ class EntityRepositoryTest {
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         entityRepository.createEntity(new C1(0));
         AtomicInteger count = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C1.class).without(C3.class).stream().forEach((rs) -> count.incrementAndGet());
+        final var results = entityRepository.findEntitiesWith(C1.class).without(C3.class);
+        results.stream().forEach((rs) -> count.incrementAndGet());
         Assertions.assertEquals(1, count.get());
+        Assertions.assertEquals(1, results.size());
 
         AtomicInteger count1 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C1.class).without(C3.class).parallelStream().forEach((rs) -> count1.incrementAndGet());
         Assertions.assertEquals(1, count1.get());
 
         AtomicInteger count2 = new AtomicInteger(0);
-        entityRepository.findEntitiesWith(C3.class).without(C1.class).stream().forEach((rs) -> count2.incrementAndGet());
+        final var results2 = entityRepository.findEntitiesWith(C3.class).without(C1.class);
+        results2.stream().forEach((rs) -> count2.incrementAndGet());
         Assertions.assertEquals(0, count2.get());
+        Assertions.assertEquals(0, results2.size());
 
         AtomicInteger count3 = new AtomicInteger(0);
         entityRepository.findEntitiesWith(C3.class).without(C1.class).parallelStream().forEach((rs) -> count3.incrementAndGet());
@@ -511,16 +538,20 @@ class EntityRepositoryTest {
         entityRepository.createEntity(new C1(1));
         entityRepository.createEntity(new C1(2));
         entityRepository.createEntity(new C1(3));
-        var iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        final var results = entityRepository.findEntitiesWith(C1.class);
+        var iterator = results.iterator();
         Assertions.assertTrue(iterator.hasNext());
+        Assertions.assertEquals(4, results.size());
         while (iterator.hasNext()) {
             var next = iterator.next();
             next.entity().setEnabled(false);
             System.out.println("next.comp() = " + next.comp());
         }
-        iterator = entityRepository.findEntitiesWith(C1.class).iterator();
+        final var results2 = entityRepository.findEntitiesWith(C1.class);
+        iterator = results2.iterator();
         Assertions.assertFalse(iterator.hasNext());
         Assertions.assertFalse(iterator.hasNext());
+        Assertions.assertEquals(0, results2.size());
     }
 
     @Test
@@ -552,5 +583,8 @@ class EntityRepositoryTest {
     }
 
     record C6(int id) {
+    }
+
+    record C7(int id) {
     }
 }
