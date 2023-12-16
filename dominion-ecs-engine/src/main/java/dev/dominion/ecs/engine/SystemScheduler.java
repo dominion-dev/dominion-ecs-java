@@ -218,7 +218,7 @@ public class SystemScheduler implements Scheduler {
 
     @Override
     public double deltaTime() {
-        return tickTime.deltaTime / 1_000_000_000d;
+        return tickTime.deltaTime;
     }
 
     @Override
@@ -243,7 +243,10 @@ public class SystemScheduler implements Scheduler {
     private interface Task extends Callable<Void> {
     }
 
-    record TickTime(long time, long deltaTime) {
+    record TickTime(long time, double deltaTime) {
+        TickTime(long time, long deltaTime) {
+            this(time, deltaTime / 1_000_000_000d);
+        }
     }
 
     private static final class SchedulerThread extends Thread {
