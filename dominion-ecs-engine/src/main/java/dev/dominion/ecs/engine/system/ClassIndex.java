@@ -5,10 +5,9 @@
 
 package dev.dominion.ecs.engine.system;
 
+import dev.dominion.ecs.engine.collections.IndexedObjectCache;
 import sun.misc.Unsafe;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,7 +25,7 @@ public final class ClassIndex implements AutoCloseable {
     public static final int MAX_HASH_BIT = 24;
     private static final System.Logger LOGGER = Logging.getLogger();
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final Map<Object, Integer> controlMap = new ConcurrentHashMap<>(1 << 10);
+    private final IndexedObjectCache cache = new IndexedObjectCache();
     private final int hashBit;
     private final long memoryAddress;
     private final AtomicBoolean useFallbackMap = new AtomicBoolean(false);
@@ -79,15 +78,21 @@ public final class ClassIndex implements AutoCloseable {
         int identityHashCode = capHashCode(System.identityHashCode(newClass), hashBit);
         long i = getIdentityAddress(identityHashCode, memoryAddress);
         int currentIndex = unsafe.getInt(i);
-        if (currentIndex == 0) {
-            int idx = fallbackMapEnabled ?
-                    fallbackMap.get((Class<?>) newClass) :
-                    atomicIndex.incrementAndGet();
-            unsafe.putIntVolatile(null, i, idx);
-            controlMap.put(newClass, idx);
-            return idx;
+        if(currentIndex == 0) {
+            int idx = fallbackMapEnabled ? fallbackMap.get((Class<?>) newClass) : atomicIndex.incrementAndGet();
+            // use cas to check, is there an index to an existing class
+            if(unsafe.compareAndSwapInt(null, i, 0, idx)) {
+                cache.set(idx - 1, newClass);
+                return idx;
+            } else {
+                // whether the existing index and the new index are the same. If they are different, it means there is a hash conflict.
+                if(idx != unsafe.getIntVolatile(null, i)) {
+                    useFallbackMap.set(true);
+                }
+                return idx;
+            }
         } else {
-            if (!controlMap.containsKey(newClass)) {
+            if (cache.getVolatile(currentIndex - 1) != newClass) {
                 int idx = fallbackMap.get((Class<?>) newClass);
                 useFallbackMap.set(true);
                 return idx;
@@ -105,7 +110,11 @@ public final class ClassIndex implements AutoCloseable {
             return fallbackMap.get((Class<?>) klass);
         }
         int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
-        return unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
+        int index = unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
+        if (index != 0 && cache.get(index - 1) == klass) {
+            return index;
+        }
+        return 0;
     }
 
     public int getObjectIndexVolatile(Object klass) {
@@ -113,7 +122,11 @@ public final class ClassIndex implements AutoCloseable {
             return fallbackMap.get((Class<?>) klass);
         }
         int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
-        return unsafe.getIntVolatile(null, getIdentityAddress(identityHashCode, memoryAddress));
+        int index = unsafe.getIntVolatile(null, getIdentityAddress(identityHashCode, memoryAddress));
+        if (index != 0 && cache.get(index - 1) == klass) {
+            return index;
+        }
+        return 0;
     }
 
     public int getIndexOrAddClass(Class<?> klass) {
@@ -121,7 +134,7 @@ public final class ClassIndex implements AutoCloseable {
     }
 
     public int getIndexOrAddObject(Object klass) {
-        int value = getObjectIndexVolatile(klass);
+        int value =  getObjectIndex(klass); // use getObjectIndex instead of getObjectIndexVolatile
         if (value != 0) {
             return value;
         }
@@ -198,7 +211,6 @@ public final class ClassIndex implements AutoCloseable {
 
     @Override
     public void close() {
-        controlMap.clear();
         unsafe.freeMemory(memoryAddress);
     }
 
