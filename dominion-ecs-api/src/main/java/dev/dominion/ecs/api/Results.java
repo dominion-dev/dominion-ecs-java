@@ -41,6 +41,13 @@ public interface Results<T> extends Iterable<T> {
     Stream<T> parallelStream();
 
     /**
+     * Returns the number of entities in this result.
+     *
+     * @return the number of entities in this result.
+     */
+    int size();
+
+    /**
      * Provides a filtered Results without one or more component types to exclude.
      *
      * @param componentTypes one or more component types to exclude
