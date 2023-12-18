@@ -82,7 +82,7 @@ public final class ClassIndex implements AutoCloseable {
             int idx = fallbackMapEnabled ? fallbackMap.get((Class<?>) newClass) : atomicIndex.incrementAndGet();
             // use cas to check, is there an index to an existing class
             if(unsafe.compareAndSwapInt(null, i, 0, idx)) {
-                cache.set(idx - 1, newClass);
+                cache.set(idx, newClass);
                 return idx;
             } else {
                 // whether the existing index and the new index are the same. If they are different, it means there is a hash conflict.
@@ -92,7 +92,7 @@ public final class ClassIndex implements AutoCloseable {
                 return idx;
             }
         } else {
-            if (cache.getVolatile(currentIndex - 1) != newClass) {
+            if (cache.getVolatile(currentIndex) != newClass) {
                 int idx = fallbackMap.get((Class<?>) newClass);
                 useFallbackMap.set(true);
                 return idx;
@@ -111,7 +111,7 @@ public final class ClassIndex implements AutoCloseable {
         }
         int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
         int index = unsafe.getInt(getIdentityAddress(identityHashCode, memoryAddress));
-        if (index != 0 && cache.get(index - 1) == klass) {
+        if (index != 0 && cache.get(index) == klass) {
             return index;
         }
         return 0;
@@ -123,7 +123,7 @@ public final class ClassIndex implements AutoCloseable {
         }
         int identityHashCode = capHashCode(System.identityHashCode(klass), hashBit);
         int index = unsafe.getIntVolatile(null, getIdentityAddress(identityHashCode, memoryAddress));
-        if (index != 0 && cache.get(index - 1) == klass) {
+        if (index != 0 && cache.get(index) == klass) {
             return index;
         }
         return 0;
