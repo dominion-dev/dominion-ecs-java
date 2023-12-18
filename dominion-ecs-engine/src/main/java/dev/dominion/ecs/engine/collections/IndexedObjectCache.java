@@ -1,8 +1,8 @@
-package dev.dominion.ecs.engine.collections;
 /*
  * Copyright (c) 2021 Enrico Stara
  * This code is licensed under the MIT license. See the LICENSE file in the project root for license terms.
  */
+package dev.dominion.ecs.engine.collections;
 
 import dev.dominion.ecs.engine.system.UnsafeFactory;
 import sun.misc.Unsafe;
