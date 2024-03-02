@@ -10,17 +10,23 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 public final class IntEntity implements Entity, Item {
-    ChunkedPool.LinkedChunk<IntEntity> chunk;
-    ChunkedPool.LinkedChunk<IntEntity> stateChunk;
-    private int id;
-    private int stateId;
+    private static final AtomicIntegerFieldUpdater<IntEntity> ID_UPDATER = AtomicIntegerFieldUpdater.newUpdater(IntEntity.class, "id");
+    private static final AtomicIntegerFieldUpdater<IntEntity> STATE_ID_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
+            IntEntity.class,
+            "stateId"
+    );
+    private final ChunkedPool<IntEntity> pool;
+    private volatile int id;
+    private volatile int stateId;
     private Object[] shelf;
 
-    public IntEntity(int id) {
+    public IntEntity(int id, ChunkedPool<IntEntity> pool) {
         this.id = id;
         this.stateId = ChunkedPool.IdSchema.DETACHED_BIT;
+        this.pool = pool;
     }
 
     @Override
@@ -29,8 +35,17 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public void setId(int id) {
+    public synchronized void setId(int id) {
+        if(this.id == id) return;
+        if(this.id > 0) {
+            pool.getChunk(this.id).incrementRmCount();
+        }
         this.id = id;
+    }
+
+    @Override
+    public boolean compareAndSetId(int expect, int id) {
+        return ID_UPDATER.compareAndSet(this, expect, id);
     }
 
     public int getStateId() {
@@ -38,43 +53,40 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public void setStateId(int stateId) {
+    public synchronized void setStateId(int stateId) {
+        if(this.stateId == stateId) return;
+        if(this.stateId > 0) {
+            pool.getChunk(this.stateId).incrementRmCount();
+        }
         this.stateId = stateId;
     }
 
+    @Override
+    public boolean compareAndSetStateId(int expect, int id) {
+        return STATE_ID_UPDATER.compareAndSet(this, expect, id);
+    }
+
     public DataComposition getComposition() {
-        return (DataComposition) chunk.getTenant().getOwner();
+        return (DataComposition) getChunk().getTenant().getOwner();
     }
 
     public ChunkedPool.LinkedChunk<IntEntity> getChunk() {
-        return chunk;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-        this.chunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+        return id < 0 ? null : pool.getChunk(id);
     }
 
     public ChunkedPool.LinkedChunk<IntEntity> getStateChunk() {
-        return stateChunk;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-        this.stateChunk = (ChunkedPool.LinkedChunk<IntEntity>) chunk;
+        return id < 0 ? null : pool.getChunk(stateId);
     }
 
     public Object[] getComponentArray() {
-        if (chunk == null || getArrayLength() == 0) {
+        if (getChunk() == null || getArrayLength() == 0) {
             return null;
         }
-        return chunk.getData(id);
+        return getChunk().getData(id);
     }
 
     public int getArrayLength() {
-        return chunk.getDataLength();
+        return getChunk().getDataLength();
     }
 
     @Override
@@ -98,8 +110,10 @@ public final class IntEntity implements Entity, Item {
         return getComposition().getRepository().removeComponentType(this, component.getClass());
     }
 
-    public synchronized boolean modify(CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
-                                       Object addedComponent, Object[] addedComponents) {
+    public synchronized boolean modify(
+            CompositionRepository compositions, PreparedComposition.TargetComposition targetComposition,
+            Object addedComponent, Object[] addedComponents
+    ) {
         if (!isEnabled()) {
             return false;
         }
@@ -117,40 +131,62 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public boolean has(Class<?> componentType) {
-        int dataLength;
-        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
-        if (dataLength == 1) {
-            return chunk.getFromDataArray(id).getClass().equals(componentType);
+        while (true) {
+            final var chunk = getChunk();
+            final var result = switch (chunk.getDataLength()) {
+                case 0 -> false;
+                case 1 -> chunk.getFromDataArray(id).getClass().equals(componentType);
+                default -> {
+                    DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+                    yield composition.fetchComponentIndex(componentType) > -1;
+                }
+            };
+            if (getChunk() == chunk) {
+                return result;
+            }
         }
-        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
-        return composition.fetchComponentIndex(componentType) > -1;
     }
 
     @Override
     public boolean contains(Object component) {
-        int dataLength;
-        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return false;
-        if (dataLength == 1) {
-            return chunk.getFromDataArray(id).equals(component);
+        while (true) {
+            final var chunk = getChunk();
+            final var result = switch (chunk.getDataLength()) {
+                case 0 -> false;
+                case 1 -> chunk.getFromDataArray(id).equals(component);
+                default -> {
+                    DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+                    int idx;
+                    yield (idx = composition.fetchComponentIndex(component.getClass())) > -1 && chunk.getData(id)[idx].equals(component);
+                }
+            };
+            if (getChunk() == chunk) {
+                return result;
+            }
         }
-        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
-        int idx;
-        return (idx = composition.fetchComponentIndex(component.getClass())) > -1
-                && chunk.getData(getId())[idx].equals(component);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(Class<T> componentType) {
-        int dataLength;
-        if (chunk == null || (dataLength = chunk.getDataLength()) == 0) return null;
-        if (dataLength == 1) {
-            T fromDataArray = (T) chunk.getFromDataArray(id);
-            return fromDataArray.getClass().equals(componentType) ? fromDataArray : null;
+        while (true) {
+            final var chunk = getChunk();
+            final T result = switch (chunk.getDataLength()) {
+                case 0 -> null;
+                case 1 -> {
+                    T fromDataArray = (T) chunk.getFromDataArray(id);
+                    yield fromDataArray.getClass().equals(componentType) ? fromDataArray : null;
+                }
+                default -> {
+                    DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
+                    int componentIndex = composition.fetchComponentIndex(componentType);
+                    yield componentIndex > -1 ? (T) chunk.getFromMultiDataArray(id, componentIndex) : null;
+                }
+            };
+            if (getChunk() == chunk) {
+                return result;
+            }
         }
-        DataComposition composition = (DataComposition) chunk.getTenant().getOwner();
-        int componentIndex = composition.fetchComponentIndex(componentType);
-        return componentIndex > -1 ? (T) chunk.getFromMultiDataArray(id, componentIndex) : null;
     }
 
     @SuppressWarnings("resource")
@@ -159,28 +195,20 @@ public final class IntEntity implements Entity, Item {
         if (!isEnabled()) {
             return this;
         }
-        if (state == null && stateChunk != null) {
-            ChunkedPool.Tenant<IntEntity> tenant;
-            synchronized (tenant = stateChunk.getTenant()) {
-                tenant.freeStateId(stateId);
-                stateChunk = null;
-                return this;
-            }
+        if (state == null && stateId > -1) {
+            getStateChunk().incrementRmCount();
+            stateId = ChunkedPool.IdSchema.DETACHED_BIT;
+            return this;
         }
         DataComposition composition = getComposition();
-        if (stateChunk != null) {
-            var tenant = stateChunk.getTenant();
+        if (stateId > -1) {
+            var tenant = getStateChunk().getTenant();
             if (tenant == composition.getStateTenant(state)) {
                 return this;
             }
-            synchronized (stateChunk.getTenant()) {
-                tenant.freeStateId(stateId);
-            }
+            stateId = ChunkedPool.IdSchema.DETACHED_BIT;
         }
-        ChunkedPool.Tenant<IntEntity> tenant;
-        synchronized (tenant = composition.fetchStateTenants(state)) {
-            stateChunk = tenant.registerState(this);
-        }
+        composition.fetchStateTenants(state).registerState(this);
         return this;
     }
 
@@ -191,33 +219,24 @@ public final class IntEntity implements Entity, Item {
 
     @Override
     public synchronized Entity setEnabled(boolean enabled) {
-        if (enabled && !isEnabled()) {
-            synchronized (chunk.getTenant()) {
-                chunk.unshelve(this, shelf);
-                shelf = null;
-            }
-        } else if (!enabled && isEnabled()) {
-            synchronized (chunk.getTenant()) {
-                shelf = chunk.shelve(this);
-            }
+        if (enabled && shelf != null) {
+            final var chunk = pool.getChunk(-id);
+            final var tenant = chunk.getTenant();
+            this.id = tenant.nextId();
+            tenant.register(this, shelf);
+            shelf = null;
+        } else if (!enabled && shelf == null) {
+            final var chunk = getChunk();
+            shelf = chunk.getData(id);
+            id = -id;
+            chunk.incrementRmCount();
         }
         return this;
     }
 
     synchronized boolean delete() {
-        ChunkedPool.Tenant<IntEntity> tenant;
-        synchronized (tenant = chunk.getTenant()) {
-            tenant.freeId(id);
-            flagDetachedId();
-            chunk = null;
-            shelf = null;
-        }
-        if (stateChunk != null) {
-            synchronized (tenant = stateChunk.getTenant()) {
-                tenant.freeStateId(stateId);
-                stateChunk = null;
-            }
-        }
+        id = ChunkedPool.IdSchema.DETACHED_BIT;
+        stateId = ChunkedPool.IdSchema.DETACHED_BIT;
         return true;
     }
 
@@ -234,6 +253,7 @@ public final class IntEntity implements Entity, Item {
     public String toString() {
         ChunkedPool.IdSchema idSchema = getComposition().getIdSchema();
         return "Entity={" +
+                "id=" + idSchema.fetchChunkId(id) + ", " +
                 "id=" + idSchema.idToString(id) + "-> " + Arrays.toString(getComponentArray()) + ", " +
                 "stateId=" + idSchema.idToString(stateId) + ", " +
                 "enabled=" + isEnabled() +

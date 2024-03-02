@@ -161,20 +161,9 @@ public final class CompositionRepository implements AutoCloseable {
                             , "Modifying " + entity + " from " + entity.getComposition() + " to " + targetComposition.target())
             );
         }
-        ChunkedPool.Tenant<IntEntity> prevTenant;
-        synchronized (prevTenant = entity.getChunk().getTenant()) {
-            int prevId = entity.getId();
-            synchronized (targetComposition.target().getTenant()) {
-                targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
-            }
-            prevTenant.freeId(prevId);
-        }
-        if (entity.stateChunk != null) {
-            ChunkedPool.Tenant<IntEntity> prevStateTenant;
-            synchronized (prevStateTenant = entity.stateChunk.getTenant()) {
-                prevStateTenant.freeStateId(entity.getStateId());
-                entity.stateChunk = targetComposition.target().fetchStateTenants((IndexKey) prevStateTenant.getSubject()).registerState(entity);
-            }
+        targetComposition.target().attachEntity(entity, targetComposition.indexMapping(), targetComposition.addedIndexMapping(), addedComponent, addedComponents);
+        if (entity.getStateId() > 0) {
+            targetComposition.target().fetchStateTenants((IndexKey) entity.getStateChunk().getTenant().getSubject()).registerState(entity);
         }
     }
 

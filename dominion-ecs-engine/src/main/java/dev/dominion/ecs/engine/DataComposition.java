@@ -22,13 +22,13 @@ public final class DataComposition {
     private static final System.Logger LOGGER = Logging.getLogger();
     private final Class<?>[] componentTypes;
     private final CompositionRepository repository;
-    private final ChunkedPool<IntEntity> pool;
     private final ChunkedPool.Tenant<IntEntity> tenant;
     private final ClassIndex classIndex;
     private final IdSchema idSchema;
     private final int[] componentIndex;
     private final Map<IndexKey, ChunkedPool.Tenant<IntEntity>> stateTenants = new ConcurrentHashMap<>();
     private final Logging.Context loggingContext;
+    final ChunkedPool<IntEntity> pool;
 
     public DataComposition(CompositionRepository repository, ChunkedPool<IntEntity> pool
             , ClassIndex classIndex, IdSchema idSchema, Logging.Context loggingContext
@@ -118,7 +118,7 @@ public final class DataComposition {
 
     public IntEntity createEntity(boolean prepared, Object... components) {
         synchronized (tenant) {
-            return tenant.register(new IntEntity(tenant.nextId()),
+            return tenant.register(new IntEntity(tenant.nextId(), this.pool),
                     !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
         }
     }

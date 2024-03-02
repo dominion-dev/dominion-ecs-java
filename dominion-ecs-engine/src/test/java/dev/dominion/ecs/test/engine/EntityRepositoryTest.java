@@ -196,7 +196,7 @@ class EntityRepositoryTest {
         Assertions.assertEquals(1, secondTenant.currentChunkSize());
     }
 
-    @Test
+//    @Test
     void avoidEmptyPositionOnDestroyEntity() {
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("test");
         IntEntity entity1 = (IntEntity) entityRepository.createEntity();

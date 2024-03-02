@@ -137,7 +137,11 @@ class IntEntityTest {
             for (int i = 0; i < capacity; i++) {
                 entityRepository.createEntity(new C1(i));
             }
-            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+            AtomicInteger count = new AtomicInteger();
+            entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> {
+                rs.entity().removeType(C1.class);
+                count.incrementAndGet();
+            });
             entityRepository.findEntitiesWith(C1.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
             Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
         }

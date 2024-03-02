@@ -54,13 +54,13 @@ public class EntityBenchmark extends DominionBenchmark {
     record C8(int id) {
     }
 
-    public static class EntityLayout {
-        public static void main(String[] args) {
-            System.out.println(VM.current().details());
-            System.out.println(ClassLayout.parseClass(IntEntity.class).toPrintable());
-            System.out.println(ClassLayout.parseInstance(new IntEntity(0)).toPrintable());
-        }
-    }
+//    public static class EntityLayout {
+//        public static void main(String[] args) {
+//            System.out.println(VM.current().details());
+//            System.out.println(ClassLayout.parseClass(IntEntity.class).toPrintable());
+//            System.out.println(ClassLayout.parseInstance(new IntEntity(0)).toPrintable());
+//        }
+//    }
 
     public static class EntityMethodBenchmark extends DominionBenchmark {
         protected EntityRepository entityRepository;

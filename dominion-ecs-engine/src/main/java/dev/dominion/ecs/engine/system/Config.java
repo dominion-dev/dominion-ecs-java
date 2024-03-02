@@ -19,8 +19,9 @@ public final class Config {
     public static final int DEFAULT_SYSTEM_TIMEOUT_SECONDS = 3;
 
     public static boolean showBanner() {
-        String showBanner = System.getProperty(getPropertyName(SHOW_BANNER));
-        return showBanner == null || !showBanner.equals("false");
+//        String showBanner = System.getProperty(getPropertyName(SHOW_BANNER));
+//        return showBanner == null || !showBanner.equals("false");
+        return false;
     }
 
     public static Optional<System.Logger.Level> fetchLoggingLevel(String name) {

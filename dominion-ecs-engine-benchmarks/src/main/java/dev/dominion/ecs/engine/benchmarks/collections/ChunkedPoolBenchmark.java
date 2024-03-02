@@ -193,7 +193,22 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
+            public boolean compareAndSetId(int expect, int id) {
+                return false;
+            }
+
+            @Override
+            public int getStateId() {
+                return 0;
+            }
+
+            @Override
             public void setStateId(int id) {
+            }
+
+            @Override
+            public boolean compareAndSetStateId(int expect, int id) {
+                return false;
             }
 
             @Override
@@ -202,11 +217,8 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public void setChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
-            }
-
-            @Override
-            public void setStateChunk(ChunkedPool.LinkedChunk<? extends Item> chunk) {
+            public ChunkedPool.LinkedChunk<? extends Item> getStateChunk() {
+                return null;
             }
         }
     }
