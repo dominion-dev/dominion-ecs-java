@@ -310,11 +310,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     if (newChunk.next != null) {
                         newChunk.next.previous = newChunk;
                     }
-                    pool.reusableChunkIdStack.push(chunk.id);
                     final var failure = chunk.rmCount - (idSchema.chunkCapacity - newChunk.size());
                     if (failure > 0) {
                         newChunk.addRmCount(failure);
                     }
+                    pool.reusableChunkIdStack.push(chunk.id);
                 } else {
                     pool.reusableChunkIdStack.push(newChunk.id);
                 }
@@ -343,14 +343,16 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 pool.getChunk(returnValue).incrementIndex();
                 return returnValue;
             }
-            returnValue = nextId;
-            if (currentChunk.index < idSchema.chunkCapacity - 1) {
+            synchronized (this) {
+                returnValue = nextId;
+                if (currentChunk.index < idSchema.chunkCapacity - 1) {
+                    nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
+                    return returnValue;
+                }
+                currentChunk = pool.newChunk(this, currentChunk);
                 nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                 return returnValue;
             }
-            currentChunk = pool.newChunk(this, currentChunk);
-            nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
-            return returnValue;
         }
 
         public int freeId(int id) {
