@@ -44,8 +44,8 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public boolean compareAndSetId(int expect, int id) {
-        return ID_UPDATER.compareAndSet(this, expect, id);
+    public void compareAndSetId(int expect, int id) {
+        ID_UPDATER.compareAndSet(this, expect, id);
     }
 
     public int getStateId() {
@@ -62,8 +62,8 @@ public final class IntEntity implements Entity, Item {
     }
 
     @Override
-    public boolean compareAndSetStateId(int expect, int id) {
-        return STATE_ID_UPDATER.compareAndSet(this, expect, id);
+    public void compareAndSetStateId(int expect, int id) {
+        STATE_ID_UPDATER.compareAndSet(this, expect, id);
     }
 
     public DataComposition getComposition() {

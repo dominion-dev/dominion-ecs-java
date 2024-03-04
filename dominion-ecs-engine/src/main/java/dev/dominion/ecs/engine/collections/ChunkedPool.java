@@ -5,6 +5,7 @@
 
 package dev.dominion.ecs.engine.collections;
 
+import dev.dominion.ecs.engine.EntityRepository;
 import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.ArrayList;
@@ -23,7 +24,22 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  * @param <T> the managed type that must implement the {@link Item} interface
  */
 public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoCloseable {
+    public record C1(int id) { }
+
+    public record C2(int id) { }
+    public static void main(String[] args) {
+        int capacity = (1 << 20) + 1;
+        System.out.println(capacity);
+        EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
+        for (int i = 0; i < capacity; i++) {
+            entityRepository.createEntity(new C1(i));
+        }
+        entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
+        entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
+        System.out.println(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
+    }
     private static final System.Logger LOGGER = Logging.getLogger();
+    private final ExecutorService gcThread = Executors.newSingleThreadExecutor();
     private final LinkedChunk<T>[] chunks;
     private final List<Tenant<T>> tenants = new ArrayList<>();
     private final IdSchema idSchema;
@@ -85,10 +101,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         return newTenant(0, null, null);
     }
 
-    public IdSchema idSchema() {
-        return idSchema;
-    }
-
     public Tenant<T> newTenant(int dataLength, Object owner, Object subject) {
         Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, owner, subject, loggingContext);
         tenants.add(newTenant);
@@ -121,13 +133,13 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         void setId(int id);
 
-        boolean compareAndSetId(int expect, int id);
+        void compareAndSetId(int expect, int id);
 
         int getStateId();
 
         void setStateId(int id);
 
-        boolean compareAndSetStateId(int expect, int id);
+        void compareAndSetStateId(int expect, int id);
 
         LinkedChunk<? extends Item> getChunk();
 
@@ -202,10 +214,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     | (objectId & objectIdBitMask);
         }
 
-        public int mergeId(int id, int objectId) {
-            return (id & chunkIdBitMaskShifted) | objectId;
-        }
-
         public int fetchChunkId(int id) {
             return (id >>> chunkBit) & chunkIdBitMask;
         }
@@ -219,13 +227,12 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     public static final class Tenant<T extends Item> implements AutoCloseable {
         private static final AtomicInteger idGenerator = new AtomicInteger();
-        private final ExecutorService gcThread = Executors.newSingleThreadExecutor();
         private final int id = idGenerator.getAndIncrement();
         private final ChunkedPool<T> pool;
         private final IdSchema idSchema;
         private final IntStack idStack;
-        private final LinkedChunk<T> firstChunk;
         private final Logging.Context loggingContext;
+        private LinkedChunk<T> firstChunk;
         private final int dataLength;
         private final Object owner;
         private final Object subject;
@@ -269,11 +276,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     '}';
         }
 
-        public void gc(LinkedChunk chunk) {
-            gcThread.submit(() -> {
-                if (!chunk.needGC()) {
-                    return;
-                }
+        public void gc(LinkedChunk<T> chunk) {
+            pool.gcThread.submit(() -> {
                 final var newChunk = new LinkedChunk<>(
                         pool.genChunkId(),
                         idSchema,
@@ -285,7 +289,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 pool.chunks[newChunk.id] = newChunk;
 
                 final var size = idSchema.chunkCapacity;
-                var count = 0;
                 for (int i = 0, j = 0; i < size; i++) {
                     final var item = chunk.itemArray[i];
                     final var itemId = item.getId();
@@ -301,12 +304,12 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                             }
                         }
                         newChunk.incrementIndex();
+                        item.compareAndSetId(itemId, idSchema.createId(newChunk.id, j));
+                        ++j;
                     }
-                    item.compareAndSetId(itemId, idSchema.createId(newChunk.id, j));
                 }
 
-                if (count > 0) {
-                    newChunk.previous.next = newChunk;
+                if (newChunk.index > 0) {
                     if (newChunk.next != null) {
                         newChunk.next.previous = newChunk;
                     }
@@ -314,6 +317,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     if (failure > 0) {
                         newChunk.addRmCount(failure);
                     }
+                    if (chunk.tenant.firstChunk == chunk) {
+                        chunk.tenant.firstChunk = newChunk;
+                    }
+                    newChunk.previous.next = newChunk;
                     pool.reusableChunkIdStack.push(chunk.id);
                 } else {
                     pool.reusableChunkIdStack.push(newChunk.id);
@@ -353,14 +360,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                 return returnValue;
             }
-        }
-
-        public int freeId(int id) {
-            return 0;
-        }
-
-        public int freeStateId(int stateId) {
-            return 0;
         }
 
         public PoolDataIterator<T> iterator() {
@@ -429,14 +428,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return currentChunk.size();
         }
 
-        public int currentChunkLength() {
-            return currentChunk.dataLength;
-        }
-
-        public int getDataLength() {
-            return dataLength;
-        }
-
         public ChunkedPool<T> getPool() {
             return pool;
         }
@@ -460,6 +451,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = Logging.getLogger();
+        private static final AtomicIntegerFieldUpdater RM_COUNT_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
+                LinkedChunk.class,
+                "rmCount"
+        );
         private final IdSchema idSchema;
         private final Item[] itemArray;
         private final Object[] dataArray;
@@ -467,10 +462,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final Tenant<T> tenant;
         private final int id;
         private final int dataLength;
-        private static final AtomicIntegerFieldUpdater RM_COUNT_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
-                LinkedChunk.class,
-                "rmCount"
-        );
         private volatile int rmCount;
         private volatile boolean gc;
         private int index = -1;
@@ -520,10 +511,6 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 gc = true;
                 tenant.gc(this);
             }
-        }
-
-        private boolean needGC() {
-            return rmCount >= idSchema.chunkCapacity * 0.25 && sizeOffset == 1;
         }
 
         public int incrementIndex() {
