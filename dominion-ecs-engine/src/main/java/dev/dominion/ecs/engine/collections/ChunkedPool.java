@@ -12,6 +12,7 @@ import dev.dominion.ecs.engine.system.Logging;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,15 +31,27 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     public record C2(int id) { }
     public static void main(String[] args) {
-        int capacity = (1 << 20) + 1;
+        int capacity = (1 << 4) + 1;
+        var random = new Random();
+        int count = 0;
         System.out.println(capacity);
         EntityRepository entityRepository = (EntityRepository) new EntityRepository.Factory().create("stress-test");
         for (int i = 0; i < capacity; i++) {
-            entityRepository.createEntity(new C1(i));
+            var entity = entityRepository.createEntity(new C1(i), new C2(i));
+            System.out.println(entity);
+            if (random.nextBoolean()) {
+                count++;
+                entity.removeType(C2.class);
+            }
         }
-        entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
-        entityRepository.findEntitiesWith(C1.class).parallelStream().forEach(rs -> rs.entity().removeType(C1.class));
-        System.out.println(entityRepository.findEntitiesWith(C1.class).iterator().hasNext());
+        System.out.println("delete: " + count);
+        System.out.println("------------------------");
+//            entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+//            entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach(rs -> rs.entity().removeType(C1.class));
+//            Assertions.assertFalse(entityRepository.findEntitiesWith(C1.class, C2.class).iterator().hasNext());
+        entityRepository.findEntitiesWith(C1.class, C2.class).stream().forEach(rs -> {
+            System.out.println(rs.entity());
+        });
     }
     private static final System.Logger LOGGER = Logging.getLogger();
     private final ExecutorService gcThread = Executors.newSingleThreadExecutor();
@@ -293,6 +306,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         loggingContext
                 );
                 pool.chunks[newChunk.id] = newChunk;
+                newChunk.next = chunk.next;
 
                 final var size = idSchema.chunkCapacity;
                 for (int i = 0, j = 0; i < size; i++) {
@@ -445,7 +459,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = Logging.getLogger();
-        private static final AtomicIntegerFieldUpdater RM_COUNT_UPDATER =
+        private static final AtomicIntegerFieldUpdater<LinkedChunk> RM_COUNT_UPDATER =
                 AtomicIntegerFieldUpdater.newUpdater(LinkedChunk.class, "rmCount");
         private final AtomicBoolean gc = new AtomicBoolean();
         private final IdSchema idSchema;
@@ -637,6 +651,10 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return index + sizeOffset - rmCount;
         }
 
+        public int itemSize() {
+            return index + sizeOffset;
+        }
+
         public boolean isEmpty() {
             return size() == 0;
         }
@@ -667,21 +685,24 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         public PoolIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             this.currentChunk = currentChunk;
             this.idSchema = idSchema;
-            next = begin = currentChunk == null ? 0 : currentChunk.size() - 1;
+            next = begin = currentChunk == null ? 0 : currentChunk.itemSize() - 1;
         }
 
         @SuppressWarnings("ConstantConditions")
         @Override
         public boolean hasNext() {
-            if (next > -1) {
-                return true;
+            while (next > -1) {
+                if (currentChunk.itemArray[next].getChunk() == currentChunk) {
+                    return true;
+                }
+                next--;
             }
             if (currentChunk == null) {
                 return false;
             }
             for (; ; ) {
                 if ((currentChunk = currentChunk.next) != null) {
-                    if (!currentChunk.isEmpty() && (next = begin = currentChunk.size() - 1) == begin) {
+                    if (!currentChunk.isEmpty() && (next = begin = currentChunk.itemSize() - 1) == begin) {
                         return true;
                     }
                 } else {
