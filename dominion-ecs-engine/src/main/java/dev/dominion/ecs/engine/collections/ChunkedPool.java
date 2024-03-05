@@ -6,6 +6,7 @@
 package dev.dominion.ecs.engine.collections;
 
 import dev.dominion.ecs.engine.EntityRepository;
+import dev.dominion.ecs.engine.system.IDUpdater;
 import dev.dominion.ecs.engine.system.Logging;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
@@ -79,9 +81,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         return id;
     }
 
-    private LinkedChunk<T> newChunk(Tenant<T> owner, LinkedChunk<T> previousChunk) {
+    private LinkedChunk<T> newChunk(Tenant<T> owner, LinkedChunk<T> previousChunk, IDUpdater idUpdater) {
         int id = genChunkId();
-        LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, previousChunk, owner.dataLength, owner, loggingContext);
+        LinkedChunk<T> newChunk = new LinkedChunk<>(id, idSchema, previousChunk, owner.dataLength, owner, idUpdater, loggingContext);
         if (previousChunk != null) {
             previousChunk.setNext(newChunk);
         }
@@ -98,11 +100,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
     }
 
     public Tenant<T> newTenant() {
-        return newTenant(0, null, null);
+        return newTenant(0, null, null, IDUpdater.ID_UPDATER);
     }
 
-    public Tenant<T> newTenant(int dataLength, Object owner, Object subject) {
-        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, owner, subject, loggingContext);
+    public Tenant<T> newTenant(int dataLength, Object owner, Object subject, IDUpdater idUpdater) {
+        Tenant<T> newTenant = new Tenant<>(this, idSchema, dataLength, owner, subject, idUpdater, loggingContext);
         tenants.add(newTenant);
         return newTenant;
     }
@@ -245,6 +247,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 int dataLength,
                 Object owner,
                 Object subject,
+                IDUpdater idUpdater,
                 Logging.Context loggingContext
         ) {
             this.pool = pool;
@@ -254,7 +257,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.subject = subject;
             this.loggingContext = loggingContext;
             idStack = new IntStack(IdSchema.DETACHED_BIT, idSchema.chunkCapacity << 3);
-            currentChunk = pool.newChunk(this, null);
+            currentChunk = pool.newChunk(this, null, idUpdater);
             firstChunk = currentChunk;
             nextId();
             if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
@@ -284,6 +287,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         chunk.previous,
                         chunk.dataLength,
                         chunk.tenant,
+                        chunk.idUpdater,
                         loggingContext
                 );
                 pool.chunks[newChunk.id] = newChunk;
@@ -291,7 +295,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 final var size = idSchema.chunkCapacity;
                 for (int i = 0, j = 0; i < size; i++) {
                     final var item = chunk.itemArray[i];
-                    final var itemId = item.getId();
+                    final var itemId = chunk.idUpdater.getId(item);
                     final var itemChunkId = idSchema.fetchChunkId(itemId); // todo: state id
                     // if itemChunkId equals chunk.id, this item is invalid, however the item will discard
                     if (itemChunkId == chunk.id) {
@@ -304,7 +308,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                             }
                         }
                         newChunk.incrementIndex();
-                        item.compareAndSetId(itemId, idSchema.createId(newChunk.id, j));
+                        chunk.idUpdater.compareAndSetId(item, itemId, idSchema.createId(newChunk.id, j));
                         ++j;
                     }
                 }
@@ -356,7 +360,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                     return returnValue;
                 }
-                currentChunk = pool.newChunk(this, currentChunk);
+                currentChunk = pool.newChunk(this, currentChunk, currentChunk.idUpdater);
                 nextId = idSchema.createId(currentChunk.id, currentChunk.incrementIndex());
                 return returnValue;
             }
@@ -451,10 +455,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
     public static final class LinkedChunk<T extends Item> {
         private static final System.Logger LOGGER = Logging.getLogger();
-        private static final AtomicIntegerFieldUpdater RM_COUNT_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
-                LinkedChunk.class,
-                "rmCount"
-        );
+        private static final AtomicIntegerFieldUpdater RM_COUNT_UPDATER =
+                AtomicIntegerFieldUpdater.newUpdater(LinkedChunk.class, "rmCount");
+        private final AtomicBoolean gc = new AtomicBoolean();
         private final IdSchema idSchema;
         private final Item[] itemArray;
         private final Object[] dataArray;
@@ -462,8 +465,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final Tenant<T> tenant;
         private final int id;
         private final int dataLength;
+        private final IDUpdater idUpdater;
         private volatile int rmCount;
-        private volatile boolean gc;
         private int index = -1;
         private LinkedChunk<T> previous;
         private LinkedChunk<T> next;
@@ -475,6 +478,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                 LinkedChunk<T> previous,
                 int dataLength,
                 Tenant<T> tenant,
+                IDUpdater idUpdater,
                 Logging.Context loggingContext
         ) {
             this.idSchema = idSchema;
@@ -485,6 +489,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.previous = previous;
             this.tenant = tenant;
             this.id = id;
+            this.idUpdater = idUpdater;
             if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                 LOGGER.log(
                         System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()
@@ -507,8 +512,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         private void checkGC(int rmCount) {
-            if (rmCount >= idSchema.chunkCapacity * 0.25 && sizeOffset == 1 && !gc) {
-                gc = true;
+            if (sizeOffset == 1 && rmCount >= idSchema.chunkCapacity * 0.25 && gc.compareAndSet(false, true)) {
                 tenant.gc(this);
             }
         }
@@ -572,7 +576,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                     }
                 }
             }
-            value.setId(newId);
+//            value.setId(newId);
+            idUpdater.setId(value, newId);
             itemArray[newIdx] = value;
         }
 

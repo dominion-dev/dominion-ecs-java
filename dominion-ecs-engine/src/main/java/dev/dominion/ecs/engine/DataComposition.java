@@ -9,6 +9,7 @@ import dev.dominion.ecs.api.Results;
 import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.IdSchema;
 import dev.dominion.ecs.engine.system.ClassIndex;
+import dev.dominion.ecs.engine.system.IDUpdater;
 import dev.dominion.ecs.engine.system.IndexKey;
 import dev.dominion.ecs.engine.system.Logging;
 
@@ -35,7 +36,7 @@ public final class DataComposition {
             , Class<?>... componentTypes) {
         this.repository = repository;
         this.pool = pool;
-        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this, "root");
+        this.tenant = pool == null ? null : pool.newTenant(componentTypes.length, this, "root", IDUpdater.ID_UPDATER);
         this.classIndex = classIndex;
         this.idSchema = idSchema;
         this.componentTypes = componentTypes;
@@ -97,7 +98,7 @@ public final class DataComposition {
     public ChunkedPool.Tenant<IntEntity> fetchStateTenants(IndexKey key) {
         return stateTenants.computeIfAbsent(key,
                 s -> {
-                    var newStateTenant = pool.newTenant(0, this, key);
+                    var newStateTenant = pool.newTenant(0, this, key, IDUpdater.STATE_ID_UPDATER);
                     if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.DEBUG)) {
                         LOGGER.log(
                                 System.Logger.Level.DEBUG, Logging.format(loggingContext.subject()

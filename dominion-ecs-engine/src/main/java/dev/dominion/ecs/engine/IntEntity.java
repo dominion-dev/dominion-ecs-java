@@ -75,7 +75,7 @@ public final class IntEntity implements Entity, Item {
     }
 
     public ChunkedPool.LinkedChunk<IntEntity> getStateChunk() {
-        return id < 0 ? null : pool.getChunk(stateId);
+        return stateId < 0 ? null : pool.getChunk(stateId);
     }
 
     public Object[] getComponentArray() {
@@ -196,8 +196,7 @@ public final class IntEntity implements Entity, Item {
             return this;
         }
         if (state == null && stateId > -1) {
-            getStateChunk().incrementRmCount();
-            stateId = ChunkedPool.IdSchema.DETACHED_BIT;
+            setStateId(ChunkedPool.IdSchema.DETACHED_BIT);
             return this;
         }
         DataComposition composition = getComposition();
@@ -206,7 +205,7 @@ public final class IntEntity implements Entity, Item {
             if (tenant == composition.getStateTenant(state)) {
                 return this;
             }
-            stateId = ChunkedPool.IdSchema.DETACHED_BIT;
+            setStateId(ChunkedPool.IdSchema.DETACHED_BIT);
         }
         composition.fetchStateTenants(state).registerState(this);
         return this;
@@ -243,10 +242,6 @@ public final class IntEntity implements Entity, Item {
     @Override
     public boolean isDeleted() {
         return (id & ChunkedPool.IdSchema.DETACHED_BIT) == ChunkedPool.IdSchema.DETACHED_BIT;
-    }
-
-    void flagDetachedId() {
-        setId(id | ChunkedPool.IdSchema.DETACHED_BIT);
     }
 
     @Override
