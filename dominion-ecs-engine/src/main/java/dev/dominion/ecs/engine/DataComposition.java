@@ -119,7 +119,7 @@ public final class DataComposition {
 
     public IntEntity createEntity(boolean prepared, Object... components) {
         synchronized (tenant) {
-            return tenant.register(new IntEntity(tenant.nextId(), this.pool),
+            return tenant.register(new IntEntity(this.pool),
                     !prepared && isMultiComponent() ? sortComponentsInPlaceByIndex(components) : components);
         }
     }

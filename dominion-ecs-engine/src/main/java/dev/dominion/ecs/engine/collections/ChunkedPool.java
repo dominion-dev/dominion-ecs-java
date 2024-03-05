@@ -234,10 +234,11 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         private final IdSchema idSchema;
         private final IntStack idStack;
         private final Logging.Context loggingContext;
-        private LinkedChunk<T> firstChunk;
+        private final IDUpdater idUpdater;
         private final int dataLength;
         private final Object owner;
         private final Object subject;
+        private LinkedChunk<T> firstChunk;
         private LinkedChunk<T> currentChunk;
         private int nextId = IdSchema.DETACHED_BIT;
 
@@ -255,6 +256,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             this.dataLength = dataLength;
             this.owner = owner;
             this.subject = subject;
+            this.idUpdater = idUpdater;
             this.loggingContext = loggingContext;
             idStack = new IntStack(IdSchema.DETACHED_BIT, idSchema.chunkCapacity << 3);
             currentChunk = pool.newChunk(this, null, idUpdater);
@@ -395,21 +397,9 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         }
 
         public T register(T entry, Object[] data) {
-            return pool.getChunk(entry.getId()).set(entry, data);
-        }
-
-        public LinkedChunk<T> registerState(T entry) {
-            int stateId = nextId();
-            LinkedChunk<T> stateChunk = pool.getChunk(stateId);
-            stateChunk.setState(stateId, entry);
-            if (Logging.isLoggable(loggingContext.levelIndex(), System.Logger.Level.TRACE)) {
-                LOGGER.log(
-                        System.Logger.Level.TRACE, Logging.format(loggingContext.subject()
-                                , "Setting state to " + entry
-                        )
-                );
-            }
-            return stateChunk;
+            final var id = nextId();
+            idUpdater.setId(entry, id);
+            return pool.getChunk(id).set(entry, data);
         }
 
         public void migrate(
@@ -528,22 +518,15 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
 
         @SuppressWarnings("unchecked")
         public T set(T value, Object[] data) {
-            int idx = idSchema.fetchObjectId(value.getId());
+            int idx = idSchema.fetchObjectId(idUpdater.getId(value));
             if (dataLength == 1) {
                 dataArray[idx] = data[0];
-            }
-            if (dataLength > 1) {
+            } else if (dataLength > 1) {
                 for (int i = 0; i < dataLength; i++) {
                     multiDataArray[i][idx] = data[i];
                 }
             }
             return (T) (itemArray[idx] = value);
-        }
-
-        public void setState(int stateId, T value) {
-            int idx = idSchema.fetchObjectId(stateId);
-            value.setStateId(stateId);
-            itemArray[idx] = value;
         }
 
         @SuppressWarnings("StatementWithEmptyBody")

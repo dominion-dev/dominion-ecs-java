@@ -23,8 +23,8 @@ public final class IntEntity implements Entity, Item {
     private volatile int stateId;
     private Object[] shelf;
 
-    public IntEntity(int id, ChunkedPool<IntEntity> pool) {
-        this.id = id;
+    public IntEntity(ChunkedPool<IntEntity> pool) {
+        this.id = ChunkedPool.IdSchema.DETACHED_BIT;
         this.stateId = ChunkedPool.IdSchema.DETACHED_BIT;
         this.pool = pool;
     }
@@ -207,7 +207,7 @@ public final class IntEntity implements Entity, Item {
             }
             setStateId(ChunkedPool.IdSchema.DETACHED_BIT);
         }
-        composition.fetchStateTenants(state).registerState(this);
+        composition.fetchStateTenants(state).register(this, null);
         return this;
     }
 
@@ -221,7 +221,6 @@ public final class IntEntity implements Entity, Item {
         if (enabled && shelf != null) {
             final var chunk = pool.getChunk(-id);
             final var tenant = chunk.getTenant();
-            this.id = tenant.nextId();
             tenant.register(this, shelf);
             shelf = null;
         } else if (!enabled && shelf == null) {
