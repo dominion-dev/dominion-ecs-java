@@ -507,7 +507,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
             return id;
         }
 
-        public void incrementRmCount() {
+        public void incrementRmCount(int id) {
+            this.itemArray[idSchema.fetchObjectId(id)] = null;
             checkGC(RM_COUNT_UPDATER.incrementAndGet(this));
         }
 
@@ -681,6 +682,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         protected LinkedChunk<T> currentChunk;
         protected IdSchema idSchema;
         private int begin;
+        private Object item;
 
         public PoolIterator(LinkedChunk<T> currentChunk, IdSchema idSchema) {
             this.currentChunk = currentChunk;
@@ -692,7 +694,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @Override
         public boolean hasNext() {
             while (next > -1) {
-                if (currentChunk.itemArray[next].getChunk() == currentChunk) {
+                if ((item = currentChunk.itemArray[next]) != null) {
                     return true;
                 }
                 next--;
@@ -714,7 +716,8 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
         @SuppressWarnings({"unchecked"})
         @Override
         public R next() {
-            return (R) currentChunk.itemArray[next--];
+            next--;
+            return (R) item;
         }
     }
 

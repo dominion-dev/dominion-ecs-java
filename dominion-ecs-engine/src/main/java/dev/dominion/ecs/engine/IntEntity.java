@@ -38,7 +38,7 @@ public final class IntEntity implements Entity, Item {
     public synchronized void setId(int id) {
         if(this.id == id) return;
         if(this.id > 0) {
-            pool.getChunk(this.id).incrementRmCount();
+            pool.getChunk(this.id).incrementRmCount(this.id);
         }
         this.id = id;
     }
@@ -56,7 +56,7 @@ public final class IntEntity implements Entity, Item {
     public synchronized void setStateId(int stateId) {
         if(this.stateId == stateId) return;
         if(this.stateId > 0) {
-            pool.getChunk(this.stateId).incrementRmCount();
+            pool.getChunk(this.stateId).incrementRmCount(this.stateId);
         }
         this.stateId = stateId;
     }
@@ -226,8 +226,8 @@ public final class IntEntity implements Entity, Item {
         } else if (!enabled && shelf == null) {
             final var chunk = getChunk();
             shelf = chunk.getData(id);
+            chunk.incrementRmCount(id);
             id = -id;
-            chunk.incrementRmCount();
         }
         return this;
     }
