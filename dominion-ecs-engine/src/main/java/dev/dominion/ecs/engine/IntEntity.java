@@ -10,14 +10,8 @@ import dev.dominion.ecs.engine.collections.ChunkedPool;
 import dev.dominion.ecs.engine.collections.ChunkedPool.Item;
 
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 public final class IntEntity implements Entity, Item {
-    private static final AtomicIntegerFieldUpdater<IntEntity> ID_UPDATER = AtomicIntegerFieldUpdater.newUpdater(IntEntity.class, "id");
-    private static final AtomicIntegerFieldUpdater<IntEntity> STATE_ID_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
-            IntEntity.class,
-            "stateId"
-    );
     private final ChunkedPool<IntEntity> pool;
     private volatile int id;
     private volatile int stateId;
@@ -43,11 +37,6 @@ public final class IntEntity implements Entity, Item {
         this.id = id;
     }
 
-    @Override
-    public void compareAndSetId(int expect, int id) {
-        ID_UPDATER.compareAndSet(this, expect, id);
-    }
-
     public int getStateId() {
         return stateId;
     }
@@ -59,11 +48,6 @@ public final class IntEntity implements Entity, Item {
             pool.getChunk(this.stateId).incrementRmCount(this.stateId);
         }
         this.stateId = stateId;
-    }
-
-    @Override
-    public void compareAndSetStateId(int expect, int id) {
-        STATE_ID_UPDATER.compareAndSet(this, expect, id);
     }
 
     public DataComposition getComposition() {

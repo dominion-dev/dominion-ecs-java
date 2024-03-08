@@ -4,6 +4,7 @@ import dev.dominion.ecs.engine.collections.IntStack;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +13,7 @@ class IntStackTest {
     @Test
     void pop() {
         try (IntStack stack = new IntStack(Integer.MIN_VALUE, 16)) {
-            Assertions.assertEquals(Integer.MIN_VALUE, stack.pop());
+            Assertions.assertEquals(IntStack.NULL_VALUE, stack.pop());
             stack.push(1);
             stack.push(2);
             Assertions.assertEquals(2, stack.size());
@@ -50,13 +51,16 @@ class IntStackTest {
     @Test
     void concurrentPop() throws InterruptedException {
         final int capacity = 1 << 22;
+        final var set = new HashSet<Integer>();
         try (IntStack stack = new IntStack(Integer.MIN_VALUE, capacity >>> 1)) {
             final ExecutorService pool = Executors.newFixedThreadPool(4);
             for (int i = 0; i < capacity; i++) {
                 if (i % 10 == 0) {
                     pool.execute(() -> {
+                        int value;
                         //noinspection StatementWithEmptyBody
-                        while (stack.pop() == Integer.MIN_VALUE) ;
+                        while ((value = stack.pop()) == IntStack.NULL_VALUE) ;
+                        set.add(value);
                     });
                 }
                 pool.execute(() -> stack.push(1));
@@ -64,6 +68,8 @@ class IntStackTest {
             pool.shutdown();
             Assertions.assertTrue(pool.awaitTermination(5, TimeUnit.SECONDS));
             Assertions.assertEquals((int) (capacity * .9), stack.size());
+            Assertions.assertEquals(1, set.size());
+            Assertions.assertTrue(set.contains(1));
         }
     }
 }

@@ -25,6 +25,7 @@ public final class IntStack implements AutoCloseable {
     private volatile long address;
     private volatile int capacity;
 
+    // todo: remove nullInt
     public IntStack(int nullInt, int initialCapacity) {
         this.capacity = initialCapacity;
         address = unsafe.allocateMemory(initialCapacity);

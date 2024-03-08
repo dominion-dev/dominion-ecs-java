@@ -64,88 +64,88 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
     }
 
 
-    @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public static class TenantReuseId extends DominionBenchmark {
-        ChunkedPool.Tenant<IntEntity> tenant;
+//    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+//    public static class TenantReuseId extends DominionBenchmark {
+//        ChunkedPool.Tenant<IntEntity> tenant;
+//
+//        @Param(value = {"1000000"})
+//        int size;
+//        boolean started;
+//
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(TenantReuseId.class)}
+//            );
+//        }
+//
+//        @SuppressWarnings("resource")
+//        @Setup(Level.Iteration)
+//        public void setup() {
+//            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
+//            started = false;
+//        }
+//
+//        @Setup(Level.Invocation)
+//        public void setupInvocation() {
+//            if (!started) return;
+//            for (int i = 0; i < size; i++) {
+//                tenant.freeId(i);
+//            }
+//        }
+//
+//        @Benchmark
+//        public void nextId(Blackhole bh) {
+//            for (int i = 0; i < size; i++) {
+//                bh.consume(tenant.nextId());
+//            }
+//            started = true;
+//        }
+//
+//        @TearDown(Level.Iteration)
+//        public void tearDown() {
+//            tenant.close();
+//        }
+//    }
 
-        @Param(value = {"1000000"})
-        int size;
-        boolean started;
 
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(TenantReuseId.class)}
-            );
-        }
-
-        @SuppressWarnings("resource")
-        @Setup(Level.Iteration)
-        public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
-            started = false;
-        }
-
-        @Setup(Level.Invocation)
-        public void setupInvocation() {
-            if (!started) return;
-            for (int i = 0; i < size; i++) {
-                tenant.freeId(i);
-            }
-        }
-
-        @Benchmark
-        public void nextId(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(tenant.nextId());
-            }
-            started = true;
-        }
-
-        @TearDown(Level.Iteration)
-        public void tearDown() {
-            tenant.close();
-        }
-    }
-
-
-    @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public static class TenantFreeId extends DominionBenchmark {
-        ChunkedPool.Tenant<IntEntity> tenant;
-
-        @Param(value = {"1000000"})
-        int size;
-
-        public static void main(String[] args) throws Exception {
-            org.openjdk.jmh.Main.main(
-                    new String[]{fetchBenchmarkName(TenantFreeId.class)}
-            );
-        }
-
-        @SuppressWarnings("resource")
-        @Setup(Level.Iteration)
-        public void setup() {
-            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
-        }
-
-        @Setup(Level.Invocation)
-        public void setupInvocation() {
-            for (int i = 0; i < size; i++) {
-                tenant.nextId();
-            }
-        }
-
-        @Benchmark
-        public void freeId(Blackhole bh) {
-            for (int i = 0; i < size; i++) {
-                bh.consume(tenant.freeId(i));
-            }
-        }
-
-        @TearDown(Level.Iteration)
-        public void tearDown() {
-            tenant.close();
-        }
-    }
+//    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+//    public static class TenantFreeId extends DominionBenchmark {
+//        ChunkedPool.Tenant<IntEntity> tenant;
+//
+//        @Param(value = {"1000000"})
+//        int size;
+//
+//        public static void main(String[] args) throws Exception {
+//            org.openjdk.jmh.Main.main(
+//                    new String[]{fetchBenchmarkName(TenantFreeId.class)}
+//            );
+//        }
+//
+//        @SuppressWarnings("resource")
+//        @Setup(Level.Iteration)
+//        public void setup() {
+//            tenant = new ChunkedPool<IntEntity>(ID_SCHEMA, Logging.Context.TEST).newTenant();
+//        }
+//
+//        @Setup(Level.Invocation)
+//        public void setupInvocation() {
+//            for (int i = 0; i < size; i++) {
+//                tenant.nextId();
+//            }
+//        }
+//
+//        @Benchmark
+//        public void freeId(Blackhole bh) {
+//            for (int i = 0; i < size; i++) {
+//                bh.consume(tenant.freeId(i));
+//            }
+//        }
+//
+//        @TearDown(Level.Iteration)
+//        public void tearDown() {
+//            tenant.close();
+//        }
+//    }
 
 
     public static class TenantIterator extends DominionBenchmark {
@@ -193,22 +193,12 @@ public class ChunkedPoolBenchmark extends DominionBenchmark {
             }
 
             @Override
-            public boolean compareAndSetId(int expect, int id) {
-                return false;
-            }
-
-            @Override
             public int getStateId() {
                 return 0;
             }
 
             @Override
             public void setStateId(int id) {
-            }
-
-            @Override
-            public boolean compareAndSetStateId(int expect, int id) {
-                return false;
             }
 
             @Override
