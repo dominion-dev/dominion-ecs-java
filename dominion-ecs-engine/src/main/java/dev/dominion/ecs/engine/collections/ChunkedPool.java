@@ -293,7 +293,7 @@ public final class ChunkedPool<T extends ChunkedPool.Item> implements AutoClosea
                         )
                 );
             }
-            if (returnValue != IntStack.NULL_VALUE) {
+            if (returnValue != IdSchema.DETACHED_BIT) {
                 pool.getChunk(returnValue).incrementIndex();
                 return returnValue;
             }

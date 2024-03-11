@@ -13,7 +13,7 @@ class IntStackTest {
     @Test
     void pop() {
         try (IntStack stack = new IntStack(Integer.MIN_VALUE, 16)) {
-            Assertions.assertEquals(IntStack.NULL_VALUE, stack.pop());
+            Assertions.assertEquals(Integer.MIN_VALUE, stack.pop());
             stack.push(1);
             stack.push(2);
             Assertions.assertEquals(2, stack.size());
@@ -59,7 +59,7 @@ class IntStackTest {
                     pool.execute(() -> {
                         int value;
                         //noinspection StatementWithEmptyBody
-                        while ((value = stack.pop()) == IntStack.NULL_VALUE) ;
+                        while ((value = stack.pop()) == Integer.MIN_VALUE) ;
                         set.add(value);
                     });
                 }

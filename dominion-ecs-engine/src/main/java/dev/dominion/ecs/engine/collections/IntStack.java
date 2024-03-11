@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntStack implements AutoCloseable {
-    public static final int NULL_VALUE = 0b10000000100000001000000010000000;
+    private static final int NULL_VALUE = 0b10000000100000001000000010000000;
     private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
     private static final AtomicIntegerFieldUpdater<IntStack> INDEX_UPDATER =
@@ -21,12 +21,14 @@ public final class IntStack implements AutoCloseable {
     private static final AtomicIntegerFieldUpdater<IntStack> CTRL =
             AtomicIntegerFieldUpdater.newUpdater(IntStack.class, "ctrl");
     private final StampedLock lock = new StampedLock();
+    private final int nullInt;
     private volatile int ctrl;
     private volatile long address;
     private volatile int capacity;
 
     // todo: remove nullInt
     public IntStack(int nullInt, int initialCapacity) {
+        this.nullInt = nullInt;
         this.capacity = initialCapacity;
         address = unsafe.allocateMemory(initialCapacity);
         unsafe.setMemory(address, initialCapacity, (byte) (1 << 7));
@@ -35,7 +37,7 @@ public final class IntStack implements AutoCloseable {
     public int pop() {
         final var offset = index;
         if (offset < 0) {
-            return NULL_VALUE;
+            return nullInt;
         }
         // try to read value, if value equals NULL_VALUE, it means that push is calling, offset has added but value added not yet
         int returnValue = unsafe.getInt(address + offset);
@@ -43,7 +45,7 @@ public final class IntStack implements AutoCloseable {
             INDEX_UPDATER.addAndGet(this, -INT_BYTES);
             return returnValue;
         }
-        return NULL_VALUE;
+        return nullInt;
     }
 
     public boolean push(int id) {
