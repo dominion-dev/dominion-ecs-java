@@ -8,58 +8,87 @@ package dev.dominion.ecs.engine.collections;
 import dev.dominion.ecs.engine.system.UnsafeFactory;
 import sun.misc.Unsafe;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.locks.StampedLock;
 
 public final class IntStack implements AutoCloseable {
+    private static final int NULL_VALUE = 0b10000000100000001000000010000000;
     private static final int INT_BYTES = 4;
     private static final Unsafe unsafe = UnsafeFactory.INSTANCE;
-    private final AtomicInteger index = new AtomicInteger(-INT_BYTES);
+    private static final AtomicIntegerFieldUpdater<IntStack> INDEX_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(IntStack.class, "index");
+    private static final AtomicIntegerFieldUpdater<IntStack> CTRL =
+            AtomicIntegerFieldUpdater.newUpdater(IntStack.class, "ctrl");
     private final StampedLock lock = new StampedLock();
     private final int nullInt;
-    private long address;
-    private int capacity;
+    private volatile int index = -INT_BYTES;
+    private volatile int ctrl;
+    private volatile long address;
+    private volatile int capacity;
 
     public IntStack(int nullInt, int initialCapacity) {
         this.nullInt = nullInt;
         this.capacity = initialCapacity;
         address = unsafe.allocateMemory(initialCapacity);
+        unsafe.setMemory(address, initialCapacity, (byte) (1 << 7));
     }
 
     public int pop() {
-        int i = index.get();
-        if (i < 0) {
+        final var offset = index;
+        if (offset < 0) {
             return nullInt;
         }
-        int returnValue = unsafe.getInt(address + i);
-        returnValue = index.compareAndSet(i, i - INT_BYTES) ? returnValue : Integer.MIN_VALUE;
-        return returnValue;
+        // try to read value, if value equals NULL_VALUE, it means that push is calling, offset has added but value added not yet
+        int returnValue = unsafe.getInt(address + offset);
+        if (returnValue != NULL_VALUE && unsafe.compareAndSwapInt(null, address + offset, returnValue, NULL_VALUE)) {
+            INDEX_UPDATER.addAndGet(this, -INT_BYTES);
+            return returnValue;
+        }
+        return nullInt;
     }
 
     public boolean push(int id) {
-        long offset = index.addAndGet(INT_BYTES);
+        final var offset = INDEX_UPDATER.addAndGet(this, INT_BYTES);
         if (offset >= capacity) {
             long l = lock.writeLock();
             try {
                 int currentCapacity;
                 if (offset >= (currentCapacity = capacity)) {
-                    int newCapacity = currentCapacity + (currentCapacity >>> 1);
-                    long newAddress = unsafe.allocateMemory(newCapacity);
-                    unsafe.copyMemory(address, newAddress, currentCapacity);
-                    unsafe.freeMemory(address);
-                    capacity = newCapacity;
-                    address = newAddress;
+                    for (; ; ) {
+                        if (CTRL.compareAndSet(this, 0, -1)) {
+                            int newCapacity = currentCapacity + (currentCapacity >>> 1);
+                            long newAddress = unsafe.allocateMemory(newCapacity);
+                            long oldAddress = address;
+                            unsafe.setMemory(newAddress, newCapacity, (byte) (1 << 7));
+                            unsafe.copyMemory(oldAddress, newAddress, currentCapacity);
+                            capacity = newCapacity;
+                            address = newAddress;
+                            unsafe.freeMemory(oldAddress);
+                            ctrl = 0;
+                            break;
+                        } else {
+                            Thread.yield();
+                        }
+                    }
                 }
             } finally {
                 lock.unlock(l);
             }
         }
-        unsafe.putInt(address + offset, id);
-        return true;
+        for (; ; ) {
+            final var c = ctrl;
+            if (c == -1) {
+                Thread.yield();
+            } else if (CTRL.compareAndSet(this, c, c + 1)) {
+                unsafe.putInt(address + offset, id);
+                CTRL.decrementAndGet(this);
+                return true;
+            }
+        }
     }
 
     public int size() {
-        return (index.get() >> 2) + 1;
+        return (index >> 2) + 1;
     }
 
     @Override
